@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import { QueryProvider } from "@/core/query/provider";
+import { LanguageProvider } from "@/core/i18n/LanguageProvider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -31,12 +32,36 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased`}
         style={{ fontFamily: "'Inter', Arial, Helvetica, sans-serif" }}
       >
-        <QueryProvider>{children}</QueryProvider>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                // Theme restoration
+                const savedTheme = localStorage.getItem('theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const shouldBeDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
+                if (shouldBeDark) {
+                  document.documentElement.classList.add('dark');
+                } else {
+                  document.documentElement.classList.remove('dark');
+                }
+                
+                // Language restoration
+                const savedLang = localStorage.getItem('language');
+                const lang = (savedLang === 'fr' || savedLang === 'en') ? savedLang : 'en';
+                document.documentElement.lang = lang;
+              })();
+            `,
+          }}
+        />
+        <QueryProvider>
+          <LanguageProvider>{children}</LanguageProvider>
+        </QueryProvider>
       </body>
     </html>
   );
