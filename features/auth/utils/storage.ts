@@ -15,11 +15,30 @@ export interface AuthData {
 }
 
 /**
+ * Set a cookie (for middleware access)
+ */
+const setCookie = (name: string, value: string, days: number = 7): void => {
+    const expires = new Date();
+    expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+    document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
+};
+
+/**
+ * Delete a cookie
+ */
+const deleteCookie = (name: string): void => {
+    document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+};
+
+/**
  * Store encrypted authentication data
  * Uses react-secure-storage to encrypt tokens before storing
+ * Also sets a cookie for middleware access
  */
 export const storeAuthData = (data: AuthData): void => {
     SecureStorage.setItem(STORAGE_KEY, data);
+    // Set cookie for middleware to detect authentication
+    setCookie('accessToken', data.accessToken, 7);
 };
 
 /**
@@ -64,6 +83,8 @@ export const getCurrentUser = (): User | null => {
  */
 export const clearAuthData = (): void => {
     SecureStorage.removeItem(STORAGE_KEY);
+    // Also clear the cookie
+    deleteCookie('accessToken');
 };
 
 /**

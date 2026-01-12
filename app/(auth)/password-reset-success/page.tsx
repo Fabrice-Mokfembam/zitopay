@@ -20,7 +20,7 @@ export default function PasswordResetSuccessPage() {
 
                     <Link
                         href="/login"
-                        className="inline-flex items-center justify-center w-full py-2.5 bg-[#2466eb] text-white rounded-lg font-semibold text-sm hover:bg-[#1d52c7] transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+                        className="inline-flex items-center justify-center w-full py-2.5 bg-[#ef2d10] text-white rounded-lg font-semibold text-sm hover:bg-[#d0260e] transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
                     >
                         Continue to Login
                     </Link>

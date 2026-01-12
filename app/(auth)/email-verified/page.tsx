@@ -15,7 +15,7 @@ export default function EmailVerifiedPage() {
 
                     <h1 className="text-xl font-bold text-foreground mb-2">Email verified successfully!</h1>
                     <p className="text-xs text-muted-foreground mb-6">
-                        Your email has been verified. Now let's set up your merchant credentials to start accepting payments.
+                        Your email has been verified. Now let&apos;s set up your merchant credentials to start accepting payments.
                     </p>
 
                     <Link

@@ -3,6 +3,8 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useTranslation } from "@/core/i18n/useTranslation";
+import { useAuthContext } from "@/features/auth/context/AuthContext";
+import { useState, useEffect, startTransition } from "react";
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -29,6 +31,14 @@ const itemVariants = {
 
 export function Hero() {
     const { t } = useTranslation("marketing");
+    const { isAuthenticated } = useAuthContext();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        startTransition(() => {
+            setMounted(true);
+        });
+    }, []);
 
     return (
         <section className="relative py-12 md:py-16 lg:py-20 overflow-hidden bg-gradient-to-br from-background via-background to-muted/20">
@@ -66,29 +76,45 @@ export function Hero() {
                         variants={itemVariants}
                         className="flex flex-wrap gap-4 justify-center items-center"
                     >
-                        <Link
-                            href="/register"
-                            className="group relative px-8 py-4 bg-gradient-to-r from-[#ef2d10] to-[#dc2626] text-white rounded-xl font-semibold text-base shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden"
-                        >
-                            <span className="relative z-10 flex items-center gap-2">
-                                {t("hero.ctaPrimary")}
-                                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                </svg>
-                            </span>
-                            <div className="absolute inset-0 bg-gradient-to-r from-[#dc2626] to-[#ef2d10] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        </Link>
-                        <Link
-                            href="/contact"
-                            className="group px-8 py-4 border-2 border-[#2466eb] bg-background text-[#2466eb] rounded-xl hover:bg-[#2466eb] hover:text-white transition-all duration-300 font-semibold text-base shadow-md hover:shadow-xl hover:scale-105 backdrop-blur-sm"
-                        >
-                            <span className="flex items-center gap-2">
-                                {t("hero.ctaSecondary")}
-                                <svg className="w-5 h-5 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                </svg>
-                            </span>
-                        </Link>
+                        {!mounted || !isAuthenticated ? (
+                            <>
+                                <Link
+                                    href="/register"
+                                    className="group relative px-8 py-4 bg-gradient-to-r from-[#ef2d10] to-[#dc2626] text-white rounded-xl font-semibold text-base shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden"
+                                >
+                                    <span className="relative z-10 flex items-center gap-2">
+                                        {t("hero.ctaPrimary")}
+                                        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                        </svg>
+                                    </span>
+                                    <div className="absolute inset-0 bg-gradient-to-r from-[#dc2626] to-[#ef2d10] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                </Link>
+                                <Link
+                                    href="/docs"
+                                    className="group px-8 py-4 border-2 border-[#2466eb] bg-background text-[#2466eb] rounded-xl hover:bg-[#2466eb] hover:text-white transition-all duration-300 font-semibold text-base shadow-md hover:shadow-xl hover:scale-105 backdrop-blur-sm"
+                                >
+                                    <span className="flex items-center gap-2">
+                                        Documentation
+                                        <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                        </svg>
+                                    </span>
+                                </Link>
+                            </>
+                        ) : (
+                            <Link
+                                href="/docs"
+                                className="group px-8 py-4 border-2 border-[#2466eb] bg-background text-[#2466eb] rounded-xl hover:bg-[#2466eb] hover:text-white transition-all duration-300 font-semibold text-base shadow-md hover:shadow-xl hover:scale-105 backdrop-blur-sm"
+                            >
+                                <span className="flex items-center gap-2">
+                                    Documentation
+                                    <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                    </svg>
+                                </span>
+                            </Link>
+                        )}
                     </motion.div>
 
                     <motion.div

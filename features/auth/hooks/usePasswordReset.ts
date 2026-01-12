@@ -21,9 +21,9 @@ export const useForgotPassword = (): UseMutationResult<ForgotPasswordResponse, E
 
     return useMutation({
         mutationFn: (payload: ForgotPasswordRequest) => forgotPassword(payload),
-        onSuccess: () => {
-            // Navigate to code verification page
-            router.push('/verify-code');
+        onSuccess: (_, variables) => {
+            // Navigate to code verification page with email
+            router.push(`/verify-code?email=${encodeURIComponent(variables.email)}`);
         },
     });
 };
@@ -37,9 +37,9 @@ export const useVerifyResetCode = (): UseMutationResult<VerifyResetCodeResponse,
 
     return useMutation({
         mutationFn: (payload: VerifyResetCodeRequest) => verifyResetCode(payload),
-        onSuccess: () => {
-            // Navigate to reset password page
-            router.push('/reset-password');
+        onSuccess: (_, variables) => {
+            // Navigate to reset password page with email and code
+            router.push(`/reset-password?email=${encodeURIComponent(variables.email)}&code=${encodeURIComponent(variables.code)}`);
         },
     });
 };

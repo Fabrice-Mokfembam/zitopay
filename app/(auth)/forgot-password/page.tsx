@@ -1,16 +1,18 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import Link from "next/link";
-import { Mail, ArrowLeft } from "lucide-react";
+import { Mail, ArrowLeft, Loader2 } from "lucide-react";
 import { AuthLayout } from "@/components/AuthLayout";
+import { useForgotPassword } from "@/features/auth/hooks";
 
 export default function ForgotPasswordPage() {
-  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const { mutate: forgotPassword, isPending, error } = useForgotPassword();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    router.push("/verify-code");
+    forgotPassword({ email });
   };
 
   return (
@@ -25,6 +27,13 @@ export default function ForgotPasswordPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Error Message */}
+            {error && (
+              <div className="p-3 text-xs text-red-500 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900 rounded-lg">
+                {error.message || "Something went wrong. Please try again."}
+              </div>
+            )}
+
             <div>
               <label htmlFor="email" className="block text-xs font-medium text-foreground mb-1.5">
                 Email address
@@ -34,8 +43,10 @@ export default function ForgotPasswordPage() {
                 <input
                   id="email"
                   type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
-                  className="w-full pl-9 pr-3 py-2.5 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2466eb] focus:border-transparent transition-all text-foreground placeholder:text-muted-foreground"
+                  className="w-full pl-9 pr-3 py-2.5 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ef2d10] focus:border-transparent transition-all text-foreground placeholder:text-muted-foreground"
                   required
                 />
               </div>
@@ -43,9 +54,17 @@ export default function ForgotPasswordPage() {
 
             <button
               type="submit"
-              className="w-full py-2.5 bg-[#2466eb] text-white rounded-lg font-semibold text-sm hover:bg-[#1d52c7] transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+              disabled={isPending}
+              className="w-full py-2.5 bg-[#ef2d10] text-white rounded-lg font-semibold text-sm hover:bg-[#d0260e] transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              Send Reset Code
+              {isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                "Send Reset Code"
+              )}
             </button>
           </form>
 

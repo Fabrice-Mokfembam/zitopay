@@ -2,20 +2,36 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Shield } from "lucide-react";
+import { Eye, EyeOff, Shield, Loader2 } from "lucide-react";
 import { AuthLayout } from "@/components/AuthLayout";
+import { useRegister } from "@/features/auth/hooks";
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const router = useRouter();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [validationError, setValidationError] = useState("");
+
+  const { mutate: register, isPending, error } = useRegister();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // In production, this would create the account and send verification code
-    // For now, just navigate to verify-email-code
-    router.push("/verify-email-code");
+    setValidationError("");
+
+    if (password !== confirmPassword) {
+      setValidationError("Passwords do not match");
+      return;
+    }
+
+    if (password.length < 8) {
+      setValidationError("Password must be at least 8 characters");
+      return;
+    }
+
+    register({ email, password });
   };
 
   return (
@@ -32,6 +48,13 @@ export default function RegisterPage() {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Error Message */}
+            {(error || validationError) && (
+              <div className="p-3 text-xs text-red-500 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900 rounded-lg">
+                {validationError || error?.message || "Something went wrong. Please try again."}
+              </div>
+            )}
+
             {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-xs font-medium text-foreground mb-1.5">
@@ -40,8 +63,10 @@ export default function RegisterPage() {
               <input
                 id="email"
                 type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@company.com"
-                className="w-full px-3 py-2.5 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2466eb] focus:border-transparent transition-all text-foreground placeholder:text-muted-foreground"
+                className="w-full px-3 py-2.5 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ef2d10] focus:border-transparent transition-all text-foreground placeholder:text-muted-foreground"
                 required
               />
             </div>
@@ -55,8 +80,10 @@ export default function RegisterPage() {
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="Create a password"
-                  className="w-full px-3 pr-10 py-2.5 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2466eb] focus:border-transparent transition-all text-foreground placeholder:text-muted-foreground"
+                  className="w-full px-3 pr-10 py-2.5 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ef2d10] focus:border-transparent transition-all text-foreground placeholder:text-muted-foreground"
                   required
                 />
                 <button
@@ -79,8 +106,10 @@ export default function RegisterPage() {
                 <input
                   id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Re-enter your password"
-                  className="w-full px-3 pr-10 py-2.5 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2466eb] focus:border-transparent transition-all text-foreground placeholder:text-muted-foreground"
+                  className="w-full px-3 pr-10 py-2.5 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ef2d10] focus:border-transparent transition-all text-foreground placeholder:text-muted-foreground"
                   required
                 />
                 <button
@@ -98,7 +127,7 @@ export default function RegisterPage() {
               <input
                 id="terms"
                 type="checkbox"
-                className="mt-0.5 w-4 h-4 rounded border-border text-[#2466eb] focus:ring-2 focus:ring-[#2466eb]"
+                className="mt-0.5 w-4 h-4 rounded border-border text-[#ef2d10] focus:ring-2 focus:ring-[#ef2d10]"
                 required
               />
               <label htmlFor="terms" className="text-xs text-muted-foreground">
@@ -117,9 +146,17 @@ export default function RegisterPage() {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full py-2.5 bg-[#2466eb] text-white rounded-lg font-semibold text-sm hover:bg-[#1d52c7] transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+              disabled={isPending}
+              className="w-full py-2.5 bg-[#ef2d10] text-white rounded-lg font-semibold text-sm hover:bg-[#d0260e] transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              Create Account
+              {isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Creating Account...
+                </>
+              ) : (
+                "Create Account"
+              )}
             </button>
           </form>
 

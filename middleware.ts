@@ -51,7 +51,19 @@ export function middleware(request: NextRequest) {
 
   // If accessing login/register while authenticated, redirect to dashboard
   if ((pathname === "/login" || pathname === "/register") && token) {
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  // If accessing marketing pages while authenticated, redirect to dashboard
+  if (token && (
+    pathname === "/" ||
+    pathname.startsWith("/solutions") ||
+    pathname.startsWith("/pricing") ||
+    pathname.startsWith("/about") ||
+    pathname.startsWith("/contact") ||
+    pathname.startsWith("/security")
+  )) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   return NextResponse.next();

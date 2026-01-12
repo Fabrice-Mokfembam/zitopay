@@ -87,7 +87,7 @@ export interface RefreshTokenResponse {
     expiresIn: number;
 }
 
-export interface GetCurrentUserResponse extends User { }
+export type GetCurrentUserResponse = User;
 
 export interface LogoutResponse {
     success: true;

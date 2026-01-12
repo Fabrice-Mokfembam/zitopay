@@ -1,20 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, startTransition } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useTranslation } from "@/core/i18n/useTranslation";
 import { ThemeToggle } from "./ThemeToggle";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuthContext } from "@/features/auth/context/AuthContext";
 
 export function Nav() {
     const { t } = useTranslation("nav");
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
+    const { user, isAuthenticated } = useAuthContext();
 
     useEffect(() => {
-        setMounted(true);
+        startTransition(() => {
+            setMounted(true);
+        });
     }, []);
 
     const toggleMenu = () => {
@@ -25,6 +30,16 @@ export function Nav() {
         setIsMenuOpen(false);
     };
 
+    // Get user initials for avatar
+    const getInitials = (name: string) => {
+        if (!name) return "U";
+        const parts = name.trim().split(" ");
+        if (parts.length >= 2) {
+            return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+        }
+        return name.substring(0, 2).toUpperCase();
+    };
+
     // Prevent hydration mismatch by not rendering translations until mounted
     if (!mounted) {
         return (
@@ -33,10 +48,16 @@ export function Nav() {
                     <div className="flex items-center justify-between h-24">
                         <Link
                             href="/"
-                            className="text-xl font-bold text-foreground hover:opacity-80 transition-opacity flex items-center gap-2"
+                            className="hover:opacity-80 transition-opacity"
                         >
-                            <span className="w-3 h-3 rounded" style={{ backgroundColor: '#2466eb' }}></span>
-                            ZitoPay
+                            <Image
+                                src="/zitopaylogo.png"
+                                alt="ZitoPay Logo"
+                                width={140}
+                                height={40}
+                                className="h-10 w-auto object-contain"
+                                priority
+                            />
                         </Link>
                         <div className="flex items-center gap-3">
                             <ThemeToggle />
@@ -54,11 +75,17 @@ export function Nav() {
                 <div className="flex items-center justify-between h-24">
                     <Link
                         href="/"
-                        className="text-xl font-bold text-foreground hover:opacity-80 transition-opacity flex items-center gap-2"
+                        className="hover:opacity-80 transition-opacity"
                         onClick={closeMenu}
                     >
-                        <span className="w-3 h-3 rounded" style={{ backgroundColor: '#2466eb' }}></span>
-                        ZitoPay
+                        <Image
+                            src="/zitopaylogo.png"
+                            alt="ZitoPay Logo"
+                            width={140}
+                            height={40}
+                            className="h-10 w-auto object-contain"
+                            priority
+                        />
                     </Link>
 
                     {/* Desktop Navigation */}
@@ -84,19 +111,32 @@ export function Nav() {
                     <div className="hidden lg:flex items-center gap-3">
                         <ThemeToggle />
                         <LanguageSwitcher />
-                        <Link
-                            href="/login"
-                            className="text-sm font-medium text-foreground hover:opacity-70 transition-opacity"
-                        >
-                            {t("login")}
-                        </Link>
-                        <Link
-                            href="/register"
-                            className="px-5 py-2.5 rounded-lg text-white font-semibold text-sm shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
-                            style={{ backgroundColor: '#ef2d10' }}
-                        >
-                            {t("signUp")}
-                        </Link>
+                        {isAuthenticated && user ? (
+                            <Link
+                                href="/dashboard"
+                                className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm hover:opacity-90 transition-opacity"
+                                style={{ backgroundColor: '#ef2d10' }}
+                                title={user.email}
+                            >
+                                {getInitials(user.email)}
+                            </Link>
+                        ) : (
+                            <>
+                                <Link
+                                    href="/login"
+                                    className="text-sm font-medium text-foreground hover:opacity-70 transition-opacity"
+                                >
+                                    {t("login")}
+                                </Link>
+                                <Link
+                                    href="/register"
+                                    className="px-5 py-2.5 rounded-lg text-white font-semibold text-sm shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+                                    style={{ backgroundColor: '#ef2d10' }}
+                                >
+                                    {t("signUp")}
+                                </Link>
+                            </>
+                        )}
                     </div>
 
                     {/* Mobile - Toggles and Hamburger */}
@@ -178,21 +218,39 @@ export function Nav() {
                                         {t("about")}
                                     </Link>
                                     <div className="pt-4 border-t border-border space-y-3">
-                                        <Link
-                                            href="/login"
-                                            onClick={closeMenu}
-                                            className="block py-2 text-sm font-medium text-foreground hover:opacity-70 transition-opacity"
-                                        >
-                                            {t("login")}
-                                        </Link>
-                                        <Link
-                                            href="/register"
-                                            onClick={closeMenu}
-                                            className="block w-full text-center px-5 py-2.5 rounded-lg text-white font-semibold text-sm shadow-lg transition-all"
-                                            style={{ backgroundColor: '#ef2d10' }}
-                                        >
-                                            {t("signUp")}
-                                        </Link>
+                                        {isAuthenticated && user ? (
+                                            <Link
+                                                href="/dashboard"
+                                                onClick={closeMenu}
+                                                className="flex items-center gap-3 py-2"
+                                            >
+                                                <div
+                                                    className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm"
+                                                    style={{ backgroundColor: '#ef2d10' }}
+                                                >
+                                                    {getInitials(user.email)}
+                                                </div>
+                                                <span className="text-sm font-medium text-foreground">{user.email}</span>
+                                            </Link>
+                                        ) : (
+                                            <>
+                                                <Link
+                                                    href="/login"
+                                                    onClick={closeMenu}
+                                                    className="block py-2 text-sm font-medium text-foreground hover:opacity-70 transition-opacity"
+                                                >
+                                                    {t("login")}
+                                                </Link>
+                                                <Link
+                                                    href="/register"
+                                                    onClick={closeMenu}
+                                                    className="block w-full text-center px-5 py-2.5 rounded-lg text-white font-semibold text-sm shadow-lg transition-all"
+                                                    style={{ backgroundColor: '#ef2d10' }}
+                                                >
+                                                    {t("signUp")}
+                                                </Link>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                             </div>

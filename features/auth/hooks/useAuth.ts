@@ -23,9 +23,9 @@ export const useRegister = (): UseMutationResult<RegisterResponse, Error, Regist
 
     return useMutation({
         mutationFn: (credentials: RegisterRequest) => register(credentials),
-        onSuccess: () => {
-            // Navigate to verification page
-            router.push('/verify-email-code');
+        onSuccess: (_, variables) => {
+            // Navigate to verification page with email
+            router.push(`/verify-email-code?email=${encodeURIComponent(variables.email)}`);
         },
     });
 };

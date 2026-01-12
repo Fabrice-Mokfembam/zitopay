@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { AuthProvider } from "@/features/auth/context/AuthContext";
 import { LanguageProvider } from "@/core/i18n/LanguageProvider";
+import { AuthCookieSync } from "@/components/AuthCookieSync";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -62,6 +63,7 @@ export default function RootLayout({
         />
         <QueryProvider>
           <AuthProvider>
+            <AuthCookieSync />
             <LanguageProvider>{children}</LanguageProvider>
           </AuthProvider>
         </QueryProvider>
