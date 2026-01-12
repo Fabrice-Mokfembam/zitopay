@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
-import { QueryProvider } from "@/core/query/provider";
+import { QueryProvider } from "@/providers/QueryProvider";
+import { AuthProvider } from "@/features/auth/context/AuthContext";
 import { LanguageProvider } from "@/core/i18n/LanguageProvider";
 import "./globals.css";
 
@@ -60,7 +61,9 @@ export default function RootLayout({
           }}
         />
         <QueryProvider>
-          <LanguageProvider>{children}</LanguageProvider>
+          <AuthProvider>
+            <LanguageProvider>{children}</LanguageProvider>
+          </AuthProvider>
         </QueryProvider>
       </body>
     </html>

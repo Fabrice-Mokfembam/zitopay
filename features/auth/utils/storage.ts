@@ -1,0 +1,76 @@
+import SecureStorage from 'react-secure-storage';
+import { STORAGE_KEY } from '@/constants/api';
+
+// Types for stored authentication data
+export interface User {
+    id: string;
+    email: string;
+    role: 'merchant-user' | 'admin';
+}
+
+export interface AuthData {
+    user: User;
+    accessToken: string;
+    refreshToken: string;
+}
+
+/**
+ * Store encrypted authentication data
+ * Uses react-secure-storage to encrypt tokens before storing
+ */
+export const storeAuthData = (data: AuthData): void => {
+    SecureStorage.setItem(STORAGE_KEY, data);
+};
+
+/**
+ * Get decrypted authentication data
+ * Returns null if no data exists
+ */
+export const getAuthData = (): AuthData | null => {
+    const data = SecureStorage.getItem(STORAGE_KEY);
+    return data as AuthData | null;
+};
+
+/**
+ * Get only the access token
+ * Useful for API requests
+ */
+export const getAccessToken = (): string | null => {
+    const data = getAuthData();
+    return data?.accessToken || null;
+};
+
+/**
+ * Get only the refresh token
+ * Useful for token refresh
+ */
+export const getRefreshToken = (): string | null => {
+    const data = getAuthData();
+    return data?.refreshToken || null;
+};
+
+/**
+ * Get current user info
+ * Returns null if not authenticated
+ */
+export const getCurrentUser = (): User | null => {
+    const data = getAuthData();
+    return data?.user || null;
+};
+
+/**
+ * Clear all authentication data
+ * Used for logout
+ */
+export const clearAuthData = (): void => {
+    SecureStorage.removeItem(STORAGE_KEY);
+};
+
+/**
+ * Check if user is authenticated
+ * Returns true if valid auth data exists
+ */
+export const isAuthenticated = (): boolean => {
+    const data = getAuthData();
+    return !!data?.accessToken;
+};
