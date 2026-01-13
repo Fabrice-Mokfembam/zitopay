@@ -54,6 +54,17 @@ export const login = async (credentials: LoginRequest): Promise<LoginResponse> =
 };
 
 /**
+ * Admin login with email and password
+ * Returns admin user data and tokens
+ * Only allows users with 'admin' role
+ */
+export const adminLogin = async (credentials: LoginRequest): Promise<LoginResponse> => {
+    const { data } = await apiClient.post<LoginResponse>('/public/v1/auth/admin/login', credentials);
+    return data;
+};
+
+
+/**
  * Request password reset code
  * Sends 6-digit code to email
  */

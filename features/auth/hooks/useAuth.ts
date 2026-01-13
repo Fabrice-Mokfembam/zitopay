@@ -1,6 +1,6 @@
 import { useMutation, UseMutationResult } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { register, verifyEmail, resendVerificationCode, login, logout } from '../api/index';
+import { register, verifyEmail, resendVerificationCode, login, adminLogin, logout } from '../api/index';
 import { storeAuthData, clearAuthData } from '../utils/storage';
 import type {
     RegisterRequest,
@@ -84,6 +84,31 @@ export const useLogin = (): UseMutationResult<LoginResponse, Error, LoginRequest
         },
     });
 };
+
+/**
+ * Hook for admin login
+ * Stores tokens and navigates to admin dashboard
+ * Only allows users with 'admin' role
+ */
+export const useAdminLogin = (): UseMutationResult<LoginResponse, Error, LoginRequest> => {
+    const router = useRouter();
+
+    return useMutation({
+        mutationFn: (credentials: LoginRequest) => adminLogin(credentials),
+        onSuccess: (data) => {
+            // Store authentication data securely
+            storeAuthData({
+                user: data.user,
+                accessToken: data.accessToken,
+                refreshToken: data.refreshToken,
+            });
+
+            // Navigate to admin dashboard
+            router.push('/admin/dashboard');
+        },
+    });
+};
+
 
 /**
  * Hook for user logout
