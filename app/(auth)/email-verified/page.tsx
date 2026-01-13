@@ -22,7 +22,7 @@ export default function EmailVerifiedPage() {
                         href="/onboarding/merchant-setup"
                         className="inline-flex items-center justify-center gap-2 w-full py-2.5 bg-[#ef2d10] text-white rounded-lg font-semibold text-sm hover:bg-[#dc2626] transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
                     >
-                        Create Merchant Credentials
+                        Set Up Business Account
                         <ArrowRight className="w-4 h-4" />
                     </Link>
                 </div>
