@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, getAuthData, getCurrentUser, isAuthenticated as checkAuth } from '../utils/storage';
+import { User, getAuthData, isAuthenticated as checkAuth } from '../utils/storage';
 
 // Context type definition
 interface AuthContextType {
@@ -26,18 +26,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         const loadUser = () => {
             const authData = getAuthData();
-            if (authData) {
+            const authenticated = checkAuth();
+
+            if (authData && authenticated) {
                 setUser(authData.user);
+            } else {
+                setUser(null);
             }
+
             setIsLoading(false);
         };
 
         loadUser();
     }, []);
 
+    // Compute isAuthenticated from user state
+    const isAuthenticated = !!user && checkAuth();
+
     const value: AuthContextType = {
         user,
-        isAuthenticated: checkAuth(),
+        isAuthenticated,
         isLoading,
         setUser,
     };

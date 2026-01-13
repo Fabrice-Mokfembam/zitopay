@@ -6,61 +6,174 @@ import Image from "next/image";
 import {
     LayoutDashboard,
     ArrowLeftRight,
-    History,
+    ArrowDownToLine,
+    ArrowUpFromLine,
+    RotateCcw,
     Wallet,
+    Receipt,
     Key,
-    Settings,
+    Webhook,
+    Globe,
+    BarChart3,
+    Building2,
+    Users,
+    Bell,
     FileText,
     HelpCircle,
     LogOut,
     Store,
     Menu,
-    X
+    X,
+    ChevronDown,
+    ChevronRight
 } from "lucide-react";
-import { useAuthContext } from "@/features/auth/context/AuthContext";
 import { useState } from "react";
 import { useLogout } from "@/features/auth/hooks/useAuth";
 
-const menuItems = [
+interface MenuItem {
+    icon: any;
+    label: string;
+    href: string;
+}
+
+interface MenuSection {
+    title?: string;
+    items: MenuItem[];
+    collapsible?: boolean;
+}
+
+const menuSections: MenuSection[] = [
+    // Dashboard (no section header)
     {
-        icon: LayoutDashboard,
-        label: "Dashboard",
-        href: "/dashboard",
+        items: [
+            {
+                icon: LayoutDashboard,
+                label: "Dashboard",
+                href: "/dashboard",
+            },
+        ],
     },
+    // PAYMENTS
     {
-        icon: ArrowLeftRight,
-        label: "Transactions",
-        href: "/dashboard/transactions",
+        title: "PAYMENTS",
+        collapsible: true,
+        items: [
+            {
+                icon: ArrowLeftRight,
+                label: "Transactions",
+                href: "/dashboard/transactions",
+            },
+            {
+                icon: ArrowDownToLine,
+                label: "Collections",
+                href: "/dashboard/collections",
+            },
+            {
+                icon: ArrowUpFromLine,
+                label: "Payouts",
+                href: "/dashboard/payouts",
+            },
+            {
+                icon: RotateCcw,
+                label: "Refunds",
+                href: "/dashboard/refunds",
+            },
+        ],
     },
+    // FINANCE
     {
-        icon: History,
-        label: "Balance History",
-        href: "/dashboard/balance-history",
+        title: "FINANCE",
+        collapsible: true,
+        items: [
+            {
+                icon: Wallet,
+                label: "Wallet & Balance",
+                href: "/dashboard/wallet",
+            },
+            {
+                icon: Receipt,
+                label: "Settlements",
+                href: "/dashboard/settlements",
+            },
+        ],
     },
+    // DEVELOPER
     {
-        icon: Wallet,
-        label: "Wallet",
-        href: "/dashboard/wallet",
+        title: "DEVELOPER",
+        collapsible: true,
+        items: [
+            {
+                icon: Key,
+                label: "API Keys",
+                href: "/dashboard/api-keys",
+            },
+            {
+                icon: Webhook,
+                label: "Webhooks",
+                href: "/dashboard/webhooks",
+            },
+            {
+                icon: Globe,
+                label: "Gateways",
+                href: "/dashboard/gateways",
+            },
+        ],
     },
+    // INSIGHTS
     {
-        icon: Key,
-        label: "API Keys",
-        href: "/dashboard/api-keys",
+        title: "INSIGHTS",
+        collapsible: true,
+        items: [
+            {
+                icon: BarChart3,
+                label: "Reports & Analytics",
+                href: "/dashboard/reports",
+            },
+        ],
     },
+    // SETTINGS
     {
-        icon: Settings,
-        label: "Settings",
-        href: "/dashboard/settings",
+        title: "SETTINGS",
+        collapsible: true,
+        items: [
+            {
+                icon: Building2,
+                label: "Business Settings",
+                href: "/dashboard/settings/business",
+            },
+            {
+                icon: Users,
+                label: "Team Members",
+                href: "/dashboard/settings/team",
+            },
+            {
+                icon: Globe,
+                label: "Domains",
+                href: "/dashboard/settings/domains",
+            },
+            {
+                icon: Bell,
+                label: "Notifications",
+                href: "/dashboard/settings/notifications",
+            },
+        ],
     },
+    // HELP
     {
-        icon: FileText,
-        label: "Documentation",
-        href: "/docs",
-    },
-    {
-        icon: HelpCircle,
-        label: "Help & Support",
-        href: "/dashboard/support",
+        title: "HELP",
+        collapsible: true,
+        items: [
+            {
+                icon: FileText,
+                label: "Documentation",
+                href: "/dashboard/documentation",
+            },
+            {
+                icon: HelpCircle,
+                label: "Help & Support",
+                href: "/dashboard/support",
+            },
+        ],
     },
 ];
 
@@ -68,6 +181,7 @@ export function DashboardSidebar() {
     const pathname = usePathname();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+    const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
     const { mutate: logout, isPending: isLoggingOut } = useLogout();
 
     const closeMobileMenu = () => setIsMobileMenuOpen(false);
@@ -83,6 +197,18 @@ export function DashboardSidebar() {
 
     const handleLogoutCancel = () => {
         setShowLogoutConfirm(false);
+    };
+
+    const toggleSection = (title: string) => {
+        setCollapsedSections(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(title)) {
+                newSet.delete(title);
+            } else {
+                newSet.add(title);
+            }
+            return newSet;
+        });
     };
 
     return (
@@ -182,24 +308,56 @@ export function DashboardSidebar() {
                 </div>
 
                 {/* Navigation Menu */}
-                <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
-                    {menuItems.map((item) => {
-                        const Icon = item.icon;
-                        const isActive = pathname === item.href;
+                <nav className="flex-1 px-4 py-4 space-y-6 overflow-y-auto">
+                    {menuSections.map((section, sectionIndex) => {
+                        const isCollapsed = section.title && collapsedSections.has(section.title);
 
                         return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                onClick={closeMobileMenu}
-                                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActive
-                                    ? "bg-orange-500/10 text-orange-600 dark:text-orange-400"
-                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                                    }`}
-                            >
-                                <Icon className="w-5 h-5" />
-                                <span>{item.label}</span>
-                            </Link>
+                            <div key={sectionIndex}>
+                                {/* Section Header */}
+                                {section.title && (
+                                    <button
+                                        onClick={() => section.collapsible && toggleSection(section.title!)}
+                                        className="w-full flex items-center justify-between px-3 py-2 mb-2 group"
+                                    >
+                                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                            {section.title}
+                                        </span>
+                                        {section.collapsible && (
+                                            isCollapsed ? (
+                                                <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                                            ) : (
+                                                <ChevronDown className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                                            )
+                                        )}
+                                    </button>
+                                )}
+
+                                {/* Section Items */}
+                                {!isCollapsed && (
+                                    <div className="space-y-1">
+                                        {section.items.map((item) => {
+                                            const Icon = item.icon;
+                                            const isActive = pathname === item.href;
+
+                                            return (
+                                                <Link
+                                                    key={item.href}
+                                                    href={item.href}
+                                                    onClick={closeMobileMenu}
+                                                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActive
+                                                        ? "bg-orange-500/10 text-orange-600 dark:text-orange-400"
+                                                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                                        }`}
+                                                >
+                                                    <Icon className="w-5 h-5" />
+                                                    <span>{item.label}</span>
+                                                </Link>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
                         );
                     })}
                 </nav>
