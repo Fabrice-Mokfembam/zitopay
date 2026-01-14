@@ -17,6 +17,15 @@ import {
   X,
   Check,
 } from "lucide-react";
+import { useMerchantAccount } from "@/features/merchants/hooks/useMerchantAccount";
+import {
+  useRegenerateSandboxCredentials,
+  useRegenerateProductionCredentials
+} from "@/features/merchants/hooks/useMerchant";
+import type {
+  RegenerateSandboxCredentialsResponse,
+  RegenerateProductionCredentialsResponse
+} from "@/features/merchants/types/index";
 
 type Environment = "sandbox" | "production";
 
@@ -27,30 +36,98 @@ export default function ApiKeysPage() {
   const [showNewCredsModal, setShowNewCredsModal] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [newCredentials, setNewCredentials] = useState<
+    RegenerateSandboxCredentialsResponse | RegenerateProductionCredentialsResponse | null
+  >(null);
 
-  // Dummy data - will be replaced with real API data
+  // Fetch merchant account data
+  const { merchant, isLoading, refetch } = useMerchantAccount();
+
+  // Regenerate credentials mutations
+  const regenerateSandbox = useRegenerateSandboxCredentials(merchant?.id || "");
+  const regenerateProduction = useRegenerateProductionCredentials(merchant?.id || "");
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="p-6 space-y-6">
+        <div>
+          <h1 className="text-xl font-bold text-foreground">API Keys</h1>
+          <p className="text-xs text-muted-foreground mt-1">
+            Loading your API credentials...
+          </p>
+        </div>
+        <div className="flex items-center justify-center h-64">
+          <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if merchant not found
+  if (!merchant) {
+    return (
+      <div className="p-6 space-y-6">
+        <div>
+          <h1 className="text-xl font-bold text-foreground">API Keys</h1>
+          <p className="text-xs text-muted-foreground mt-1">
+            Unable to load merchant account
+          </p>
+        </div>
+        <div className="bg-background rounded-xl p-6 border border-border">
+          <div className="flex items-center gap-3 text-red-600">
+            <AlertCircle className="w-5 h-5" />
+            <p className="text-sm">Failed to load merchant account data</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Determine if production is available
+  const isProductionActive = merchant.productionState === "ACTIVE";
+  const isProductionPending = merchant.productionState === "PENDING_APPROVAL";
+  const isKYBApproved = merchant.kycStatus === "APPROVED";
+
+  // Check if we have regenerated credentials for current environment
+  const hasRegeneratedSandbox = newCredentials && "sandboxSecretKey" in newCredentials;
+  const hasRegeneratedProduction = newCredentials && "productionSecretKey" in newCredentials;
+
+  // Build credentials object from merchant data
+  // If we just regenerated, show the actual secret key temporarily
   const credentials = {
     sandbox: {
-      apiKey: "zito_test_1234567890abcdefghijklmnopqrstuvwxyz",
-      secretKey: "zito_secret_test_0987654321zyxwvutsrqponmlkjihgfedcba",
-      createdAt: "Jan 1, 2026",
-      lastUsed: "2 hours ago",
+      apiKey: merchant.sandboxApiKey,
+      secretKey: hasRegeneratedSandbox
+        ? newCredentials.sandboxSecretKey
+        : "••••••••••••••••••••••••••••••••", // Masked when not available
+      hasSecretKey: hasRegeneratedSandbox, // Flag to show/hide buttons
+      createdAt: new Date(merchant.createdAt).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
+      lastUsed: "Recently", // This would come from usage tracking
     },
     production: {
-      apiKey: "zito_live_abcdefghijklmnopqrstuvwxyz1234567890",
-      secretKey: "zito_secret_live_zyxwvutsrqponmlkjihgfedcba0987654321",
-      createdAt: "Jan 15, 2026",
-      lastUsed: "5 minutes ago",
-      approved: true, // Set to false to show "not approved" state
+      apiKey: merchant.productionApiKey || "Not generated yet",
+      secretKey: hasRegeneratedProduction
+        ? newCredentials.productionSecretKey
+        : "••••••••••••••••••••••••••••••••", // Masked when not available
+      hasSecretKey: hasRegeneratedProduction, // Flag to show/hide buttons
+      createdAt: merchant.productionApiKey
+        ? new Date(merchant.updatedAt).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+        : "N/A",
+      lastUsed: merchant.productionApiKey ? "Recently" : "N/A",
+      approved: isProductionActive,
     },
   };
 
-  const usageStats = {
-    totalRequests: 1279,
-    successfulRequests: 1234,
-    failedRequests: 45,
-    rateLimit: 100,
-  };
+
 
   const handleCopy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -58,11 +135,29 @@ export default function ApiKeysPage() {
     setTimeout(() => setCopiedKey(null), 2000);
   };
 
-  const handleRegenerate = () => {
-    if (confirmText === "REGENERATE") {
+  const handleRegenerate = async () => {
+    if (confirmText !== "REGENERATE") return;
+
+    try {
+      const isProduction = activeEnv === "production";
+
+      if (isProduction) {
+        const response = await regenerateProduction.mutateAsync();
+        setNewCredentials(response);
+      } else {
+        const response = await regenerateSandbox.mutateAsync();
+        setNewCredentials(response);
+      }
+
       setShowRegenerateModal(false);
       setShowNewCredsModal(true);
       setConfirmText("");
+
+      // Refetch merchant data to update the UI
+      refetch();
+    } catch (error) {
+      console.error("Failed to regenerate credentials:", error);
+      // You might want to show an error toast here
     }
   };
 
@@ -94,7 +189,7 @@ export default function ApiKeysPage() {
         </button>
         <button
           onClick={() => setActiveEnv("production")}
-          disabled={!credentials.production.approved}
+          disabled={!isProductionActive}
           className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${activeEnv === "production"
             ? "bg-green-500 text-white"
             : "bg-background border border-border text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
@@ -130,7 +225,7 @@ export default function ApiKeysPage() {
                 ? "⚠️ These credentials process REAL MONEY. Use with caution and never expose the secret key."
                 : "Use these credentials for development and testing. No real money will be processed."}
             </p>
-            {isProduction && credentials.production.approved && (
+            {isProduction && isProductionActive && (
               <div className="flex items-center gap-3 mt-2 text-xs">
                 <span className="flex items-center gap-1 text-green-600 dark:text-green-400">
                   <CheckCircle2 className="w-3 h-3" />
@@ -143,8 +238,11 @@ export default function ApiKeysPage() {
               </div>
             )}
           </div>
-          {!isProduction && (
-            <button className="text-xs font-medium text-orange-600 dark:text-orange-400 hover:underline whitespace-nowrap flex items-center gap-1">
+          {!isProduction && isProductionActive && (
+            <button
+              onClick={() => setActiveEnv("production")}
+              className="text-xs font-medium text-orange-600 dark:text-orange-400 hover:underline whitespace-nowrap flex items-center gap-1"
+            >
               Switch to Production
               <ArrowRight className="w-3 h-3" />
             </button>
@@ -153,7 +251,7 @@ export default function ApiKeysPage() {
       </div>
 
       {/* PRODUCTION NOT APPROVED STATE */}
-      {isProduction && !credentials.production.approved && (
+      {isProduction && !isProductionActive && (
         <div className="bg-background rounded-xl p-6 border border-border">
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -168,15 +266,34 @@ export default function ApiKeysPage() {
               </p>
               <div className="space-y-2 mb-4">
                 <div className="flex items-center gap-2 text-xs">
-                  <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  <span className="text-foreground">1. Complete KYB verification</span>
+                  {isKYBApproved ? (
+                    <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  ) : (
+                    <div className="w-4 h-4 border-2 border-orange-500 rounded-full" />
+                  )}
+                  <span className="text-foreground">
+                    1. Complete KYB verification {isKYBApproved && "✓"}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2 text-xs">
-                  <div className="w-4 h-4 border-2 border-orange-500 rounded-full animate-spin border-t-transparent" />
-                  <span className="text-foreground">2. Submit production access request (Pending)</span>
+                  {isProductionPending ? (
+                    <div className="w-4 h-4 border-2 border-orange-500 rounded-full animate-spin border-t-transparent" />
+                  ) : merchant.productionState === "NOT_REQUESTED" ? (
+                    <div className="w-4 h-4 border-2 border-border rounded-full" />
+                  ) : (
+                    <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  )}
+                  <span className="text-foreground">
+                    2. Submit production access request
+                    {isProductionPending && " (Pending)"}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2 text-xs">
-                  <div className="w-4 h-4 border-2 border-border rounded-full" />
+                  {isProductionPending ? (
+                    <div className="w-4 h-4 border-2 border-border rounded-full" />
+                  ) : (
+                    <div className="w-4 h-4 border-2 border-border rounded-full" />
+                  )}
                   <span className="text-muted-foreground">3. Wait for admin approval</span>
                 </div>
               </div>
@@ -184,8 +301,11 @@ export default function ApiKeysPage() {
                 <button className="px-3 py-1.5 bg-orange-500 text-white rounded-lg text-xs font-semibold hover:bg-orange-600 transition-colors">
                   View KYB Status
                 </button>
-                <button className="px-3 py-1.5 bg-background border border-border text-foreground rounded-lg text-xs font-semibold hover:bg-muted transition-colors">
-                  Request Production Access
+                <button
+                  disabled={!isKYBApproved || isProductionPending}
+                  className="px-3 py-1.5 bg-background border border-border text-foreground rounded-lg text-xs font-semibold hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isProductionPending ? "Request Pending" : "Request Production Access"}
                 </button>
               </div>
             </div>
@@ -194,7 +314,7 @@ export default function ApiKeysPage() {
       )}
 
       {/* API CREDENTIALS */}
-      {(!isProduction || credentials.production.approved) && (
+      {(!isProduction || isProductionActive) && (
         <div className="bg-background rounded-xl p-6 border border-border space-y-6">
           <h3 className="text-sm font-semibold text-foreground">API Credentials</h3>
 
@@ -251,47 +371,63 @@ export default function ApiKeysPage() {
                 type={showSecretKey ? "text" : "password"}
                 value={currentCreds.secretKey}
                 readOnly
-                className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-xs font-mono text-foreground pr-32"
+                className={`w-full px-3 py-2 bg-muted border border-border rounded-lg text-xs font-mono text-foreground ${currentCreds.hasSecretKey ? "pr-32" : "pr-3"
+                  }`}
               />
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-2">
-                <button
-                  onClick={() => setShowSecretKey(!showSecretKey)}
-                  className="px-2 py-1 bg-background border border-border rounded text-xs font-medium hover:bg-muted transition-colors flex items-center gap-1"
-                >
-                  {showSecretKey ? (
-                    <>
-                      <EyeOff className="w-3 h-3" />
-                      Hide
-                    </>
-                  ) : (
-                    <>
-                      <Eye className="w-3 h-3" />
-                      Show
-                    </>
-                  )}
-                </button>
-                <button
-                  onClick={() => handleCopy(currentCreds.secretKey, "secretKey")}
-                  className="px-2 py-1 bg-background border border-border rounded text-xs font-medium hover:bg-muted transition-colors flex items-center gap-1"
-                >
-                  {copiedKey === "secretKey" ? (
-                    <>
-                      <Check className="w-3 h-3 text-green-500" />
-                      Copied
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3 h-3" />
-                      Copy
-                    </>
-                  )}
-                </button>
-              </div>
+              {/* Only show buttons if we have the actual secret key */}
+              {currentCreds.hasSecretKey && (
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-2">
+                  <button
+                    onClick={() => setShowSecretKey(!showSecretKey)}
+                    className="px-2 py-1 bg-background border border-border rounded text-xs font-medium hover:bg-muted transition-colors flex items-center gap-1"
+                  >
+                    {showSecretKey ? (
+                      <>
+                        <EyeOff className="w-3 h-3" />
+                        Hide
+                      </>
+                    ) : (
+                      <>
+                        <Eye className="w-3 h-3" />
+                        Show
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => handleCopy(currentCreds.secretKey, "secretKey")}
+                    className="px-2 py-1 bg-background border border-border rounded text-xs font-medium hover:bg-muted transition-colors flex items-center gap-1"
+                  >
+                    {copiedKey === "secretKey" ? (
+                      <>
+                        <Check className="w-3 h-3 text-green-500" />
+                        Copied
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3 h-3" />
+                        Copy
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
-            <p className="text-xs text-muted-foreground flex items-start gap-1">
-              <AlertCircle className="w-3 h-3 mt-0.5 text-red-500 flex-shrink-0" />
-              NEVER expose this key in frontend code or public repositories
-            </p>
+            {currentCreds.hasSecretKey ? (
+              <div className="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg p-3">
+                <p className="text-xs font-semibold text-foreground flex items-center gap-1 mb-1">
+                  <CheckCircle2 className="w-3 h-3 text-green-600" />
+                  Secret Key Available
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Your secret key is currently visible. Copy it now! It will be hidden when you refresh or navigate away from this page.
+                </p>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground flex items-start gap-1">
+                <AlertCircle className="w-3 h-3 mt-0.5 text-orange-500 flex-shrink-0" />
+                Secret keys are only shown once during generation. If you lost it, you must regenerate your credentials.
+              </p>
+            )}
           </div>
 
           {/* Metadata */}
@@ -305,10 +441,11 @@ export default function ApiKeysPage() {
           <div className="pt-3 border-t border-border">
             <button
               onClick={() => setShowRegenerateModal(true)}
-              className="px-4 py-2 bg-orange-500 text-white rounded-lg text-xs font-semibold hover:bg-orange-600 transition-colors flex items-center gap-2"
+              disabled={regenerateSandbox.isPending || regenerateProduction.isPending}
+              className="px-4 py-2 bg-orange-500 text-white rounded-lg text-xs font-semibold hover:bg-orange-600 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <RefreshCw className="w-4 h-4" />
-              Regenerate Credentials
+              <RefreshCw className={`w-4 h-4 ${(regenerateSandbox.isPending || regenerateProduction.isPending) ? "animate-spin" : ""}`} />
+              {(regenerateSandbox.isPending || regenerateProduction.isPending) ? "Regenerating..." : "Regenerate Credentials"}
             </button>
             <p className="text-xs text-muted-foreground mt-2 flex items-start gap-1">
               <AlertCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
@@ -318,53 +455,10 @@ export default function ApiKeysPage() {
         </div>
       )}
 
-      {/* API USAGE STATS */}
-      <div className="bg-background rounded-xl p-6 border border-border">
-        <h3 className="text-sm font-semibold text-foreground mb-4">
-          API Usage Statistics (Last 30 Days)
-        </h3>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-muted/50 rounded-lg p-4">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-              📊 TOTAL REQUESTS
-            </p>
-            <p className="text-xl font-bold text-foreground mb-1">{usageStats.totalRequests}</p>
-            <p className="text-xs text-muted-foreground">This period</p>
-          </div>
-          <div className="bg-muted/50 rounded-lg p-4">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-              ✅ SUCCESSFUL
-            </p>
-            <p className="text-xl font-bold text-foreground mb-1">{usageStats.successfulRequests}</p>
-            <p className="text-xs text-green-600 dark:text-green-400">
-              {((usageStats.successfulRequests / usageStats.totalRequests) * 100).toFixed(1)}% Completed
-            </p>
-          </div>
-          <div className="bg-muted/50 rounded-lg p-4">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-              ❌ FAILED
-            </p>
-            <p className="text-xl font-bold text-foreground mb-1">{usageStats.failedRequests}</p>
-            <p className="text-xs text-red-600 dark:text-red-400">
-              {((usageStats.failedRequests / usageStats.totalRequests) * 100).toFixed(1)}% Need review
-            </p>
-          </div>
-          <div className="bg-muted/50 rounded-lg p-4">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-              ⚡ RATE LIMIT
-            </p>
-            <p className="text-xl font-bold text-foreground mb-1">{usageStats.rateLimit}/min</p>
-            <p className="text-xs text-muted-foreground">Current limit</p>
-          </div>
-        </div>
-        <button className="mt-4 text-xs font-medium text-orange-600 dark:text-orange-400 hover:underline flex items-center gap-1">
-          View Detailed Logs
-          <ArrowRight className="w-3 h-3" />
-        </button>
-      </div>
+
 
       {/* QUICK START */}
-      <div className="bg-background rounded-xl p-6 border border-border">
+      {/* <div className="bg-background rounded-xl p-6 border border-border">
         <h3 className="text-sm font-semibold text-foreground mb-4">Quick Start</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
           <button className="flex items-center justify-center gap-2 py-3 px-4 bg-background border border-border text-foreground rounded-lg text-xs font-semibold hover:bg-muted transition-colors">
@@ -381,7 +475,6 @@ export default function ApiKeysPage() {
           </button>
         </div>
 
-        {/* Code Example */}
         <div className="bg-muted/50 rounded-lg p-4 border border-border">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-medium text-foreground">JavaScript / Node.js</span>
@@ -410,7 +503,7 @@ export default function ApiKeysPage() {
           View More Examples
           <ArrowRight className="w-3 h-3" />
         </button>
-      </div>
+      </div> */}
 
       {/* SECURITY BEST PRACTICES */}
       <div className="bg-background rounded-xl p-6 border border-border">
@@ -563,10 +656,15 @@ export default function ApiKeysPage() {
               </button>
               <button
                 onClick={handleRegenerate}
-                disabled={confirmText !== "REGENERATE"}
-                className="px-4 py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={confirmText !== "REGENERATE" || regenerateSandbox.isPending || regenerateProduction.isPending}
+                className="px-4 py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                Regenerate Credentials
+                {(regenerateSandbox.isPending || regenerateProduction.isPending) && (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                )}
+                {(regenerateSandbox.isPending || regenerateProduction.isPending)
+                  ? "Regenerating..."
+                  : "Regenerate Credentials"}
               </button>
             </div>
           </div>
@@ -574,7 +672,7 @@ export default function ApiKeysPage() {
       )}
 
       {/* NEW CREDENTIALS MODAL */}
-      {showNewCredsModal && (
+      {showNewCredsModal && newCredentials && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-background rounded-2xl p-6 shadow-2xl border border-border max-w-md w-full">
             <div className="flex items-center justify-between mb-4">
@@ -583,7 +681,10 @@ export default function ApiKeysPage() {
                 <h3 className="text-lg font-bold text-foreground">New Credentials Generated</h3>
               </div>
               <button
-                onClick={() => setShowNewCredsModal(false)}
+                onClick={() => {
+                  setShowNewCredsModal(false);
+                  // Don't clear newCredentials - keep it so secret key stays visible on main page
+                }}
                 className="p-1 hover:bg-muted rounded transition-colors"
               >
                 <X className="w-5 h-5 text-muted-foreground" />
@@ -596,49 +697,107 @@ export default function ApiKeysPage() {
                 SAVE THESE CREDENTIALS NOW!
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                The secret key will only be shown once.
+                The secret key will only be shown once. After closing this window, you won&apos;t be able to see it again.
               </p>
             </div>
 
             <div className="space-y-4 mb-6">
               <div>
-                <label className="text-xs font-medium text-foreground mb-2 block">New API Key</label>
+                <label className="text-xs font-medium text-foreground mb-2 block">
+                  New API Key ({activeEnv === "production" ? "Production" : "Sandbox"})
+                </label>
                 <div className="relative">
                   <input
                     type="text"
-                    value="sk_sandbox_NEW123456789..."
+                    value={
+                      "sandboxApiKey" in newCredentials
+                        ? newCredentials.sandboxApiKey
+                        : newCredentials.productionApiKey
+                    }
                     readOnly
                     className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-xs font-mono text-foreground pr-16"
                   />
-                  <button className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-background border border-border rounded text-xs font-medium hover:bg-muted transition-colors">
-                    Copy
+                  <button
+                    onClick={() =>
+                      handleCopy(
+                        "sandboxApiKey" in newCredentials
+                          ? newCredentials.sandboxApiKey
+                          : newCredentials.productionApiKey,
+                        "newApiKey"
+                      )
+                    }
+                    className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-background border border-border rounded text-xs font-medium hover:bg-muted transition-colors flex items-center gap-1"
+                  >
+                    {copiedKey === "newApiKey" ? (
+                      <>
+                        <Check className="w-3 h-3 text-green-500" />
+                        Copied
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3 h-3" />
+                        Copy
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-medium text-foreground mb-2 block">New Secret Key</label>
+                <label className="text-xs font-medium text-foreground mb-2 block">
+                  New Secret Key ({activeEnv === "production" ? "Production" : "Sandbox"})
+                </label>
                 <div className="relative">
                   <input
                     type="text"
-                    value="secret_NEW987654321..."
+                    value={
+                      "sandboxSecretKey" in newCredentials
+                        ? newCredentials.sandboxSecretKey
+                        : newCredentials.productionSecretKey
+                    }
                     readOnly
                     className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-xs font-mono text-foreground pr-16"
                   />
-                  <button className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-background border border-border rounded text-xs font-medium hover:bg-muted transition-colors">
-                    Copy
+                  <button
+                    onClick={() =>
+                      handleCopy(
+                        "sandboxSecretKey" in newCredentials
+                          ? newCredentials.sandboxSecretKey
+                          : newCredentials.productionSecretKey,
+                        "newSecretKey"
+                      )
+                    }
+                    className="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-background border border-border rounded text-xs font-medium hover:bg-muted transition-colors flex items-center gap-1"
+                  >
+                    {copiedKey === "newSecretKey" ? (
+                      <>
+                        <Check className="w-3 h-3 text-green-500" />
+                        Copied
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3 h-3" />
+                        Copy
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
 
-              <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
-                <input type="checkbox" className="rounded border-border" />
-                I have saved these credentials securely
-              </label>
+              <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-3">
+                <p className="text-xs font-semibold text-foreground flex items-center gap-1 mb-1">
+                  <AlertCircle className="w-3 h-3 text-red-600" />
+                  Important Warning
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {newCredentials.warning || "Your old credentials have been invalidated immediately. Update your integration now to avoid service disruption."}
+                </p>
+              </div>
 
               <div className="bg-muted/50 rounded-lg p-3">
                 <h4 className="text-xs font-semibold text-foreground mb-2">Next Steps:</h4>
                 <ol className="space-y-1 text-xs text-muted-foreground list-decimal list-inside">
+                  <li>Copy and save both keys securely</li>
                   <li>Update your environment variables</li>
                   <li>Deploy your updated code</li>
                   <li>Test your integration</li>
@@ -647,12 +806,30 @@ export default function ApiKeysPage() {
             </div>
 
             <div className="flex gap-3">
-              <button className="flex-1 px-4 py-2 rounded-lg border border-border text-foreground hover:bg-muted transition-colors text-sm font-medium flex items-center justify-center gap-2">
+              <button
+                onClick={() => {
+                  const envContent = `# ${activeEnv === "production" ? "Production" : "Sandbox"} API Credentials
+ZITOPAY_API_KEY=${"sandboxApiKey" in newCredentials ? newCredentials.sandboxApiKey : newCredentials.productionApiKey}
+ZITOPAY_SECRET_KEY=${"sandboxSecretKey" in newCredentials ? newCredentials.sandboxSecretKey : newCredentials.productionSecretKey}`;
+
+                  const blob = new Blob([envContent], { type: "text/plain" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `.env.${activeEnv}`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                className="flex-1 px-4 py-2 rounded-lg border border-border text-foreground hover:bg-muted transition-colors text-sm font-medium flex items-center justify-center gap-2"
+              >
                 <Download className="w-4 h-4" />
                 Download .env
               </button>
               <button
-                onClick={() => setShowNewCredsModal(false)}
+                onClick={() => {
+                  setShowNewCredsModal(false);
+                  // Don't clear newCredentials - keep it so secret key stays visible on main page
+                }}
                 className="flex-1 px-4 py-2 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors text-sm font-medium"
               >
                 Done

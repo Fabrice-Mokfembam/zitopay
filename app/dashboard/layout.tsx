@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthContext } from "@/features/auth/context/AuthContext";
+import { useMerchantAccount } from "@/features/merchants/hooks/useMerchantAccount";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardNavbar } from "@/components/dashboard/DashboardNavbar";
 import { motion } from "framer-motion";
@@ -17,6 +18,10 @@ export default function DashboardLayout({
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuthContext();
 
+  // Prefetch merchant account data at layout level
+  // Only fetch when authenticated to avoid blank screen
+  const { isLoading: isMerchantLoading } = useMerchantAccount(isAuthenticated);
+
   useEffect(() => {
     // Redirect to login if not authenticated
     if (!isLoading && !isAuthenticated) {
@@ -24,8 +29,8 @@ export default function DashboardLayout({
     }
   }, [isAuthenticated, isLoading, router]);
 
-  // Show loading state while checking authentication
-  if (isLoading) {
+  // Show loading state while checking authentication OR fetching merchant data
+  if (isLoading || (isAuthenticated && isMerchantLoading)) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-6">
@@ -71,7 +76,7 @@ export default function DashboardLayout({
               ease: "easeInOut",
             }}
           >
-            Loading your dashboard...
+            {isMerchantLoading ? "Loading your account..." : "Loading your dashboard..."}
           </motion.p>
         </div>
       </div>

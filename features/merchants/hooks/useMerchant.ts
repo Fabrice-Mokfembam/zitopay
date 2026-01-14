@@ -25,7 +25,7 @@ import type {
     UpdateMerchantResponse,
     SubmitKYBResponse,
     ApproveKYBResponse,
-    RejectKYBResponse,
+    RejectKYBResponse,                  
     RequestProductionResponse,
     ApproveProductionResponse,
     SuspendSandboxResponse,
