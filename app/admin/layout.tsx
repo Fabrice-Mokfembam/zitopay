@@ -38,7 +38,7 @@ export default function AdminLayout({
     const authData = getAuthData();
 
     // Must be authenticated AND have admin role
-    if (!authData || !authData.accessToken || authData.user.role !== 'admin') {
+    if (!authData || !authData.accessToken || !authData.user || authData.user.role !== 'admin') {
       router.push("/admin/login");
     } else {
       setTimeout(() => {

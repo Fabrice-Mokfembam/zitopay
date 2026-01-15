@@ -1,4 +1,4 @@
-import { ApiError } from "../http/errors";
+import { ApiError, ValidationError } from "../http/errors";
 
 export function normalizeApiError(error: unknown): string {
   if (error instanceof ApiError) {
@@ -26,7 +26,7 @@ export function getApiErrorDetails(error: unknown): {
       message: error.message,
       statusCode: error.statusCode,
       errors:
-        error instanceof import("../http/errors").ValidationError
+        error instanceof ValidationError
           ? error.errors
           : undefined,
     };

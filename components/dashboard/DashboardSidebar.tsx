@@ -138,7 +138,7 @@ const menuSections: MenuSection[] = [
         items: [
             {
                 icon: Building2,
-                label: "Business Settings",
+                label: "Environment Settings",
                 href: "/dashboard/settings/business",
             },
             {

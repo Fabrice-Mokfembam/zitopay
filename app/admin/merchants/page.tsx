@@ -159,119 +159,119 @@ export default function AdminMerchantsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
 
       {/* --- Header Section --- */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Building2 className="w-8 h-8 text-blue-600" />
+          <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <Building2 className="w-6 h-6 text-blue-600" />
             Merchants
           </h1>
-          <p className="text-sm text-gray-500 mt-1">Manage and monitor all merchant accounts</p>
+          <p className="text-xs text-gray-500 mt-1">Manage and monitor all merchant accounts</p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 text-gray-700">
-            <Download className="w-4 h-4" /> Export
+          <button className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs font-medium hover:bg-gray-50 text-gray-700">
+            <Download className="w-3.5 h-3.5" /> Export
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 rounded-lg text-sm font-medium hover:bg-blue-700 text-white">
-            <Plus className="w-4 h-4" /> Add Merchant
+          <button className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 rounded-lg text-xs font-medium hover:bg-blue-700 text-white">
+            <Plus className="w-3.5 h-3.5" /> Add Merchant
           </button>
         </div>
       </div>
 
       {/* --- Quick Stats --- */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
         {STATS.map((stat) => (
-          <div key={stat.type} className={`p-4 rounded-xl border ${stat.color.replace('text-', 'border-').replace('50', '200')} ${stat.color} cursor-pointer hover:opacity-90 transition-opacity`}>
-            <p className="text-xs font-semibold uppercase tracking-wider opacity-80">{stat.label}</p>
-            <p className="text-2xl font-bold mt-1">{stat.value}</p>
+          <div key={stat.type} className={`p-3 rounded-lg border ${stat.color.replace('text-', 'border-').replace('50', '200')} ${stat.color} cursor-pointer hover:opacity-90 transition-opacity`}>
+            <p className="text-[10px] font-semibold uppercase tracking-wider opacity-80">{stat.label}</p>
+            <p className="text-lg font-bold mt-0.5">{stat.value}</p>
           </div>
         ))}
       </div>
 
       {/* --- Search & Filter --- */}
-      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm flex flex-col md:flex-row gap-3 items-center justify-between">
         <div className="relative w-full md:max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
           <input
             type="text"
             placeholder="Search by name, email, or ID..."
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+            className="w-full pl-9 pr-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-xs"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         <div className="flex items-center gap-2 w-full md:w-auto">
-          <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 text-gray-700">
-            <Filter className="w-4 h-4" /> Filter <ChevronDown className="w-3 h-3" />
+          <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-medium hover:bg-gray-50 text-gray-700">
+            <Filter className="w-3.5 h-3.5" /> Filter <ChevronDown className="w-3 h-3" />
           </button>
         </div>
       </div>
 
       {/* --- Merchants Table --- */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="p-4 w-4">
+                <th className="p-3 w-4">
                   <input
                     type="checkbox"
-                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     onChange={handleSelectAll}
                     checked={selectedMerchants.length === DUMMY_MERCHANTS.length && DUMMY_MERCHANTS.length > 0}
                   />
                 </th>
-                <th className="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Merchant</th>
-                <th className="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">ID</th>
-                <th className="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">KYB Status</th>
-                <th className="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Environment</th>
-                <th className="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Created</th>
-                <th className="p-4 w-10"></th>
+                <th className="p-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Merchant</th>
+                <th className="p-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">ID</th>
+                <th className="p-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">KYB Status</th>
+                <th className="p-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Environment</th>
+                <th className="p-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="p-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Created</th>
+                <th className="p-3 w-8"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {DUMMY_MERCHANTS.map((merchant) => (
                 <tr key={merchant.id} className="hover:bg-gray-50 transition-colors group">
-                  <td className="p-4">
+                  <td className="p-3">
                     <input
                       type="checkbox"
-                      className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       checked={selectedMerchants.includes(merchant.id)}
                       onChange={() => handleSelectOne(merchant.id)}
                     />
                   </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
-                        <Building2 className="w-5 h-5" />
+                  <td className="p-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                        <Building2 className="w-4 h-4" />
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">{merchant.businessName}</p>
-                        <p className="text-xs text-gray-500">{merchant.email}</p>
+                        <p className="font-medium text-xs text-gray-900 group-hover:text-blue-600 transition-colors">{merchant.businessName}</p>
+                        <p className="text-[10px] text-gray-500">{merchant.email}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="p-4">
-                    <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded text-gray-600">{merchant.merchantId}</span>
+                  <td className="p-3">
+                    <span className="text-[10px] font-mono bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">{merchant.merchantId}</span>
                   </td>
-                  <td className="p-4">
+                  <td className="p-3">
                     {renderKybBadge(merchant.kybStatus)}
                   </td>
-                  <td className="p-4">
+                  <td className="p-3">
                     {renderEnvBadge(merchant.environment)}
                   </td>
-                  <td className="p-4">
+                  <td className="p-3">
                     {renderStatusBadge(merchant.status)}
                   </td>
-                  <td className="p-4 text-sm text-gray-600">
+                  <td className="p-3 text-xs text-gray-600">
                     {merchant.createdAt}
                   </td>
-                  <td className="p-4">
-                    <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg">
-                      <MoreVertical className="w-5 h-5" />
+                  <td className="p-3">
+                    <button className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg">
+                      <MoreVertical className="w-4 h-4" />
                     </button>
                   </td>
                 </tr>
@@ -281,42 +281,42 @@ export default function AdminMerchantsPage() {
         </div>
 
         {/* --- Pagination --- */}
-        <div className="p-4 border-t border-gray-200 flex items-center justify-between">
-          <div className="text-sm text-gray-500">
+        <div className="p-3 border-t border-gray-200 flex items-center justify-between">
+          <div className="text-xs text-gray-500">
             Showing <span className="font-medium">1</span> to <span className="font-medium">{DUMMY_MERCHANTS.length}</span> of <span className="font-medium">1,234</span> merchants
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <button
-              className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-1.5 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={currentPage === 1}
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-3.5 h-3.5" />
             </button>
             <div className="flex items-center gap-1">
               {[1, 2, 3].map(page => (
                 <button
                   key={page}
-                  className={`px-3 py-1 rounded-md text-sm font-medium ${currentPage === page ? 'bg-blue-600 text-white' : 'hover:bg-gray-100 text-gray-600'}`}
+                  className={`px-2.5 py-1 rounded-md text-xs font-medium ${currentPage === page ? 'bg-blue-600 text-white' : 'hover:bg-gray-100 text-gray-600'}`}
                   onClick={() => setCurrentPage(page)}
                 >
                   {page}
                 </button>
               ))}
-              <span className="text-gray-400 px-1">...</span>
+              <span className="text-gray-400 px-1 text-xs">...</span>
               <button
-                className={`px-3 py-1 rounded-md text-sm font-medium ${currentPage === 50 ? 'bg-blue-600 text-white' : 'hover:bg-gray-100 text-gray-600'}`}
+                className={`px-2.5 py-1 rounded-md text-xs font-medium ${currentPage === 50 ? 'bg-blue-600 text-white' : 'hover:bg-gray-100 text-gray-600'}`}
                 onClick={() => setCurrentPage(50)}
               >
                 50
               </button>
             </div>
             <button
-              className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-1.5 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={currentPage === 50}
               onClick={() => setCurrentPage(prev => Math.min(50, prev + 1))}
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>

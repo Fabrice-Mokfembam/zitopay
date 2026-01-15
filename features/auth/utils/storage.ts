@@ -43,11 +43,34 @@ export const storeAuthData = (data: AuthData): void => {
 
 /**
  * Get decrypted authentication data
- * Returns null if no data exists
+ * Returns null if no data exists or if decryption fails
  */
 export const getAuthData = (): AuthData | null => {
-    const data = SecureStorage.getItem(STORAGE_KEY);
-    return data as AuthData | null;
+    try {
+        const data = SecureStorage.getItem(STORAGE_KEY);
+
+        // Validate the data structure
+        if (data && typeof data === 'object' && 'accessToken' in data && 'user' in data) {
+            return data as AuthData;
+        }
+
+        // If data is corrupted or invalid, clear it
+        if (data) {
+            console.warn('Invalid auth data structure detected, clearing storage');
+            clearAuthData();
+        }
+
+        return null;
+    } catch (error) {
+        // If decryption fails, clear the corrupted data
+        console.error('Failed to decrypt auth data:', error);
+        try {
+            clearAuthData();
+        } catch (clearError) {
+            console.error('Failed to clear corrupted auth data:', clearError);
+        }
+        return null;
+    }
 };
 
 /**

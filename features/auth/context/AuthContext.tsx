@@ -1,14 +1,15 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, getAuthData, isAuthenticated as checkAuth } from '../utils/storage';
+import { User, AuthData, getAuthData, storeAuthData, clearAuthData, isAuthenticated as checkAuth } from '../utils/storage';
 
 // Context type definition
 interface AuthContextType {
     user: User | null;
     isAuthenticated: boolean;
     isLoading: boolean;
-    setUser: (user: User | null) => void;
+    login: (data: AuthData) => void;
+    logout: () => void;
 }
 
 // Create context with undefined default
@@ -25,29 +26,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Load user from storage on mount
     useEffect(() => {
         const loadUser = () => {
-            const authData = getAuthData();
-            const authenticated = checkAuth();
+            try {
+                const authData = getAuthData();
+                const authenticated = checkAuth();
 
-            if (authData && authenticated) {
-                setUser(authData.user);
-            } else {
+                if (authData && authenticated) {
+                    setUser(authData.user);
+                } else {
+                    setUser(null);
+                }
+            } catch (error) {
+                console.error('Error loading user from storage:', error);
                 setUser(null);
+            } finally {
+                setIsLoading(false);
             }
-
-            setIsLoading(false);
         };
 
         loadUser();
     }, []);
 
+    const login = (data: AuthData) => {
+        storeAuthData(data);
+        setUser(data.user);
+    };
+
+    const logout = () => {
+        clearAuthData();
+        setUser(null);
+    };
+
     // Compute isAuthenticated from user state
-    const isAuthenticated = !!user && checkAuth();
+    // We trust local state 'user' which is synced with storage on login/logout
+    const isAuthenticated = !!user;
 
     const value: AuthContextType = {
         user,
         isAuthenticated,
         isLoading,
-        setUser,
+        login,
+        logout,
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

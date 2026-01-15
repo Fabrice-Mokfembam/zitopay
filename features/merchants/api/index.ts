@@ -19,12 +19,14 @@ import type {
     AddDomainResponse,
     VerifyDomainResponse,
     GetDomainsResponse,
+    GetGatewaysResponse,
     ConfigureGatewayRequest,
     ConfigureGatewayResponse,
     SetFeeOverrideRequest,
     SetFeeOverrideResponse,
     RegenerateSandboxCredentialsResponse,
     RegenerateProductionCredentialsResponse,
+    GetPendingKYBSubmissionsResponse,
 } from '../types/index';
 
 const MERCHANT_BASE_URL = '/merchant/v1/merchants';
@@ -227,6 +229,18 @@ export const getDomains = async (
 };
 
 /**
+ * Get configured gateways for a merchant
+ */
+export const getGateways = async (
+    merchantId: string
+): Promise<GetGatewaysResponse> => {
+    const response = await apiClient.get<GetGatewaysResponse>(
+        `${MERCHANT_BASE_URL}/${merchantId}/gateways`
+    );
+    return response.data;
+};
+
+/**
  * Configure payment gateway settings
  */
 export const configureGateway = async (
@@ -277,6 +291,17 @@ export const regenerateProductionCredentials = async (
 ): Promise<RegenerateProductionCredentialsResponse> => {
     const response = await apiClient.post<RegenerateProductionCredentialsResponse>(
         `${MERCHANT_BASE_URL}/${merchantId}/regenerate-production-credentials`
+    );
+    return response.data;
+};
+
+/**
+ * Get all pending KYB submissions (Admin only)
+ * Returns merchants with kycStatus = 'PENDING'
+ */
+export const getPendingKYBSubmissions = async (): Promise<GetPendingKYBSubmissionsResponse> => {
+    const response = await apiClient.get<GetPendingKYBSubmissionsResponse>(
+        '/merchant/v1/admin/pending-kyb'
     );
     return response.data;
 };

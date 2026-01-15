@@ -30,7 +30,16 @@ import type {
 type Environment = "sandbox" | "production";
 
 export default function ApiKeysPage() {
-  const [activeEnv, setActiveEnv] = useState<Environment>("sandbox");
+  // Fetch merchant account data first
+  const { merchant, isLoading, refetch } = useMerchantAccount();
+
+  // Determine if production is available
+  const isProductionActive = merchant?.productionState === "ACTIVE";
+
+  // Default to production if available, otherwise sandbox
+  const [activeEnv, setActiveEnv] = useState<Environment>(
+    isProductionActive ? "production" : "sandbox"
+  );
   const [showSecretKey, setShowSecretKey] = useState(false);
   const [showRegenerateModal, setShowRegenerateModal] = useState(false);
   const [showNewCredsModal, setShowNewCredsModal] = useState(false);
@@ -39,9 +48,6 @@ export default function ApiKeysPage() {
   const [newCredentials, setNewCredentials] = useState<
     RegenerateSandboxCredentialsResponse | RegenerateProductionCredentialsResponse | null
   >(null);
-
-  // Fetch merchant account data
-  const { merchant, isLoading, refetch } = useMerchantAccount();
 
   // Regenerate credentials mutations
   const regenerateSandbox = useRegenerateSandboxCredentials(merchant?.id || "");
@@ -84,8 +90,7 @@ export default function ApiKeysPage() {
     );
   }
 
-  // Determine if production is available
-  const isProductionActive = merchant.productionState === "ACTIVE";
+  // Additional production state checks
   const isProductionPending = merchant.productionState === "PENDING_APPROVAL";
   const isKYBApproved = merchant.kycStatus === "APPROVED";
 

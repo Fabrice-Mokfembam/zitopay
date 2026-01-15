@@ -4,6 +4,7 @@ import { QueryProvider } from "@/providers/QueryProvider";
 import { AuthProvider } from "@/features/auth/context/AuthContext";
 import { LanguageProvider } from "@/core/i18n/LanguageProvider";
 import { AuthCookieSync } from "@/components/AuthCookieSync";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -35,32 +36,42 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased`}
-        style={{ fontFamily: "'Inter', Arial, Helvetica, sans-serif" }}
-      >
+      <head>
         <script
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
-                // Theme restoration
-                const savedTheme = localStorage.getItem('theme');
-                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                const shouldBeDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
-                if (shouldBeDark) {
-                  document.documentElement.classList.add('dark');
-                } else {
-                  document.documentElement.classList.remove('dark');
+                try {
+                  // Theme restoration - must run before body renders
+                  const savedTheme = localStorage.getItem('theme');
+                  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  const shouldBeDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
+                  if (shouldBeDark) {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                  }
+                  
+                  // Language restoration
+                  const savedLang = localStorage.getItem('language');
+                  const lang = (savedLang === 'fr' || savedLang === 'en') ? savedLang : 'en';
+                  document.documentElement.lang = lang;
+                } catch (error) {
+                  // If localStorage fails, use defaults
+                  console.error('Failed to restore theme/language:', error);
+                  document.documentElement.lang = 'en';
                 }
-                
-                // Language restoration
-                const savedLang = localStorage.getItem('language');
-                const lang = (savedLang === 'fr' || savedLang === 'en') ? savedLang : 'en';
-                document.documentElement.lang = lang;
               })();
             `,
           }}
         />
+      </head>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased`}
+        style={{ fontFamily: "'Inter', Arial, Helvetica, sans-serif" }}
+        suppressHydrationWarning
+      >
+        <Toaster position="top-right" richColors />
         <QueryProvider>
           <AuthProvider>
             <AuthCookieSync />

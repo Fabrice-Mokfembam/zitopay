@@ -1,7 +1,8 @@
 import { useMutation, UseMutationResult } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import { useAuthContext } from '../context/AuthContext';
 import { register, verifyEmail, resendVerificationCode, login, adminLogin, logout } from '../api/index';
-import { storeAuthData, clearAuthData } from '../utils/storage';
+// storeAuthData/clearAuthData removed as we use context now
 import type {
     RegisterRequest,
     RegisterResponse,
@@ -36,12 +37,13 @@ export const useRegister = (): UseMutationResult<RegisterResponse, Error, Regist
  */
 export const useVerifyEmail = (): UseMutationResult<VerifyEmailResponse, Error, VerifyEmailRequest> => {
     const router = useRouter();
+    const { login: authLogin } = useAuthContext();
 
     return useMutation({
         mutationFn: (payload: VerifyEmailRequest) => verifyEmail(payload),
         onSuccess: (data) => {
-            // Store authentication data securely
-            storeAuthData({
+            // Update auth context (syncs state + storage)
+            authLogin({
                 user: data.user,
                 accessToken: data.accessToken,
                 refreshToken: data.refreshToken,
@@ -68,12 +70,13 @@ export const useResendVerification = (): UseMutationResult<ResendVerificationRes
  */
 export const useLogin = (): UseMutationResult<LoginResponse, Error, LoginRequest> => {
     const router = useRouter();
+    const { login: authLogin } = useAuthContext();
 
     return useMutation({
         mutationFn: (credentials: LoginRequest) => login(credentials),
         onSuccess: (data) => {
-            // Store authentication data securely
-            storeAuthData({
+            // Update auth context (syncs state + storage)
+            authLogin({
                 user: data.user,
                 accessToken: data.accessToken,
                 refreshToken: data.refreshToken,
@@ -92,12 +95,13 @@ export const useLogin = (): UseMutationResult<LoginResponse, Error, LoginRequest
  */
 export const useAdminLogin = (): UseMutationResult<LoginResponse, Error, LoginRequest> => {
     const router = useRouter();
+    const { login: authLogin } = useAuthContext();
 
     return useMutation({
         mutationFn: (credentials: LoginRequest) => adminLogin(credentials),
         onSuccess: (data) => {
-            // Store authentication data securely
-            storeAuthData({
+            // Update auth context (syncs state + storage)
+            authLogin({
                 user: data.user,
                 accessToken: data.accessToken,
                 refreshToken: data.refreshToken,
@@ -116,19 +120,20 @@ export const useAdminLogin = (): UseMutationResult<LoginResponse, Error, LoginRe
  */
 export const useLogout = (): UseMutationResult<LogoutResponse, Error, void> => {
     const router = useRouter();
+    const { logout: authLogout } = useAuthContext();
 
     return useMutation({
         mutationFn: () => logout(),
         onSuccess: () => {
-            // Clear all authentication data
-            clearAuthData();
+            // Clear auth context (clears state + storage)
+            authLogout();
 
             // Navigate to login page
             router.push('/login');
         },
         onError: () => {
             // Even if API call fails, clear local data and redirect
-            clearAuthData();
+            authLogout();
             router.push('/login');
         },
     });

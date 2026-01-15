@@ -15,6 +15,7 @@ import {
     reactivateProduction,
     regenerateSandboxCredentials,
     regenerateProductionCredentials,
+    getPendingKYBSubmissions,
 } from '../api/index';
 import type {
     CreateMerchantRequest,
@@ -25,7 +26,7 @@ import type {
     UpdateMerchantResponse,
     SubmitKYBResponse,
     ApproveKYBResponse,
-    RejectKYBResponse,                  
+    RejectKYBResponse,
     RequestProductionResponse,
     ApproveProductionResponse,
     SuspendSandboxResponse,
@@ -34,6 +35,7 @@ import type {
     ReactivateProductionResponse,
     RegenerateSandboxCredentialsResponse,
     RegenerateProductionCredentialsResponse,
+    GetPendingKYBSubmissionsResponse,
 } from '../types/index';
 
 /**
@@ -210,5 +212,16 @@ export const useRegenerateProductionCredentials = (
 ): UseMutationResult<RegenerateProductionCredentialsResponse, Error, void> => {
     return useMutation({
         mutationFn: () => regenerateProductionCredentials(merchantId),
+    });
+};
+
+/**
+ * Hook for fetching pending KYB submissions (Admin only)
+ * Returns all merchants with kycStatus = 'PENDING'
+ */
+export const useGetPendingKYBSubmissions = (): UseQueryResult<GetPendingKYBSubmissionsResponse, Error> => {
+    return useQuery({
+        queryKey: ['pending-kyb-submissions'],
+        queryFn: getPendingKYBSubmissions,
     });
 };

@@ -175,6 +175,10 @@ export interface ConfigureGatewayResponse {
     gateway: GatewayConfig;
 }
 
+export interface GetGatewaysResponse {
+    gateways: GatewayConfig[];
+}
+
 export interface SetFeeOverrideResponse {
     feeOverride: FeeOverride;
 }
@@ -192,3 +196,69 @@ export interface RegenerateProductionCredentialsResponse {
     productionSecretKey: string;
     warning: string;
 }
+
+// Pending KYB Submissions Types
+export interface KYBDocument {
+    id: string;
+    fileId: string;
+    type: string;
+    name: string;
+    size: string;
+    status: 'valid' | 'error' | 'warning';
+    reviewStatus: 'PENDING' | 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED';
+    url: string;
+    urlExpiresAt: string;
+    notes?: string;
+}
+
+export interface KYBSubmission {
+    id: string;
+    merchant: {
+        businessName: string;
+        email: string;
+        phone: string;
+        businessType: string;
+        country: string;
+        countryCode: string;
+    };
+    submittedAt: string;
+    documents: KYBDocument[];
+    notes: string;
+    isResubmission: boolean;
+    priority: 'recent' | 'attention' | 'urgent';
+    ageInDays: number;
+}
+
+export interface GetPendingKYBSubmissionsResponse {
+    submissions: KYBSubmission[];
+}
+
+// Pending Production Summary Types
+export interface PendingProductionSummaryItem {
+    id: string;
+    merchant: {
+        businessName: string;
+        email: string;
+        phone: string;
+        businessType: string;
+        country: string;
+        countryCode: string;
+        kybStatus: string;
+        productionState: string;
+    };
+    submissionDate: string;
+    ageInDays: number;
+    priority: 'recent' | 'attention' | 'urgent';
+    totalDocuments: number;
+    approvedDocuments: number;
+}
+
+export interface GetPendingProductionSummaryResponse {
+    summary: PendingProductionSummaryItem[];
+}
+
+// Legacy alias for backward compatibility (deprecated)
+/** @deprecated Use PendingProductionSummaryItem instead */
+export type PendingKYBSummaryItem = PendingProductionSummaryItem;
+/** @deprecated Use GetPendingProductionSummaryResponse instead */
+export type GetPendingKYBSummaryResponse = GetPendingProductionSummaryResponse;

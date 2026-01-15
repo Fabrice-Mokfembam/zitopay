@@ -1,119 +1,248 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
-    Building2,
     CheckCircle2,
     AlertCircle,
     Clock,
     XCircle,
     Edit,
-    FileText,
-    Shield,
-    AlertTriangle,
     X,
+    Loader2,
 } from "lucide-react";
-
-type KYBStatus = "not_submitted" | "pending" | "approved" | "rejected";
+import { toast } from "sonner";
+import { useGetUserMerchants, useSubmitKYB, useRequestProduction } from "@/features/merchants/hooks/useMerchant";
+import KYBUploadSection from "./components/KYBUploadSection";
+import ProductionAccessSection from "./components/ProductionAccessSection";
+import type { Merchant } from "@/features/merchants/types/index";
 
 export default function BusinessSettingsPage() {
     const [showEditModal, setShowEditModal] = useState(false);
-    const [kybStatus] = useState<KYBStatus>("approved");
+    const [productionCredentials, setProductionCredentials] = useState<{
+        apiKey: string;
+        secretKey: string;
+    } | undefined>(undefined);
 
-    const businessInfo = {
-        name: "ZitoPay Solutions SARL",
-        type: "Limited Liability Company",
-        country: "Cameroon (CM)",
-        email: "contact@zitopay.com",
-        phone: "+237 670 123 456",
-        registrationNumber: "CM-2024-12345",
-        taxId: "TAX-CM-67890",
-        address: "123 Business Street",
-        city: "Douala, Cameroon",
-    };
+    // Fetch merchant data
+    const { data: merchantsData, isLoading, refetch } = useGetUserMerchants();
 
-    const getKYBStatusColor = (status: KYBStatus) => {
-        switch (status) {
-            case "approved":
-                return "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800";
-            case "pending":
-                return "bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800";
-            case "rejected":
-                return "bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800";
-            default:
-                return "bg-muted text-muted-foreground border-border";
+    // Get the first merchant (using useMemo to avoid cascading renders)
+    const selectedMerchant = useMemo(() => {
+        if (merchantsData?.merchants && merchantsData.merchants.length > 0) {
+            return merchantsData.merchants[0];
+        }
+        return null;
+    }, [merchantsData]);
+
+    // KYB submission hook
+    const submitKYBMutation = useSubmitKYB(selectedMerchant?.id || "");
+
+    // Production request hook
+    const requestProductionMutation = useRequestProduction(selectedMerchant?.id || "");
+
+    const handleSubmitKYB = async () => {
+        if (!selectedMerchant) return;
+
+        try {
+            await submitKYBMutation.mutateAsync();
+            // Refetch merchant data to get updated status
+            await refetch();
+            toast.success('KYB Submitted Successfully!', {
+                description: 'Your documents have been submitted for review. We\'ll notify you once the review is complete.',
+            });
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Failed to submit KYB';
+            toast.error('KYB Submission Failed', {
+                description: errorMessage,
+            });
+            console.error("Failed to submit KYB:", error);
         }
     };
 
-    const getKYBStatusIcon = (status: KYBStatus) => {
+    const handleRequestProduction = async () => {
+        if (!selectedMerchant) return;
+
+        try {
+            const result = await requestProductionMutation.mutateAsync();
+            // Refetch merchant data to get updated status
+            await refetch();
+
+            // Check if production was approved immediately and credentials were returned
+            if (result && typeof result === 'object' && 'productionApiKey' in result && 'productionSecretKey' in result) {
+                setProductionCredentials({
+                    apiKey: result.productionApiKey as string,
+                    secretKey: result.productionSecretKey as string,
+                });
+                toast.success('Production Access Granted!', {
+                    description: 'Your production credentials are ready. Please save them securely.',
+                });
+            } else {
+                toast.success('Production Request Submitted!', {
+                    description: 'Your request is under review. We\'ll notify you once it\'s approved.',
+                });
+            }
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Failed to request production access';
+            toast.error('Production Request Failed', {
+                description: errorMessage,
+            });
+            console.error("Failed to request production:", error);
+        }
+    };
+
+    const getKYBStatusIcon = (status: string) => {
         switch (status) {
-            case "approved":
+            case "APPROVED":
                 return <CheckCircle2 className="w-5 h-5" />;
-            case "pending":
+            case "PENDING":
                 return <Clock className="w-5 h-5" />;
-            case "rejected":
+            case "REJECTED":
                 return <XCircle className="w-5 h-5" />;
             default:
                 return <AlertCircle className="w-5 h-5" />;
         }
     };
 
-    const getKYBStatusText = (status: KYBStatus) => {
+    const getKYBStatusText = (status: string) => {
         switch (status) {
-            case "approved":
+            case "APPROVED":
                 return { title: "KYB APPROVED", message: "Your business is verified and approved" };
-            case "pending":
+            case "PENDING":
                 return { title: "KYB PENDING", message: "Your documents are under review" };
-            case "rejected":
+            case "REJECTED":
                 return { title: "KYB REJECTED", message: "Your documents were rejected" };
             default:
                 return { title: "KYB NOT SUBMITTED", message: "Please submit your business documents" };
         }
     };
 
+    const getProductionStatusText = (status: string) => {
+        switch (status) {
+            case "ACTIVE":
+                return { text: "Active", color: "text-green-600 dark:text-green-400" };
+            case "PENDING_APPROVAL":
+                return { text: "Pending Approval", color: "text-orange-600 dark:text-orange-400" };
+            case "SUSPENDED":
+                return { text: "Suspended", color: "text-red-600 dark:text-red-400" };
+            default:
+                return { text: "Not Requested", color: "text-muted-foreground" };
+        }
+    };
+
+    if (isLoading) {
+        return (
+            <div className="p-6 flex items-center justify-center min-h-[400px]">
+                <div className="text-center">
+                    <Loader2 className="w-8 h-8 animate-spin text-orange-500 mx-auto mb-3" />
+                    <p className="text-sm text-muted-foreground">Loading merchant data...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!selectedMerchant) {
+        return (
+            <div className="p-6">
+                <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                    <p className="text-sm text-red-600 dark:text-red-400">
+                        No merchant account found. Please create a merchant account first.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    const kybStatusText = getKYBStatusText(selectedMerchant.kycStatus);
+    const productionStatus = getProductionStatusText(selectedMerchant.productionState);
+
     return (
         <div className="p-6 space-y-6">
             {/* HEADER */}
             <div>
-                <h1 className="text-xl font-bold text-foreground">Business Settings</h1>
+                <h1 className="text-xl font-bold text-foreground">Environment Settings</h1>
                 <p className="text-xs text-muted-foreground mt-1">
-                    Manage your business information and verification status
+                    Manage your sandbox and production environments, KYB verification, and business information
                 </p>
             </div>
 
-            {/* KYB STATUS */}
+            {/* ENVIRONMENT STATUS OVERVIEW */}
             <div className="bg-background rounded-xl p-6 border border-border">
-                <h3 className="text-sm font-semibold text-foreground mb-4">KYB STATUS</h3>
-                <div className={`rounded-lg p-4 border ${getKYBStatusColor(kybStatus)}`}>
-                    <div className="flex items-start gap-3 mb-2">
-                        {getKYBStatusIcon(kybStatus)}
-                        <div className="flex-1">
-                            <h4 className="text-sm font-bold">{getKYBStatusText(kybStatus).title}</h4>
-                            <p className="text-xs mt-1">{getKYBStatusText(kybStatus).message}</p>
-                            {kybStatus === "approved" && (
-                                <p className="text-xs mt-1">Approved on: Jan 1, 2026</p>
-                            )}
-                        </div>
-                    </div>
-                </div>
+                <h3 className="text-sm font-semibold text-foreground mb-4">ENVIRONMENT STATUS</h3>
 
-                <div className="mt-4 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-muted-foreground">Production Access:</span>
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-600 dark:text-green-400">
-                            <CheckCircle2 className="w-3 h-3" />
-                            Active
-                        </span>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Sandbox Status */}
+                    <div className="bg-muted rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-medium text-muted-foreground">Sandbox</span>
+                            <span className={`inline-flex items-center gap-1 text-xs font-semibold ${selectedMerchant.sandboxState === "ACTIVE"
+                                ? "text-green-600 dark:text-green-400"
+                                : "text-red-600 dark:text-red-400"
+                                }`}>
+                                <CheckCircle2 className="w-3 h-3" />
+                                {selectedMerchant.sandboxState}
+                            </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">Test environment active</p>
                     </div>
-                    <div className="flex gap-3">
-                        <button className="px-3 py-1.5 bg-background border border-border text-foreground rounded-lg text-xs font-semibold hover:bg-muted transition-colors">
-                            View KYB Documents
-                        </button>
-                        <button className="px-3 py-1.5 bg-orange-500 text-white rounded-lg text-xs font-semibold hover:bg-orange-600 transition-colors">
-                            Request Production Access
-                        </button>
+
+                    {/* KYB Status */}
+                    <div className="bg-muted rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-medium text-muted-foreground">KYB Status</span>
+                            <span className={`inline-flex items-center gap-1 text-xs font-semibold ${selectedMerchant.kycStatus === "APPROVED"
+                                ? "text-green-600 dark:text-green-400"
+                                : selectedMerchant.kycStatus === "PENDING"
+                                    ? "text-orange-600 dark:text-orange-400"
+                                    : "text-muted-foreground"
+                                }`}>
+                                {getKYBStatusIcon(selectedMerchant.kycStatus)}
+                                {selectedMerchant.kycStatus.replace("_", " ")}
+                            </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{kybStatusText.message}</p>
+                    </div>
+
+                    {/* Production Status */}
+                    <div className="bg-muted rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-medium text-muted-foreground">Production</span>
+                            <span className={`inline-flex items-center gap-1 text-xs font-semibold ${productionStatus.color}`}>
+                                {selectedMerchant.productionState === "ACTIVE" && <CheckCircle2 className="w-3 h-3" />}
+                                {selectedMerchant.productionState === "PENDING_APPROVAL" && <Clock className="w-3 h-3" />}
+                                {productionStatus.text}
+                            </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                            {selectedMerchant.productionState === "ACTIVE"
+                                ? "Live environment active"
+                                : "Not yet activated"}
+                        </p>
                     </div>
                 </div>
+            </div>
+
+            {/* KYB UPLOAD SECTION */}
+            <div className="bg-background rounded-xl p-6 border border-border">
+                <h3 className="text-sm font-semibold text-foreground mb-4">KYB VERIFICATION</h3>
+                <KYBUploadSection
+                    merchantId={selectedMerchant.id}
+                    kycStatus={selectedMerchant.kycStatus}
+                    onSubmitKYB={handleSubmitKYB}
+                    isSubmitting={submitKYBMutation.isPending}
+                />
+            </div>
+
+            {/* PRODUCTION ACCESS SECTION */}
+            <div className="bg-background rounded-xl p-6 border border-border">
+                <h3 className="text-sm font-semibold text-foreground mb-4">PRODUCTION ACCESS</h3>
+                <ProductionAccessSection
+                    merchantId={selectedMerchant.id}
+                    kycStatus={selectedMerchant.kycStatus}
+                    productionState={selectedMerchant.productionState}
+                    onRequestProduction={handleRequestProduction}
+                    isRequesting={requestProductionMutation.isPending}
+                    productionCredentials={productionCredentials}
+                />
             </div>
 
             {/* BUSINESS INFORMATION */}
@@ -132,94 +261,28 @@ export default function BusinessSettingsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <p className="text-xs font-medium text-muted-foreground mb-1">Business Name</p>
-                        <p className="text-sm font-semibold text-foreground">{businessInfo.name}</p>
+                        <p className="text-sm font-semibold text-foreground">{selectedMerchant.businessName}</p>
                     </div>
                     <div>
                         <p className="text-xs font-medium text-muted-foreground mb-1">Business Type</p>
-                        <p className="text-sm font-semibold text-foreground">{businessInfo.type}</p>
+                        <p className="text-sm font-semibold text-foreground">{selectedMerchant.businessType}</p>
                     </div>
                     <div>
                         <p className="text-xs font-medium text-muted-foreground mb-1">Country</p>
-                        <p className="text-sm font-semibold text-foreground">{businessInfo.country}</p>
+                        <p className="text-sm font-semibold text-foreground">{selectedMerchant.country}</p>
                     </div>
                     <div>
                         <p className="text-xs font-medium text-muted-foreground mb-1">Email</p>
-                        <p className="text-sm font-semibold text-foreground">{businessInfo.email}</p>
+                        <p className="text-sm font-semibold text-foreground">{selectedMerchant.email}</p>
                     </div>
                     <div>
                         <p className="text-xs font-medium text-muted-foreground mb-1">Phone</p>
-                        <p className="text-sm font-semibold text-foreground">{businessInfo.phone}</p>
+                        <p className="text-sm font-semibold text-foreground">{selectedMerchant.phone}</p>
                     </div>
                     <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Registration Number</p>
-                        <p className="text-sm font-semibold text-foreground font-mono">
-                            {businessInfo.registrationNumber}
-                        </p>
+                        <p className="text-xs font-medium text-muted-foreground mb-1">Rate Limit</p>
+                        <p className="text-sm font-semibold text-foreground">{selectedMerchant.rateLimitPerMinute} requests/minute</p>
                     </div>
-                    <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Tax ID</p>
-                        <p className="text-sm font-semibold text-foreground font-mono">{businessInfo.taxId}</p>
-                    </div>
-                    <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Address</p>
-                        <p className="text-sm font-semibold text-foreground">
-                            {businessInfo.address}
-                            <br />
-                            {businessInfo.city}
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            {/* ENVIRONMENT SETTINGS */}
-            <div className="bg-background rounded-xl p-6 border border-border">
-                <h3 className="text-sm font-semibold text-foreground mb-4">ENVIRONMENT SETTINGS</h3>
-
-                <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-muted-foreground">Sandbox Mode:</span>
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-600 dark:text-green-400">
-                            <CheckCircle2 className="w-3 h-3" />
-                            Active
-                        </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-muted-foreground">Production Mode:</span>
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-600 dark:text-green-400">
-                            <CheckCircle2 className="w-3 h-3" />
-                            Active
-                        </span>
-                    </div>
-                    <div className="flex items-center justify-between pt-3 border-t border-border">
-                        <span className="text-xs font-medium text-muted-foreground">Rate Limit:</span>
-                        <span className="text-xs font-semibold text-foreground">100 requests/minute</span>
-                    </div>
-                </div>
-
-                <button className="mt-4 px-3 py-1.5 bg-background border border-border text-foreground rounded-lg text-xs font-semibold hover:bg-muted transition-colors">
-                    Request Limit Increase
-                </button>
-            </div>
-
-            {/* DANGER ZONE */}
-            <div className="bg-red-50 dark:bg-red-900/10 rounded-xl p-6 border border-red-200 dark:border-red-800">
-                <div className="flex items-start gap-3 mb-4">
-                    <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" />
-                    <div>
-                        <h3 className="text-sm font-semibold text-foreground">DANGER ZONE</h3>
-                        <p className="text-xs text-muted-foreground mt-1">
-                            ⚠️ These actions are permanent and cannot be undone
-                        </p>
-                    </div>
-                </div>
-
-                <div className="flex gap-3">
-                    <button className="px-3 py-1.5 bg-background border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded-lg text-xs font-semibold hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                        Suspend Account
-                    </button>
-                    <button className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-semibold hover:bg-red-700 transition-colors">
-                        Delete Account
-                    </button>
                 </div>
             </div>
 
@@ -245,7 +308,7 @@ export default function BusinessSettingsPage() {
                                     </label>
                                     <input
                                         type="text"
-                                        defaultValue={businessInfo.name}
+                                        defaultValue={selectedMerchant.businessName}
                                         className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm"
                                     />
                                 </div>
@@ -254,7 +317,7 @@ export default function BusinessSettingsPage() {
                                         Business Type *
                                     </label>
                                     <select
-                                        defaultValue={businessInfo.type}
+                                        defaultValue={selectedMerchant.businessType}
                                         className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm"
                                     >
                                         <option>Limited Liability Company</option>
@@ -267,7 +330,7 @@ export default function BusinessSettingsPage() {
                                     <label className="text-xs font-medium text-foreground mb-2 block">Email *</label>
                                     <input
                                         type="email"
-                                        defaultValue={businessInfo.email}
+                                        defaultValue={selectedMerchant.email}
                                         className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm"
                                     />
                                 </div>
@@ -275,48 +338,10 @@ export default function BusinessSettingsPage() {
                                     <label className="text-xs font-medium text-foreground mb-2 block">Phone *</label>
                                     <input
                                         type="tel"
-                                        defaultValue={businessInfo.phone}
+                                        defaultValue={selectedMerchant.phone}
                                         className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm"
                                     />
                                 </div>
-                                <div>
-                                    <label className="text-xs font-medium text-foreground mb-2 block">
-                                        Registration Number
-                                    </label>
-                                    <input
-                                        type="text"
-                                        defaultValue={businessInfo.registrationNumber}
-                                        className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm font-mono"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-xs font-medium text-foreground mb-2 block">Tax ID</label>
-                                    <input
-                                        type="text"
-                                        defaultValue={businessInfo.taxId}
-                                        className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm font-mono"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="text-xs font-medium text-foreground mb-2 block">Address *</label>
-                                <input
-                                    type="text"
-                                    defaultValue={businessInfo.address}
-                                    className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="text-xs font-medium text-foreground mb-2 block">
-                                    City, Country *
-                                </label>
-                                <input
-                                    type="text"
-                                    defaultValue={businessInfo.city}
-                                    className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm"
-                                />
                             </div>
 
                             <div className="flex gap-3 pt-4 border-t border-border">

@@ -19,7 +19,7 @@ export default function AdminLoginPage() {
   // Redirect if already authenticated as admin
   useEffect(() => {
     const authData = getAuthData();
-    if (authData && authData.accessToken && authData.user.role === 'admin') {
+    if (authData && authData.accessToken && authData.user && authData.user.role === 'admin') {
       router.push('/admin/dashboard');
     }
   }, [router]);

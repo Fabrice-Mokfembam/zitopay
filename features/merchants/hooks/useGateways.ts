@@ -1,11 +1,26 @@
-import { useMutation, UseMutationResult } from '@tanstack/react-query';
-import { configureGateway, setFeeOverride } from '../api/index';
+import { useMutation, UseMutationResult, useQuery, UseQueryResult } from '@tanstack/react-query';
+import { configureGateway, setFeeOverride, getGateways } from '../api/index';
 import type {
     ConfigureGatewayRequest,
     ConfigureGatewayResponse,
     SetFeeOverrideRequest,
     SetFeeOverrideResponse,
+    GetGatewaysResponse,
 } from '../types/index';
+
+/**
+ * Hook to fetch configured gateways
+ */
+export const useGetGateways = (
+    merchantId: string,
+    enabled: boolean = true
+): UseQueryResult<GetGatewaysResponse, Error> => {
+    return useQuery({
+        queryKey: ['merchants', merchantId, 'gateways'],
+        queryFn: () => getGateways(merchantId),
+        enabled: !!merchantId && enabled,
+    });
+};
 
 /**
  * Hook for configuring payment gateway settings

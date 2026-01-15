@@ -154,16 +154,6 @@ export default function AdminDashboardPage() {
             href: "/admin/merchants/pending-kyb",
         },
         {
-            type: "Production Requests",
-            count: 5,
-            description: "5 merchants requested production access",
-            icon: Rocket,
-            color: "text-green-600",
-            bgColor: "bg-green-50",
-            action: "Review Now",
-            href: "/admin/merchants/pending-production",
-        },
-        {
             type: "Reconciliation Issues",
             count: 3,
             description: "3 unresolved settlement mismatches",
@@ -273,10 +263,10 @@ export default function AdminDashboardPage() {
                             <metric.icon className={`w-5 h-5 ${metric.iconColor}`} />
                             <span
                                 className={`text-sm font-semibold ${metric.trend === "up"
-                                        ? "text-green-600"
-                                        : metric.trend === "down"
-                                            ? "text-red-600"
-                                            : "text-gray-600"
+                                    ? "text-green-600"
+                                    : metric.trend === "down"
+                                        ? "text-red-600"
+                                        : "text-gray-600"
                                     }`}
                             >
                                 {metric.change}

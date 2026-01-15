@@ -34,6 +34,7 @@ interface AuditLog {
     details: {
         before?: any;
         after?: any;
+        [key: string]: any;
     };
     severity: "low" | "medium" | "high" | "critical";
 }

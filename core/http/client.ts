@@ -25,15 +25,15 @@ class HttpClient {
   ): Promise<T> {
     const { skipAuth = false, ...fetchConfig } = config;
 
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
-      ...fetchConfig.headers,
-    };
+    const headers = new Headers(config.headers);
+    if (!headers.has("Content-Type")) {
+      headers.set("Content-Type", "application/json");
+    }
 
     if (!skipAuth) {
       const token = await this.getAuthToken();
       if (token) {
-        headers.Authorization = `Bearer ${token}`;
+        headers.set("Authorization", `Bearer ${token}`);
       }
     }
 

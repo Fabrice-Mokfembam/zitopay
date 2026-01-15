@@ -1,4 +1,6 @@
 import { Merchant } from "./types";
+import { GetPendingProductionSummaryResponse } from "./types/index";
+import { getAccessToken } from "@/features/auth/utils/storage";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
@@ -25,5 +27,28 @@ export const merchantsApi = {
     }
 
     return response.json();
+  },
+
+  getPendingProductionSummary: async (): Promise<GetPendingProductionSummaryResponse> => {
+    const token = getAccessToken();
+    const response = await fetch(`${API_BASE_URL}/merchant/v1/admin/pending-production-summary`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch pending production summary");
+    }
+
+    return response.json();
+  },
+
+  // Legacy alias for backward compatibility (deprecated)
+  /** @deprecated Use getPendingProductionSummary instead */
+  getPendingKYBSummary: async (): Promise<GetPendingProductionSummaryResponse> => {
+    return merchantsApi.getPendingProductionSummary();
   },
 };

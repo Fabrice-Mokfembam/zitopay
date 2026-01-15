@@ -17,6 +17,7 @@ import {
     X,
     RefreshCw,
 } from "lucide-react";
+import { useWalletSummary, useWalletActivity } from "@/features/wallet";
 
 export default function WalletPage() {
     const [showWithdrawModal, setShowWithdrawModal] = useState(false);
@@ -26,57 +27,9 @@ export default function WalletPage() {
     const [withdrawMethod, setWithdrawMethod] = useState("bank");
     const [topUpMethod, setTopUpMethod] = useState("mobile");
 
-    const balanceData = {
-        available: 450000,
-        pending: 25000,
-        totalCollected: 2500000,
-        totalWithdrawn: 1800000,
-        trend: "+5.2%",
-        lastUpdated: "2 mins ago",
-    };
-
-    const recentActivity = [
-        {
-            date: "Jan 12",
-            time: "14:23",
-            type: "credit",
-            label: "Collection",
-            reference: "TX #123",
-            amount: 10000,
-            balanceAfter: 450000,
-            status: "completed",
-        },
-        {
-            date: "Jan 11",
-            time: "16:45",
-            type: "withdrawal",
-            label: "To Bank",
-            reference: "WD #456",
-            amount: -50000,
-            balanceAfter: 440000,
-            status: "completed",
-        },
-        {
-            date: "Jan 10",
-            time: "09:12",
-            type: "credit",
-            label: "Collection",
-            reference: "TX #789",
-            amount: 15000,
-            balanceAfter: 490000,
-            status: "completed",
-        },
-        {
-            date: "Jan 09",
-            time: "00:00",
-            type: "fee",
-            label: "Platform Fee",
-            reference: "",
-            amount: -500,
-            balanceAfter: 475000,
-            status: "completed",
-        },
-    ];
+    // Fetch wallet data using hooks
+    const { data: balanceData, isLoading: isLoadingSummary, error: summaryError } = useWalletSummary();
+    const { data: recentActivity, isLoading: isLoadingActivity, error: activityError } = useWalletActivity({ limit: 20 });
 
     const getTypeIcon = (type: string) => {
         switch (type) {
@@ -106,11 +59,81 @@ export default function WalletPage() {
 
     const setQuickAmount = (amount: number, type: "withdraw" | "topup") => {
         if (type === "withdraw") {
-            setWithdrawAmount(amount === balanceData.available ? balanceData.available.toString() : amount.toString());
+            setWithdrawAmount(amount === (balanceData?.available || 0) ? (balanceData?.available || 0).toString() : amount.toString());
         } else {
             setTopUpAmount(amount.toString());
         }
     };
+
+    // Loading state
+    if (isLoadingSummary || isLoadingActivity) {
+        return (
+            <div className="p-6 space-y-6">
+                <div>
+                    <h1 className="text-xl font-bold text-foreground">Wallet & Balance</h1>
+                    <p className="text-xs text-muted-foreground mt-1">
+                        Manage your funds, view balance history, and process withdrawals
+                    </p>
+                </div>
+
+                {/* Loading Skeleton */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="bg-muted/50 rounded-xl p-6 border border-border animate-pulse">
+                            <div className="h-10 w-10 bg-muted rounded-lg mb-3" />
+                            <div className="h-3 w-24 bg-muted rounded mb-2" />
+                            <div className="h-6 w-32 bg-muted rounded mb-1" />
+                            <div className="h-3 w-20 bg-muted rounded mb-4" />
+                            <div className="h-8 w-full bg-muted rounded" />
+                        </div>
+                    ))}
+                </div>
+
+                <div className="bg-background rounded-xl p-6 border border-border">
+                    <div className="h-6 w-48 bg-muted rounded mb-6 animate-pulse" />
+                    <div className="h-64 bg-muted/30 rounded-lg animate-pulse" />
+                </div>
+            </div>
+        );
+    }
+
+    // Error state
+    if (summaryError || activityError) {
+        return (
+            <div className="p-6">
+                <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
+                    <XCircle className="w-12 h-12 text-red-600 dark:text-red-400 mx-auto mb-3" />
+                    <h3 className="text-lg font-bold text-red-900 dark:text-red-100 mb-2">
+                        Failed to Load Wallet Data
+                    </h3>
+                    <p className="text-sm text-red-700 dark:text-red-300 mb-4">
+                        {summaryError?.message || activityError?.message || "An error occurred while fetching wallet data"}
+                    </p>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors"
+                    >
+                        Retry
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // No data state
+    if (!balanceData || !recentActivity) {
+        return (
+            <div className="p-6">
+                <div className="bg-muted/50 border border-border rounded-xl p-6 text-center">
+                    <WalletIcon className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                    <h3 className="text-lg font-bold text-foreground mb-2">No Wallet Data</h3>
+                    <p className="text-sm text-muted-foreground">
+                        Unable to load wallet information at this time.
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="p-6 space-y-6">
@@ -131,17 +154,17 @@ export default function WalletPage() {
                             <WalletIcon className="w-5 h-5 text-white" />
                         </div>
                         <span className="text-xs font-semibold text-green-600 dark:text-green-400">
-                            {balanceData.trend}
+                            {balanceData!.trend}
                         </span>
                     </div>
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
                         💰 AVAILABLE BALANCE
                     </p>
                     <p className="text-2xl font-bold text-foreground mb-1">
-                        FCFA {balanceData.available.toLocaleString()}
+                        FCFA {balanceData!.available.toLocaleString()}
                     </p>
                     <p className="text-xs text-muted-foreground mb-4">
-                        Last updated: {balanceData.lastUpdated}
+                        Last updated: {balanceData!.lastUpdated}
                     </p>
                     <div className="flex gap-2">
                         <button
@@ -170,7 +193,7 @@ export default function WalletPage() {
                         🔒 PENDING BALANCE
                     </p>
                     <p className="text-2xl font-bold text-foreground mb-1">
-                        FCFA {balanceData.pending.toLocaleString()}
+                        FCFA {balanceData!.pending.toLocaleString()}
                     </p>
                     <p className="text-xs text-muted-foreground mb-4">
                         3 transactions processing
@@ -191,7 +214,7 @@ export default function WalletPage() {
                         📊 TOTAL COLLECTED
                     </p>
                     <p className="text-2xl font-bold text-foreground mb-1">
-                        FCFA {balanceData.totalCollected.toLocaleString()}
+                        FCFA {balanceData!.totalCollected.toLocaleString()}
                     </p>
                     <p className="text-xs text-muted-foreground mb-4">This month</p>
                     <button className="w-full px-3 py-1.5 bg-background border border-border text-foreground rounded-lg text-xs font-semibold hover:bg-muted transition-colors">
@@ -210,7 +233,7 @@ export default function WalletPage() {
                         📤 TOTAL WITHDRAWN
                     </p>
                     <p className="text-2xl font-bold text-foreground mb-1">
-                        FCFA {balanceData.totalWithdrawn.toLocaleString()}
+                        FCFA {balanceData!.totalWithdrawn.toLocaleString()}
                     </p>
                     <p className="text-xs text-muted-foreground mb-4">This month</p>
                     <button className="w-full px-3 py-1.5 bg-background border border-border text-foreground rounded-lg text-xs font-semibold hover:bg-muted transition-colors">
@@ -284,7 +307,7 @@ export default function WalletPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {recentActivity.map((activity, index) => (
+                            {recentActivity!.map((activity, index) => (
                                 <tr
                                     key={index}
                                     className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors"
@@ -371,7 +394,7 @@ export default function WalletPage() {
                             <div className="bg-muted/50 rounded-lg p-3 text-xs">
                                 <span className="text-muted-foreground">Available Balance:</span>
                                 <span className="font-bold text-foreground ml-2">
-                                    FCFA {balanceData.available.toLocaleString()}
+                                    FCFA {balanceData!.available.toLocaleString()}
                                 </span>
                             </div>
 
@@ -392,7 +415,7 @@ export default function WalletPage() {
                                     />
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                    Min: 10,000 FCFA | Max: {balanceData.available.toLocaleString()} FCFA
+                                    Min: 10,000 FCFA | Max: {balanceData!.available.toLocaleString()} FCFA
                                 </p>
                             </div>
 
@@ -416,7 +439,7 @@ export default function WalletPage() {
                                     100K
                                 </button>
                                 <button
-                                    onClick={() => setQuickAmount(balanceData.available, "withdraw")}
+                                    onClick={() => setQuickAmount(balanceData!.available, "withdraw")}
                                     className="px-3 py-1.5 bg-muted rounded-lg text-xs font-medium hover:bg-muted/80"
                                 >
                                     All
@@ -508,7 +531,7 @@ export default function WalletPage() {
                             <div className="bg-muted/50 rounded-lg p-3 text-xs">
                                 <span className="text-muted-foreground">Current Balance:</span>
                                 <span className="font-bold text-foreground ml-2">
-                                    FCFA {balanceData.available.toLocaleString()}
+                                    FCFA {balanceData!.available.toLocaleString()}
                                 </span>
                             </div>
 
