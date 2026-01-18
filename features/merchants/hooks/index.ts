@@ -3,6 +3,7 @@ export {
     useCreateMerchant,
     useGetUserMerchants,
     useGetMerchant,
+    useGetFirstMerchant,
     useUpdateMerchant,
     useSubmitKYB,
     useApproveKYB,

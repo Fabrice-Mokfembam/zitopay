@@ -17,10 +17,10 @@ import {
   X,
   Check,
 } from "lucide-react";
-import { useMerchantAccount } from "@/features/merchants/hooks/useMerchantAccount";
+import { useUserMerchantData } from "@/features/merchants/context/MerchantContext";
 import {
   useRegenerateSandboxCredentials,
-  useRegenerateProductionCredentials
+  useRegenerateProductionCredentials,
 } from "@/features/merchants/hooks/useMerchant";
 import type {
   RegenerateSandboxCredentialsResponse,
@@ -30,8 +30,8 @@ import type {
 type Environment = "sandbox" | "production";
 
 export default function ApiKeysPage() {
-  // Fetch merchant account data first
-  const { merchant, isLoading, refetch } = useMerchantAccount();
+  // Get merchant account data from context
+  const { merchant, merchantId, isLoading, refetch } = useUserMerchantData();
 
   // Determine if production is available
   const isProductionActive = merchant?.productionState === "ACTIVE";
@@ -50,8 +50,8 @@ export default function ApiKeysPage() {
   >(null);
 
   // Regenerate credentials mutations
-  const regenerateSandbox = useRegenerateSandboxCredentials(merchant?.id || "");
-  const regenerateProduction = useRegenerateProductionCredentials(merchant?.id || "");
+  const regenerateSandbox = useRegenerateSandboxCredentials(merchantId || "");
+  const regenerateProduction = useRegenerateProductionCredentials(merchantId || "");
 
   // Show loading state
   if (isLoading) {

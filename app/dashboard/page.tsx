@@ -18,105 +18,27 @@ import {
   RefreshCw,
   MoreVertical,
 } from "lucide-react";
+import { useDashboardStats, useDashboardQuickStats, useRecentTransactions } from "@/features/reports/hooks";
+
+// Map icon strings to components
+const iconMap: Record<string, any> = {
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  TrendingUp,
+  Wallet,
+  CheckCircle2,
+  Clock,
+  DollarSign,
+  AlertCircle
+};
 
 export default function DashboardPage() {
-  // Dummy data - will be replaced with real API data
-  const stats = [
-    {
-      label: "COLLECTIONS",
-      value: "FCFA 2,450,000",
-      change: "+12.5%",
-      trend: "up",
-      icon: ArrowDownToLine,
-      bgColor: "bg-green-50 dark:bg-green-900/10",
-      iconColor: "text-green-600 dark:text-green-400",
-      borderColor: "border-green-200 dark:border-green-800",
-    },
-    {
-      label: "PAYOUTS",
-      value: "FCFA 850,000",
-      change: "-5.2%",
-      trend: "down",
-      icon: ArrowUpFromLine,
-      bgColor: "bg-orange-50 dark:bg-orange-900/10",
-      iconColor: "text-orange-600 dark:text-orange-400",
-      borderColor: "border-orange-200 dark:border-orange-800",
-    },
-    {
-      label: "NET REVENUE",
-      value: "FCFA 1,600,000",
-      change: "+18.3%",
-      trend: "up",
-      icon: TrendingUp,
-      bgColor: "bg-purple-50 dark:bg-purple-900/10",
-      iconColor: "text-purple-600 dark:text-purple-400",
-      borderColor: "border-purple-200 dark:border-purple-800",
-    },
-    {
-      label: "BALANCE",
-      value: "FCFA 450,000",
-      status: "Available",
-      icon: Wallet,
-      bgColor: "bg-blue-50 dark:bg-blue-900/10",
-      iconColor: "text-blue-600 dark:text-blue-400",
-      borderColor: "border-blue-200 dark:border-blue-800",
-      hasAction: true,
-    },
-    {
-      label: "SUCCESS RATE",
-      value: "94.2%",
-      change: "+2.1%",
-      trend: "up",
-      subtitle: "1,234 / 1,310 transactions",
-      icon: CheckCircle2,
-      bgColor: "bg-emerald-50 dark:bg-emerald-900/10",
-      iconColor: "text-emerald-600 dark:text-emerald-400",
-      borderColor: "border-emerald-200 dark:border-emerald-800",
-    },
-  ];
+  // Fetch data from APIs
+  const { data: stats, isLoading: isLoadingStats } = useDashboardStats();
+  const { data: quickStats, isLoading: isLoadingQuickStats } = useDashboardQuickStats();
+  const { data: transactions, isLoading: isLoadingTransactions } = useRecentTransactions();
 
-  const quickStats = [
-    { label: "TRANSACTIONS", value: "1,234", subtitle: "This period" },
-    { label: "AVG TIME", value: "45s", subtitle: "To complete" },
-    { label: "TOTAL FEES", value: "FCFA 45,000", subtitle: "Gateway + Platform" },
-    { label: "PENDING", value: "12", subtitle: "Awaiting confirm" },
-  ];
-
-  const transactions = [
-    {
-      date: "Oct 24",
-      time: "14:23",
-      id: "#27-9281-023",
-      status: "success",
-      amount: "$120.00",
-      gateway: "MTN",
-    },
-    {
-      date: "Oct 24",
-      time: "13:45",
-      id: "#27-9281-024",
-      status: "pending",
-      amount: "$43.90",
-      gateway: "Orange",
-    },
-    {
-      date: "Oct 23",
-      time: "22:10",
-      id: "#27-9280-998",
-      status: "failed",
-      amount: "$210.00",
-      gateway: "MTN",
-    },
-    {
-      date: "Oct 23",
-      time: "18:34",
-      id: "#27-9280-997",
-      status: "success",
-      amount: "$1,450.00",
-      gateway: "Moov",
-    },
-  ];
-
+  // Static alerts (client-side for now as per user request not covering this endpoint yet)
   const alerts = [
     {
       type: "warning",
@@ -168,51 +90,66 @@ export default function DashboardPage() {
 
       {/* SECTION 1: KEY METRICS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        {stats.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <div
-              key={index}
-              className={`${stat.bgColor} rounded-xl p-4 border ${stat.borderColor}`}
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className={`w-9 h-9 bg-white dark:bg-background rounded-lg flex items-center justify-center shadow-sm`}>
-                  <Icon className={`w-5 h-5 ${stat.iconColor}`} />
-                </div>
-                {stat.change && (
-                  <span
-                    className={`text-xs font-semibold ${stat.trend === "up"
+        {isLoadingStats ? (
+          // Skeleton Loader
+          Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="bg-background rounded-xl p-4 border border-border animate-pulse">
+              <div className="flex justify-between mb-3">
+                <div className="w-9 h-9 bg-muted rounded-lg" />
+                <div className="w-8 h-4 bg-muted rounded" />
+              </div>
+              <div className="w-20 h-3 bg-muted rounded mb-2" />
+              <div className="w-32 h-6 bg-muted rounded mb-2" />
+              <div className="w-24 h-3 bg-muted rounded" />
+            </div>
+          ))
+        ) : (
+          stats?.map((stat, index) => {
+            const Icon = iconMap[stat.icon] || ArrowRight;
+            return (
+              <div
+                key={index}
+                className={`${stat.bgColor} rounded-xl p-4 border ${stat.borderColor}`}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className={`w-9 h-9 bg-white dark:bg-background rounded-lg flex items-center justify-center shadow-sm`}>
+                    <Icon className={`w-5 h-5 ${stat.iconColor}`} />
+                  </div>
+                  {stat.change && (
+                    <span
+                      className={`text-xs font-semibold ${stat.trend === "up"
                         ? "text-green-600 dark:text-green-400"
                         : "text-red-600 dark:text-red-400"
-                      }`}
-                  >
-                    {stat.change}
-                  </span>
+                        }`}
+                    >
+                      {stat.change}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
+                  {stat.label}
+                </p>
+                <p className="text-lg font-bold text-foreground mb-1">{stat.value}</p>
+                {stat.subtitle && (
+                  <p className="text-xs text-muted-foreground">{stat.subtitle}</p>
+                )}
+                {stat.status && (
+                  <div className="flex items-center gap-1.5 mt-2">
+                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                    <span className="text-xs text-green-600 dark:text-green-400 font-medium">
+                      {stat.status}
+                    </span>
+                  </div>
+                )}
+                {stat.hasAction && (
+                  <button className="mt-3 w-full py-1.5 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition-colors">
+                    Withdraw
+                  </button>
                 )}
               </div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
-                {stat.label}
-              </p>
-              <p className="text-lg font-bold text-foreground mb-1">{stat.value}</p>
-              {stat.subtitle && (
-                <p className="text-xs text-muted-foreground">{stat.subtitle}</p>
-              )}
-              {stat.status && (
-                <div className="flex items-center gap-1.5 mt-2">
-                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-                  <span className="text-xs text-green-600 dark:text-green-400 font-medium">
-                    {stat.status}
-                  </span>
-                </div>
-              )}
-              {stat.hasAction && (
-                <button className="mt-3 w-full py-1.5 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition-colors">
-                  Withdraw
-                </button>
-              )}
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
 
       {/* SECTION 2: CHARTS */}
@@ -291,18 +228,29 @@ export default function DashboardPage() {
 
       {/* SECTION 3: QUICK STATS */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {quickStats.map((stat, index) => (
-          <div
-            key={index}
-            className="bg-background rounded-xl p-4 border border-border hover:border-orange-200 dark:hover:border-orange-800 transition-colors"
-          >
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-              {stat.label}
-            </p>
-            <p className="text-xl font-bold text-foreground mb-1">{stat.value}</p>
-            <p className="text-xs text-muted-foreground">{stat.subtitle}</p>
-          </div>
-        ))}
+        {isLoadingQuickStats ? (
+          // Skeleton Loader
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="bg-background rounded-xl p-4 border border-border animate-pulse">
+              <div className="w-20 h-3 bg-muted rounded mb-2" />
+              <div className="w-16 h-6 bg-muted rounded mb-2" />
+              <div className="w-24 h-3 bg-muted rounded" />
+            </div>
+          ))
+        ) : (
+          quickStats?.map((stat, index) => (
+            <div
+              key={index}
+              className="bg-background rounded-xl p-4 border border-border hover:border-orange-200 dark:hover:border-orange-800 transition-colors"
+            >
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                {stat.label}
+              </p>
+              <p className="text-xl font-bold text-foreground mb-1">{stat.value}</p>
+              <p className="text-xs text-muted-foreground">{stat.subtitle}</p>
+            </div>
+          ))
+        )}
       </div>
 
       {/* SECTION 4: RECENT TRANSACTIONS */}
@@ -340,47 +288,74 @@ export default function DashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {transactions.map((tx, index) => (
-                <tr
-                  key={index}
-                  className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors"
-                >
-                  <td className="py-3 px-4">
-                    <div className="text-xs text-foreground font-medium">{tx.date}</div>
-                    <div className="text-xs text-muted-foreground">{tx.time}</div>
-                  </td>
-                  <td className="py-3 px-4 text-xs text-foreground font-mono">{tx.id}</td>
-                  <td className="py-3 px-4">
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${tx.status === "success"
+              {isLoadingTransactions ? (
+                // Skeleton Loader
+                Array.from({ length: 4 }).map((_, i) => (
+                  <tr key={i} className="border-b border-border last:border-0">
+                    <td className="py-3 px-4">
+                      <div className="w-12 h-3 bg-muted rounded mb-1" />
+                      <div className="w-10 h-3 bg-muted rounded" />
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="w-24 h-3 bg-muted rounded" />
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="w-20 h-6 bg-muted rounded" />
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="w-16 h-3 bg-muted rounded" />
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="w-12 h-3 bg-muted rounded" />
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="w-4 h-4 bg-muted rounded" />
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                transactions?.map((tx, index) => (
+                  <tr
+                    key={index}
+                    className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors"
+                  >
+                    <td className="py-3 px-4">
+                      <div className="text-xs text-foreground font-medium">{tx.date}</div>
+                      <div className="text-xs text-muted-foreground">{tx.time}</div>
+                    </td>
+                    <td className="py-3 px-4 text-xs text-foreground font-mono">{tx.id}</td>
+                    <td className="py-3 px-4">
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${tx.status === "success"
                           ? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400"
                           : tx.status === "pending"
                             ? "bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400"
                             : "bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400"
-                        }`}
-                    >
-                      <span
-                        className={`w-1.5 h-1.5 rounded-full ${tx.status === "success"
+                          }`}
+                      >
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${tx.status === "success"
                             ? "bg-green-500"
                             : tx.status === "pending"
                               ? "bg-orange-500"
                               : "bg-red-500"
-                          }`}
-                      />
-                      {tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 text-xs font-semibold text-foreground">
-                    {tx.amount}
-                  </td>
-                  <td className="py-3 px-4 text-xs text-foreground">{tx.gateway}</td>
-                  <td className="py-3 px-4">
-                    <button className="p-1 hover:bg-muted rounded transition-colors">
-                      <MoreVertical className="w-4 h-4 text-muted-foreground" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                            }`}
+                        />
+                        {tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-xs font-semibold text-foreground">
+                      {tx.amount}
+                    </td>
+                    <td className="py-3 px-4 text-xs text-foreground">{tx.gateway}</td>
+                    <td className="py-3 px-4">
+                      <button className="p-1 hover:bg-muted rounded transition-colors">
+                        <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -396,8 +371,8 @@ export default function DashboardPage() {
             <div
               key={index}
               className={`p-4 rounded-lg border ${alert.type === "warning"
-                  ? "bg-orange-50 dark:bg-orange-900/10 border-orange-200 dark:border-orange-800"
-                  : "bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800"
+                ? "bg-orange-50 dark:bg-orange-900/10 border-orange-200 dark:border-orange-800"
+                : "bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800"
                 }`}
             >
               <div className="flex items-start justify-between gap-4">
@@ -405,8 +380,8 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-2 mb-1">
                     <AlertCircle
                       className={`w-4 h-4 ${alert.type === "warning"
-                          ? "text-orange-600 dark:text-orange-400"
-                          : "text-blue-600 dark:text-blue-400"
+                        ? "text-orange-600 dark:text-orange-400"
+                        : "text-blue-600 dark:text-blue-400"
                         }`}
                     />
                     <h4 className="text-xs font-semibold text-foreground">{alert.title}</h4>

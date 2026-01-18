@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthContext } from "@/features/auth/context/AuthContext";
-import { useMerchantAccount } from "@/features/merchants/hooks/useMerchantAccount";
+import { useUserMerchantData } from "@/features/merchants/context/MerchantContext";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardNavbar } from "@/components/dashboard/DashboardNavbar";
 import { motion } from "framer-motion";
@@ -18,9 +18,9 @@ export default function DashboardLayout({
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuthContext();
 
-  // Prefetch merchant account data at layout level
-  // Only fetch when authenticated to avoid blank screen
-  const { isLoading: isMerchantLoading } = useMerchantAccount(isAuthenticated);
+  // Get merchant account data from context
+  // Context automatically handles fetching when authenticated
+  const { isLoading: isMerchantLoading } = useUserMerchantData();
 
   useEffect(() => {
     // Redirect to login if not authenticated

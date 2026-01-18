@@ -1,7 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, AuthData, getAuthData, storeAuthData, clearAuthData, isAuthenticated as checkAuth } from '../utils/storage';
+import { User, AuthData, getAuthData, storeAuthData, clearAuthData, getAccessToken } from '../utils/storage';
+import { getCurrentUser } from '../api/index';
 
 // Context type definition
 interface AuthContextType {
@@ -18,25 +19,53 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 /**
  * Auth Provider Component
  * Manages user authentication state across the app
+ * Fetches fresh user data from API on mount if token exists
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Load user from storage on mount
+    // Load user from storage and fetch fresh data from API on mount
     useEffect(() => {
-        const loadUser = () => {
+        const loadUser = async () => {
             try {
+                const token = getAccessToken();
                 const authData = getAuthData();
-                const authenticated = checkAuth();
 
-                if (authData && authenticated) {
+                // If no token, user is not authenticated
+                if (!token) {
+                    setUser(null);
+                    setIsLoading(false);
+                    return;
+                }
+
+                // First, set user from storage (for immediate UI update)
+                if (authData?.user) {
                     setUser(authData.user);
-                } else {
+                }
+
+                // Then fetch fresh user data from API
+                try {
+                    const freshUser = await getCurrentUser();
+                    
+                    // Update context with fresh data
+                    setUser(freshUser);
+                    
+                    // Update storage with fresh user data (keep existing tokens)
+                    if (authData) {
+                        storeAuthData({
+                            ...authData,
+                            user: freshUser,
+                        });
+                    }
+                } catch (error) {
+                    // If API call fails (token invalid/expired), clear auth
+                    console.error('Failed to fetch current user:', error);
+                    clearAuthData();
                     setUser(null);
                 }
             } catch (error) {
-                console.error('Error loading user from storage:', error);
+                console.error('Error loading user:', error);
                 setUser(null);
             } finally {
                 setIsLoading(false);

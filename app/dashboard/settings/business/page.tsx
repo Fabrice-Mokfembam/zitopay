@@ -11,10 +11,10 @@ import {
     Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useGetUserMerchants, useSubmitKYB, useRequestProduction } from "@/features/merchants/hooks/useMerchant";
+import { useSubmitKYB, useRequestProduction } from "@/features/merchants/hooks/useMerchant";
+import { useUserMerchantData } from "@/features/merchants/context/MerchantContext";
 import KYBUploadSection from "./components/KYBUploadSection";
 import ProductionAccessSection from "./components/ProductionAccessSection";
-import type { Merchant } from "@/features/merchants/types/index";
 
 export default function BusinessSettingsPage() {
     const [showEditModal, setShowEditModal] = useState(false);
@@ -23,22 +23,14 @@ export default function BusinessSettingsPage() {
         secretKey: string;
     } | undefined>(undefined);
 
-    // Fetch merchant data
-    const { data: merchantsData, isLoading, refetch } = useGetUserMerchants();
-
-    // Get the first merchant (using useMemo to avoid cascading renders)
-    const selectedMerchant = useMemo(() => {
-        if (merchantsData?.merchants && merchantsData.merchants.length > 0) {
-            return merchantsData.merchants[0];
-        }
-        return null;
-    }, [merchantsData]);
+    // Get merchant data from context
+    const { merchant: selectedMerchant, merchantId, isLoading, refetch } = useUserMerchantData();
 
     // KYB submission hook
-    const submitKYBMutation = useSubmitKYB(selectedMerchant?.id || "");
+    const submitKYBMutation = useSubmitKYB(merchantId || "");
 
     // Production request hook
-    const requestProductionMutation = useRequestProduction(selectedMerchant?.id || "");
+    const requestProductionMutation = useRequestProduction(merchantId || "");
 
     const handleSubmitKYB = async () => {
         if (!selectedMerchant) return;

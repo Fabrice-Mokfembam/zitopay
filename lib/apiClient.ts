@@ -55,8 +55,37 @@ apiClient.interceptors.response.use(
     async (error: AxiosError) => {
         const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-        // If 401 error and haven't retried yet
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        // Extract error message from API response if available
+        // This ensures that all parts of the app receive the user-friendly message from the server
+        if (error.response?.data && typeof error.response.data === 'object') {
+            const data = error.response.data as Record<string, unknown>;
+            // Prefer 'message' but fallback to 'error' (type) if message is missing
+            const apiMessage = (data.message || data.error) as string;
+            if (apiMessage) {
+                // We modify the error message to be the one from the API
+                // This allows toast.error(error.message) to work correctly across the app
+                error.message = apiMessage;
+            }
+        }
+
+        // Public endpoints that don't need authentication - should not trigger refresh/redirect
+        const publicEndpoints = [
+            '/public/v1/auth/register',
+            '/public/v1/auth/login',
+            '/public/v1/auth/admin/login',
+            '/public/v1/auth/verify-email',
+            '/public/v1/auth/resend-verification',
+            '/public/v1/auth/forgot-password',
+            '/public/v1/auth/verify-reset-code',
+            '/public/v1/auth/reset-password',
+            '/public/v1/auth/resend-reset-code',
+            '/public/v1/auth/refresh',
+        ];
+
+        const isPublicEndpoint = publicEndpoints.some(endpoint => originalRequest.url?.includes(endpoint));
+
+        // If 401 error and haven't retried yet, and it's NOT a public endpoint
+        if (error.response?.status === 401 && !originalRequest._retry && !isPublicEndpoint) {
             originalRequest._retry = true;
 
             const refreshToken = getRefreshToken();
@@ -79,7 +108,9 @@ apiClient.interceptors.response.use(
                     }
 
                     // Retry original request with new token
-                    originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+                    if (originalRequest.headers) {
+                        originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+                    }
                     return apiClient(originalRequest);
                 } catch (refreshError) {
                     // Refresh failed, clear auth and redirect to login

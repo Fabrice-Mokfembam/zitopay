@@ -152,7 +152,7 @@ export default function AboutPage() {
                 We spent three months just getting payments to work reliably. Three months that should have been spent building features and serving customers. We knew there had to be a better way.
               </p>
               <p className="text-muted-foreground leading-relaxed">
-                That's when ZitoPay was born. We set out to build the payment infrastructure we wished we had—one platform that would make African payments as simple as they should be. Today, we're proud to serve over 1,000 merchants across 15 African countries, processing millions in transactions every month.
+                That&apos;s when ZitoPay was born. We set out to build the payment infrastructure we wished we had—one platform that would make African payments as simple as they should be. Today, we&apos;re proud to serve over 1,000 merchants across 15 African countries, processing millions in transactions every month.
               </p>
             </motion.div>
           </div>

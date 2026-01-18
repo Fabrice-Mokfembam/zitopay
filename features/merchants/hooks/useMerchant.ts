@@ -3,6 +3,7 @@ import {
     createMerchant,
     getUserMerchants,
     getMerchant,
+    getFirstMerchant,
     updateMerchant,
     submitKYB,
     approveKYB,
@@ -21,6 +22,7 @@ import type {
     CreateMerchantRequest,
     CreateMerchantResponse,
     GetMerchantResponse,
+    GetFirstMerchantResponse,
     GetUserMerchantsResponse,
     UpdateMerchantRequest,
     UpdateMerchantResponse,
@@ -76,6 +78,23 @@ export const useGetMerchant = (
         queryKey: ['merchant', merchantId],
         queryFn: () => getMerchant(merchantId),
         enabled: enabled && !!merchantId,
+    });
+};
+
+/**
+ * Hook for fetching the first merchant account associated with the authenticated user
+ * Returns 404 if user has no merchant accounts
+ * Refetches on mount and when enabled state changes to ensure fresh data
+ */
+export const useGetFirstMerchant = (
+    enabled: boolean = true
+): UseQueryResult<GetFirstMerchantResponse, Error> => {
+    return useQuery({
+        queryKey: ['merchant', 'first'],
+        queryFn: () => getFirstMerchant(),
+        enabled: enabled,
+        refetchOnMount: true, // Always refetch when component mounts
+        staleTime: 0, // Consider data stale immediately to ensure fresh fetch on app load
     });
 };
 

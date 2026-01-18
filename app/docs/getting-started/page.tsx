@@ -1,24 +1,54 @@
+"use client";
+
+import Link from "next/link";
+
 export default function GettingStartedPage() {
-  return (
-    <div>
-      <h1 className="text-4xl font-bold mb-6">Getting Started</h1>
-      <div className="prose max-w-none">
-        <p className="text-lg text-gray-600 mb-6">
-          Get up and running with ZitoPay in minutes. Follow these steps to integrate mobile money payments into your application.
-        </p>
-        <h2 className="text-2xl font-semibold mt-8 mb-4">Step 1: Create an Account</h2>
-        <p className="text-gray-600 mb-4">
-          Sign up for a ZitoPay account to get your API credentials.
-        </p>
-        <h2 className="text-2xl font-semibold mt-8 mb-4">Step 2: Get Your API Key</h2>
-        <p className="text-gray-600 mb-4">
-          Navigate to your dashboard and generate an API key from the API Keys section.
-        </p>
-        <h2 className="text-2xl font-semibold mt-8 mb-4">Step 3: Make Your First Request</h2>
-        <p className="text-gray-600 mb-4">
-          Use your API key to authenticate requests to the ZitoPay API.
-        </p>
-      </div>
-    </div>
-  );
+    return (
+        <div>
+            <h1>Getting Started</h1>
+            <p className="mb-6">
+                Get up and running with ZitoPay in minutes. Follow these guides to integrate mobile money payments into your application.
+            </p>
+
+            <div className="grid md:grid-cols-3 gap-4 my-6">
+                <Link
+                    href="/docs/getting-started/introduction"
+                    className="p-4 border border-border rounded-lg hover:bg-muted transition-colors"
+                >
+                    <h2 className="mb-1.5">Introduction</h2>
+                    <p className="text-muted-foreground">
+                        Learn about ZitoPay, its features, and use cases.
+                    </p>
+                </Link>
+
+                <Link
+                    href="/docs/getting-started/implementation-guide"
+                    className="p-4 border border-border rounded-lg hover:bg-muted transition-colors"
+                >
+                    <h2 className="mb-1.5">Implementation Guide</h2>
+                    <p className="text-muted-foreground">
+                        Step-by-step guide to integrate ZitoPay into your app.
+                    </p>
+                </Link>
+
+                <Link
+                    href="/docs/getting-started/using-the-api"
+                    className="p-4 border border-border rounded-lg hover:bg-muted transition-colors"
+                >
+                    <h2 className="mb-1.5">Using the API</h2>
+                    <p className="text-muted-foreground">
+                        Understand authentication, environments, and API usage.
+                    </p>
+                </Link>
+            </div>
+
+            <h2>Quick Start</h2>
+            <ol>
+                <li>Create a ZitoPay account</li>
+                <li>Get your API keys from the dashboard</li>
+                <li>Follow the <Link href="/docs/getting-started/implementation-guide">Implementation Guide</Link></li>
+                <li>Start testing in the sandbox environment</li>
+            </ol>
+        </div>
+    );
 }

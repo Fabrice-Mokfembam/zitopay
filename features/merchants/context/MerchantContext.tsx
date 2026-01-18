@@ -1,0 +1,68 @@
+"use client";
+
+import React, { createContext, useContext, ReactNode } from 'react';
+import { useGetFirstMerchant } from '../hooks/useMerchant';
+import { useAuthContext } from '@/features/auth/context/AuthContext';
+import type { Merchant } from '../types/index';
+
+// Context type definition
+interface MerchantContextType {
+    merchant: Merchant | null;
+    merchantId: string | null;
+    isLoading: boolean;
+    error: Error | null;
+    refetch: () => Promise<unknown>;
+}
+
+// Create context with undefined default
+const MerchantContext = createContext<MerchantContextType | undefined>(undefined);
+
+/**
+ * Merchant Provider Component
+ * Manages merchant account data globally across the app
+ * Fetches fresh merchant data on mount if user is authenticated
+ */
+export function MerchantProvider({ children }: { children: ReactNode }) {
+    const { isAuthenticated } = useAuthContext();
+    
+    // Only fetch merchant data if user is authenticated
+    const { data, isLoading, error, refetch: refetchMerchant } = useGetFirstMerchant(isAuthenticated);
+
+    // Extract merchant from response
+    const merchant = data?.merchant || null;
+    const merchantId = merchant?.id || null;
+
+    const value: MerchantContextType = {
+        merchant,
+        merchantId,
+        isLoading,
+        error: error as Error | null,
+        refetch: async () => {
+            if (isAuthenticated) {
+                return refetchMerchant();
+            }
+            return Promise.resolve();
+        },
+    };
+
+    return <MerchantContext.Provider value={value}>{children}</MerchantContext.Provider>;
+}
+
+/**
+ * Hook to access merchant context
+ * Must be used within MerchantProvider
+ * 
+ * @example
+ * ```tsx
+ * const { merchant, merchantId, isLoading } = useUserMerchantData();
+ * ```
+ */
+export function useUserMerchantData(): MerchantContextType {
+    const context = useContext(MerchantContext);
+
+    if (context === undefined) {
+        throw new Error('useUserMerchantData must be used within MerchantProvider');
+    }
+
+    return context;
+}

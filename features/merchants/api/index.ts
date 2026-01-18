@@ -3,6 +3,7 @@ import type {
     CreateMerchantRequest,
     CreateMerchantResponse,
     GetMerchantResponse,
+    GetFirstMerchantResponse,
     GetUserMerchantsResponse,
     UpdateMerchantRequest,
     UpdateMerchantResponse,
@@ -51,6 +52,17 @@ export const createMerchant = async (
 export const getUserMerchants = async (): Promise<GetUserMerchantsResponse> => {
     const response = await apiClient.get<GetUserMerchantsResponse>(
         MERCHANT_BASE_URL
+    );
+    return response.data;
+};
+
+/**
+ * Get the first merchant account associated with the authenticated user
+ * Returns 404 if user has no merchant accounts
+ */
+export const getFirstMerchant = async (): Promise<GetFirstMerchantResponse> => {
+    const response = await apiClient.get<GetFirstMerchantResponse>(
+        `${MERCHANT_BASE_URL}/first`
     );
     return response.data;
 };

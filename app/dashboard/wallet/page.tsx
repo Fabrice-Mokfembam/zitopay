@@ -243,7 +243,7 @@ export default function WalletPage() {
             </div>
 
             {/* BALANCE CHART */}
-            <div className="bg-background rounded-xl p-6 border border-border">
+            {/* <div className="bg-background rounded-xl p-6 border border-border">
                 <div className="flex items-center justify-between mb-6">
                     <div>
                         <h3 className="text-sm font-semibold text-foreground">📈 Balance History</h3>
@@ -262,7 +262,6 @@ export default function WalletPage() {
                     </div>
                 </div>
 
-                {/* Chart Placeholder */}
                 <div className="h-64 flex items-center justify-center bg-muted/30 rounded-lg border-2 border-dashed border-border">
                     <div className="text-center">
                         <TrendingUp className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
@@ -274,7 +273,7 @@ export default function WalletPage() {
                         </p>
                     </div>
                 </div>
-            </div>
+            </div> */}
 
             {/* RECENT ACTIVITY */}
             <div className="bg-background rounded-xl border border-border overflow-hidden">

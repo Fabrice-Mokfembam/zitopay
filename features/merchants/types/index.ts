@@ -28,12 +28,11 @@ export interface Merchant {
 // Domain Object
 export interface Domain {
     id: string;
-    merchantId: string;
     domain: string;
-    verified: boolean;
     verificationToken: string;
-    verifiedAt?: string;
+    verifiedAt: string | null;
     createdAt: string;
+    updatedAt: string;
 }
 
 // Gateway Configuration
@@ -109,6 +108,10 @@ export interface GetMerchantResponse {
     merchant: Merchant;
 }
 
+export interface GetFirstMerchantResponse {
+    merchant: Merchant;
+}
+
 export interface GetUserMerchantsResponse {
     merchants: Merchant[];
 }
@@ -160,6 +163,8 @@ export interface AddDomainResponse {
         id: string;
         domain: string;
         verificationToken: string;
+        verifiedAt: string | null;
+        createdAt: string;
     };
 }
 

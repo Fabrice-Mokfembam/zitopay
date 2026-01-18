@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { AuthProvider } from "@/features/auth/context/AuthContext";
+import { MerchantProvider } from "@/features/merchants/context/MerchantContext";
 import { LanguageProvider } from "@/core/i18n/LanguageProvider";
 import { AuthCookieSync } from "@/components/AuthCookieSync";
 import { Toaster } from "sonner";
@@ -74,8 +75,10 @@ export default function RootLayout({
         <Toaster position="top-right" richColors />
         <QueryProvider>
           <AuthProvider>
-            <AuthCookieSync />
-            <LanguageProvider>{children}</LanguageProvider>
+            <MerchantProvider>
+              <AuthCookieSync />
+              <LanguageProvider>{children}</LanguageProvider>
+            </MerchantProvider>
           </AuthProvider>
         </QueryProvider>
       </body>
