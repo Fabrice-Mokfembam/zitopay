@@ -29,10 +29,11 @@ export default function TransactionsPage() {
 
   // Fetch transactions using the same hook as dashboard
   // Pass type filter based on activeTab
-  const transactionType = activeTab === "all" ? undefined : activeTab;
-  const { data: transactionsData, isLoading: isLoadingTransactions } = useRecentTransactions(
+  const transactionType: 'collection' | 'payout' | 'refund' | undefined = 
+    activeTab === "all" ? undefined : activeTab;
+  const { data: transactionsData, isLoading: isLoadingTransactions, error: transactionsError } = useRecentTransactions(
     merchantId || '',
-    100, // Fetch more transactions for pagination
+    50, // Fetch more transactions for pagination (reduced from 100 to avoid API limits)
     transactionType,
     !!merchantId
   );
@@ -75,6 +76,20 @@ export default function TransactionsPage() {
 
   // Get transactions from API data
   const transactions = transactionsData?.transactions || [];
+  
+  // Debug logging (remove in production)
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+    console.log('Transactions Page Debug:', {
+      merchantId,
+      activeTab,
+      transactionType,
+      hasData: !!transactionsData,
+      transactionsCount: transactions.length,
+      isLoading: isLoadingTransactions,
+      error: transactionsError?.message,
+      errorDetails: transactionsError
+    });
+  }
 
   // Pagination calculations
   const totalPages = Math.ceil(transactions.length / itemsPerPage);
@@ -134,6 +149,33 @@ export default function TransactionsPage() {
 
       {/* TRANSACTIONS TABLE */}
       <div className="bg-background rounded-xl p-6 border border-border">
+        {transactionsError && (
+          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg">
+            <p className="text-sm text-red-900 dark:text-red-100 font-semibold mb-1">
+              Error loading transactions
+            </p>
+            <p className="text-xs text-red-800 dark:text-red-200">
+              {transactionsError.message || 'An unknown error occurred. Please try again.'}
+            </p>
+            {process.env.NODE_ENV === 'development' && (
+              <details className="mt-2">
+                <summary className="text-xs text-red-700 dark:text-red-300 cursor-pointer">
+                  Show error details
+                </summary>
+                <pre className="mt-2 text-xs text-red-600 dark:text-red-400 overflow-auto">
+                  {JSON.stringify(transactionsError, null, 2)}
+                </pre>
+              </details>
+            )}
+          </div>
+        )}
+        {!merchantId && (
+          <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+            <p className="text-sm text-yellow-900 dark:text-yellow-100">
+              Merchant ID not found. Please ensure you&apos;re logged in.
+            </p>
+          </div>
+        )}
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -191,7 +233,7 @@ export default function TransactionsPage() {
                     </td>
                   </tr>
                 ))
-              ) : paginatedTransactions.length > 0 ? (
+              ) : transactions.length > 0 && paginatedTransactions.length > 0 ? (
                 paginatedTransactions.map((tx) => (
                   <tr
                     key={tx.id}
