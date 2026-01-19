@@ -2,145 +2,90 @@
 
 import { useState } from "react";
 import {
-  Search,
-  Filter,
-  Download,
-  FileText,
-  Calendar,
-  CreditCard,
-  CheckCircle2,
-  Clock,
-  XCircle,
   ArrowDownToLine,
   ArrowUpFromLine,
   MoreVertical,
   X,
-  Copy,
+  Download,
   RefreshCw,
-  AlertCircle,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  CheckCircle2,
+  Clock,
+  XCircle,
 } from "lucide-react";
+import { useUserMerchantData } from "@/features/merchants/context/MerchantContext";
+import { useRecentTransactions } from "@/features/merchants/hooks/useMerchant";
 
 type TransactionType = "all" | "collection" | "payout";
-type TransactionStatus = "all" | "success" | "pending" | "failed" | "refunded";
 
 export default function TransactionsPage() {
+  const { merchantId } = useUserMerchantData();
   const [activeTab, setActiveTab] = useState<TransactionType>("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState<TransactionStatus>("all");
-  const [selectedGateway, setSelectedGateway] = useState("all");
-  const [selectedDateRange, setSelectedDateRange] = useState("last30");
-  const [selectedTransactions, setSelectedTransactions] = useState<string[]>([]);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
-  // Dummy data - will be replaced with real API data
-  const stats = {
-    totalVolume: 2500000,
-    successful: 1234,
-    failed: 45,
-    pending: 12,
+  // Fetch transactions using the same hook as dashboard
+  // Pass type filter based on activeTab
+  const transactionType = activeTab === "all" ? undefined : activeTab;
+  const { data: transactionsData, isLoading: isLoadingTransactions } = useRecentTransactions(
+    merchantId || '',
+    100, // Fetch more transactions for pagination
+    transactionType,
+    !!merchantId
+  );
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "SUCCESS":
+        return "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400";
+      case "PENDING_GATEWAY":
+        return "bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400";
+      case "FAILED":
+        return "bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400";
+      default:
+        return "bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-400";
+    }
   };
 
-  const transactions = [
-    {
-      id: "#27-9281-023",
-      type: "collection",
-      status: "success",
-      amount: 10000,
-      currency: "FCFA",
-      gateway: "MTN",
-      customer: "+237 670 123 456",
-      date: "Jan 12, 2026",
-      time: "14:23:45",
-      reference: "MTN-REF-123456789",
-    },
-    {
-      id: "#27-9281-024",
-      type: "payout",
-      status: "pending",
-      amount: 5000,
-      currency: "FCFA",
-      gateway: "Orange",
-      customer: "+237 690 234 567",
-      date: "Jan 12, 2026",
-      time: "13:45:12",
-      reference: "ORG-REF-987654321",
-    },
-    {
-      id: "#27-9280-998",
-      type: "collection",
-      status: "failed",
-      amount: 15000,
-      currency: "FCFA",
-      gateway: "MTN",
-      customer: "+237 677 345 678",
-      date: "Jan 11, 2026",
-      time: "22:10:33",
-      reference: "MTN-REF-111222333",
-      failureReason: "Insufficient balance",
-    },
-    {
-      id: "#27-9280-997",
-      type: "collection",
-      status: "success",
-      amount: 1450000,
-      currency: "FCFA",
-      gateway: "Bank",
-      customer: "+237 680 456 789",
-      date: "Jan 11, 2026",
-      time: "18:34:22",
-      reference: "BANK-REF-444555666",
-    },
-  ];
+  const formatAmount = (amount: number, currency: string = "XAF") => {
+    return `${amount.toLocaleString()} ${currency}`;
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "success":
+      case "SUCCESS":
         return <CheckCircle2 className="w-4 h-4" />;
-      case "pending":
+      case "PENDING_GATEWAY":
         return <Clock className="w-4 h-4" />;
-      case "failed":
+      case "FAILED":
         return <XCircle className="w-4 h-4" />;
       default:
         return <Clock className="w-4 h-4" />;
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "success":
-        return "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800";
-      case "pending":
-        return "bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800";
-      case "failed":
-        return "bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800";
-      default:
-        return "bg-muted text-muted-foreground";
-    }
-  };
-
-  const handleSelectAll = () => {
-    if (selectedTransactions.length === transactions.length) {
-      setSelectedTransactions([]);
-    } else {
-      setSelectedTransactions(transactions.map((t) => t.id));
-    }
-  };
-
-  const handleSelectTransaction = (id: string) => {
-    if (selectedTransactions.includes(id)) {
-      setSelectedTransactions(selectedTransactions.filter((t) => t !== id));
-    } else {
-      setSelectedTransactions([...selectedTransactions, id]);
-    }
-  };
 
   const openDetailModal = (transaction: any) => {
     setSelectedTransaction(transaction);
     setShowDetailModal(true);
+  };
+
+  // Get transactions from API data
+  const transactions = transactionsData?.transactions || [];
+
+  // Pagination calculations
+  const totalPages = Math.ceil(transactions.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedTransactions = transactions.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filter changes
+  const handleTabChange = (tab: TransactionType) => {
+    setActiveTab(tab);
+    setCurrentPage(1);
   };
 
   return (
@@ -156,7 +101,7 @@ export default function TransactionsPage() {
       {/* TABS */}
       <div className="flex gap-2">
         <button
-          onClick={() => setActiveTab("all")}
+          onClick={() => handleTabChange("all")}
           className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${activeTab === "all"
               ? "bg-orange-500 text-white"
               : "bg-background border border-border text-foreground hover:bg-muted"
@@ -165,7 +110,7 @@ export default function TransactionsPage() {
           All Transactions
         </button>
         <button
-          onClick={() => setActiveTab("collection")}
+          onClick={() => handleTabChange("collection")}
           className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${activeTab === "collection"
               ? "bg-green-500 text-white"
               : "bg-background border border-border text-foreground hover:bg-muted"
@@ -175,7 +120,7 @@ export default function TransactionsPage() {
           Collections
         </button>
         <button
-          onClick={() => setActiveTab("payout")}
+          onClick={() => handleTabChange("payout")}
           className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${activeTab === "payout"
               ? "bg-blue-500 text-white"
               : "bg-background border border-border text-foreground hover:bg-muted"
@@ -186,150 +131,15 @@ export default function TransactionsPage() {
         </button>
       </div>
 
-      {/* STATS CARDS */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-blue-50 dark:bg-blue-900/10 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-            💰 TOTAL VOLUME
-          </p>
-          <p className="text-xl font-bold text-foreground mb-1">
-            FCFA {stats.totalVolume.toLocaleString()}
-          </p>
-          <p className="text-xs text-muted-foreground">This period</p>
-        </div>
-        <div className="bg-green-50 dark:bg-green-900/10 rounded-xl p-4 border border-green-200 dark:border-green-800">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-            ✅ SUCCESSFUL
-          </p>
-          <p className="text-xl font-bold text-foreground mb-1">{stats.successful}</p>
-          <p className="text-xs text-green-600 dark:text-green-400">
-            {((stats.successful / (stats.successful + stats.failed + stats.pending)) * 100).toFixed(1)}% Completed
-          </p>
-        </div>
-        <div className="bg-red-50 dark:bg-red-900/10 rounded-xl p-4 border border-red-200 dark:border-red-800">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-            ❌ FAILED
-          </p>
-          <p className="text-xl font-bold text-foreground mb-1">{stats.failed}</p>
-          <p className="text-xs text-red-600 dark:text-red-400">
-            {((stats.failed / (stats.successful + stats.failed + stats.pending)) * 100).toFixed(1)}% Need review
-          </p>
-        </div>
-        <div className="bg-orange-50 dark:bg-orange-900/10 rounded-xl p-4 border border-orange-200 dark:border-orange-800">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-            ⏳ PENDING
-          </p>
-          <p className="text-xl font-bold text-foreground mb-1">{stats.pending}</p>
-          <p className="text-xs text-orange-600 dark:text-orange-400">
-            {((stats.pending / (stats.successful + stats.failed + stats.pending)) * 100).toFixed(1)}% Processing
-          </p>
-        </div>
-      </div>
-
-      {/* FILTERS & SEARCH */}
-      <div className="bg-background rounded-xl p-4 border border-border space-y-4">
-        {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search by ID, amount, phone number..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-muted border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground"
-          />
-        </div>
-
-        {/* Filter Dropdowns */}
-        <div className="flex flex-wrap gap-3">
-          <select
-            value={selectedDateRange}
-            onChange={(e) => setSelectedDateRange(e.target.value)}
-            className="px-3 py-2 bg-background border border-border rounded-lg text-xs font-medium text-foreground hover:bg-muted transition-colors"
-          >
-            <option value="today">Today</option>
-            <option value="last7">Last 7 days</option>
-            <option value="last30">Last 30 days</option>
-            <option value="last90">Last 90 days</option>
-            <option value="custom">Custom range</option>
-          </select>
-
-          <select
-            value={selectedGateway}
-            onChange={(e) => setSelectedGateway(e.target.value)}
-            className="px-3 py-2 bg-background border border-border rounded-lg text-xs font-medium text-foreground hover:bg-muted transition-colors"
-          >
-            <option value="all">All Gateways</option>
-            <option value="mtn">MTN Mobile Money</option>
-            <option value="orange">Orange Money</option>
-            <option value="moov">Moov Money</option>
-            <option value="bank">Bank Transfer</option>
-          </select>
-
-          <select
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value as TransactionStatus)}
-            className="px-3 py-2 bg-background border border-border rounded-lg text-xs font-medium text-foreground hover:bg-muted transition-colors"
-          >
-            <option value="all">All Status</option>
-            <option value="success">✅ Success</option>
-            <option value="pending">⏳ Pending</option>
-            <option value="failed">❌ Failed</option>
-            <option value="refunded">🔄 Refunded</option>
-          </select>
-
-          <button className="px-3 py-2 bg-background border border-border rounded-lg text-xs font-medium text-foreground hover:bg-muted transition-colors">
-            Clear Filters
-          </button>
-
-          <div className="ml-auto flex gap-2">
-            <button className="px-3 py-2 bg-background border border-border rounded-lg text-xs font-semibold text-foreground hover:bg-muted transition-colors flex items-center gap-2">
-              <Download className="w-4 h-4" />
-              Export CSV
-            </button>
-            <button className="px-3 py-2 bg-background border border-border rounded-lg text-xs font-semibold text-foreground hover:bg-muted transition-colors flex items-center gap-2">
-              <FileText className="w-4 h-4" />
-              Export PDF
-            </button>
-          </div>
-        </div>
-      </div>
 
       {/* TRANSACTIONS TABLE */}
-      <div className="bg-background rounded-xl border border-border overflow-hidden">
-        {/* Table Header with Bulk Actions */}
-        <div className="p-4 border-b border-border flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <input
-              type="checkbox"
-              checked={selectedTransactions.length === transactions.length}
-              onChange={handleSelectAll}
-              className="rounded border-border"
-            />
-            <span className="text-xs font-medium text-foreground">
-              {selectedTransactions.length > 0
-                ? `${selectedTransactions.length} selected`
-                : "Select all"}
-            </span>
-          </div>
-          {selectedTransactions.length > 0 && (
-            <button className="px-3 py-1.5 bg-orange-500 text-white rounded-lg text-xs font-semibold hover:bg-orange-600 transition-colors flex items-center gap-2">
-              Bulk Actions
-              <ChevronDown className="w-3 h-3" />
-            </button>
-          )}
-        </div>
-
-        {/* Table */}
+      <div className="bg-background rounded-xl p-6 border border-border">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-border bg-muted/50">
+              <tr className="border-b border-border">
                 <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  <input type="checkbox" className="rounded border-border opacity-0" />
-                </th>
-                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Date/Time
+                  Date & Time
                 </th>
                 <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wide">
                   Transaction ID
@@ -352,98 +162,166 @@ export default function TransactionsPage() {
               </tr>
             </thead>
             <tbody>
-              {transactions.map((tx) => (
-                <tr
-                  key={tx.id}
-                  className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors cursor-pointer"
-                  onClick={() => openDetailModal(tx)}
-                >
-                  <td className="py-3 px-4" onClick={(e) => e.stopPropagation()}>
-                    <input
-                      type="checkbox"
-                      checked={selectedTransactions.includes(tx.id)}
-                      onChange={() => handleSelectTransaction(tx.id)}
-                      className="rounded border-border"
-                    />
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="text-xs font-medium text-foreground">{tx.date}</div>
-                    <div className="text-xs text-muted-foreground">{tx.time}</div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="text-xs font-mono text-foreground font-medium">{tx.id}</div>
-                    <div className="text-xs text-muted-foreground">{tx.customer}</div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-2">
-                      {tx.type === "collection" ? (
-                        <>
-                          <ArrowDownToLine className="w-4 h-4 text-green-600" />
-                          <span className="text-xs font-medium text-foreground">Collection</span>
-                        </>
-                      ) : (
-                        <>
-                          <ArrowUpFromLine className="w-4 h-4 text-blue-600" />
-                          <span className="text-xs font-medium text-foreground">Payout</span>
-                        </>
+              {isLoadingTransactions ? (
+                // Skeleton Loaders
+                Array.from({ length: 10 }).map((_, i) => (
+                  <tr key={i} className="border-b border-border last:border-0">
+                    <td className="py-3 px-4">
+                      <div className="w-20 h-3 bg-muted rounded mb-1 animate-pulse" />
+                      <div className="w-16 h-3 bg-muted rounded animate-pulse" />
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="w-32 h-3 bg-muted rounded animate-pulse" />
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="w-16 h-3 bg-muted rounded animate-pulse" />
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="w-20 h-6 bg-muted rounded animate-pulse" />
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="w-24 h-3 bg-muted rounded mb-1 animate-pulse" />
+                      <div className="w-16 h-3 bg-muted rounded animate-pulse" />
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="w-20 h-3 bg-muted rounded animate-pulse" />
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="w-4 h-4 bg-muted rounded animate-pulse" />
+                    </td>
+                  </tr>
+                ))
+              ) : paginatedTransactions.length > 0 ? (
+                paginatedTransactions.map((tx) => (
+                  <tr
+                    key={tx.id}
+                    className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors"
+                  >
+                    <td className="py-3 px-4">
+                      <div className="text-xs text-foreground font-medium">{tx.date}</div>
+                      <div className="text-xs text-muted-foreground">{tx.time}</div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="text-xs text-foreground font-mono">
+                        {tx.id.length > 20 ? `${tx.id.slice(0, 20)}...` : tx.id}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="text-xs font-medium text-foreground capitalize">
+                        {tx.type}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${getStatusColor(
+                          tx.status
+                        )}`}
+                      >
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${
+                            tx.status === "SUCCESS"
+                              ? "bg-green-500"
+                              : tx.status === "PENDING_GATEWAY"
+                                ? "bg-orange-500"
+                                : "bg-red-500"
+                          }`}
+                        />
+                        {tx.status.replace("_", " ")}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="text-xs font-semibold text-foreground">
+                        {formatAmount(tx.amount, tx.currency)}
+                      </div>
+                      {tx.fees > 0 && (
+                        <div className="text-xs text-muted-foreground">
+                          Fee: {formatAmount(tx.fees, tx.currency)}
+                        </div>
                       )}
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded border text-xs font-medium ${getStatusColor(tx.status)}`}>
-                      {getStatusIcon(tx.status)}
-                      {tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
-                    </div>
-                    {tx.failureReason && (
-                      <div className="text-xs text-red-600 dark:text-red-400 mt-1">{tx.failureReason}</div>
-                    )}
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="text-xs font-semibold text-foreground">
-                      {tx.amount.toLocaleString()} {tx.currency}
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="text-xs text-foreground">{tx.gateway}</div>
-                  </td>
-                  <td className="py-3 px-4" onClick={(e) => e.stopPropagation()}>
-                    <button className="p-1 hover:bg-muted rounded transition-colors">
-                      <MoreVertical className="w-4 h-4 text-muted-foreground" />
-                    </button>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="text-xs text-foreground">
+                        {tx.gateway.replace("_", " ")}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <button className="p-1 hover:bg-muted rounded transition-colors">
+                        <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center">
+                    <p className="text-sm text-muted-foreground">No transactions found</p>
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
 
         {/* Pagination */}
-        <div className="p-4 border-t border-border flex items-center justify-between">
-          <div className="text-xs text-muted-foreground">
-            Showing 1-{transactions.length} of 1,234 transactions
+        {transactions.length > 0 && (
+          <div className="p-4 border-t border-border flex items-center justify-between">
+            <div className="text-xs text-muted-foreground">
+            Showing {startIndex + 1}-{Math.min(endIndex, transactions.length)} of {transactions.length} transactions
           </div>
           <div className="flex items-center gap-2">
-            <button className="p-2 hover:bg-muted rounded transition-colors disabled:opacity-50" disabled>
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="p-2 hover:bg-muted rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               <ChevronLeft className="w-4 h-4 text-muted-foreground" />
             </button>
-            <button className="px-3 py-1 bg-orange-500 text-white rounded text-xs font-medium">
-              1
-            </button>
-            <button className="px-3 py-1 hover:bg-muted rounded text-xs font-medium text-foreground">
-              2
-            </button>
-            <button className="px-3 py-1 hover:bg-muted rounded text-xs font-medium text-foreground">
-              3
-            </button>
-            <span className="text-xs text-muted-foreground">...</span>
-            <button className="px-3 py-1 hover:bg-muted rounded text-xs font-medium text-foreground">
-              62
-            </button>
-            <button className="p-2 hover:bg-muted rounded transition-colors">
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                    currentPage === pageNum
+                      ? "bg-orange-500 text-white"
+                      : "hover:bg-muted text-foreground"
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+            {totalPages > 5 && currentPage < totalPages - 2 && (
+              <span className="text-xs text-muted-foreground">...</span>
+            )}
+            {totalPages > 5 && currentPage < totalPages - 2 && (
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                className="px-3 py-1 hover:bg-muted rounded text-xs font-medium text-foreground"
+              >
+                {totalPages}
+              </button>
+            )}
+            <button
+              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              className="p-2 hover:bg-muted rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
         </div>
+        )}
       </div>
 
       {/* TRANSACTION DETAIL MODAL */}
@@ -472,9 +350,9 @@ export default function TransactionsPage() {
                   </span>
                 </div>
                 <p className="text-xs">
-                  {selectedTransaction.status === "success"
+                  {selectedTransaction.status === "SUCCESS"
                     ? "Transaction completed successfully"
-                    : selectedTransaction.status === "pending"
+                    : selectedTransaction.status === "PENDING_GATEWAY"
                       ? "Transaction is being processed"
                       : "Transaction failed"}
                 </p>
@@ -502,11 +380,7 @@ export default function TransactionsPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Gateway:</span>
-                    <span className="font-medium text-foreground">{selectedTransaction.gateway}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Gateway Reference:</span>
-                    <span className="font-mono text-xs text-foreground">{selectedTransaction.reference}</span>
+                    <span className="font-medium text-foreground">{selectedTransaction.gateway?.replace("_", " ") || "N/A"}</span>
                   </div>
                 </div>
               </div>
@@ -521,33 +395,23 @@ export default function TransactionsPage() {
                       {selectedTransaction.amount.toLocaleString()} {selectedTransaction.currency}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Gateway Fee:</span>
-                    <span className="text-foreground">200 FCFA</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Platform Fee:</span>
-                    <span className="text-foreground">100 FCFA</span>
-                  </div>
-                  <div className="flex justify-between pt-2 border-t border-border">
-                    <span className="font-medium text-foreground">Net Amount:</span>
-                    <span className="font-bold text-foreground">
-                      {(selectedTransaction.amount - 300).toLocaleString()} {selectedTransaction.currency}
-                    </span>
-                  </div>
+                  {selectedTransaction.fees > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Fees:</span>
+                      <span className="text-foreground">{formatAmount(selectedTransaction.fees, selectedTransaction.currency)}</span>
+                    </div>
+                  )}
+                  {selectedTransaction.fees > 0 && (
+                    <div className="flex justify-between pt-2 border-t border-border">
+                      <span className="font-medium text-foreground">Net Amount:</span>
+                      <span className="font-bold text-foreground">
+                        {formatAmount(selectedTransaction.amount - selectedTransaction.fees, selectedTransaction.currency)}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Customer Information */}
-              <div>
-                <h4 className="text-sm font-semibold text-foreground mb-3">Customer Information</h4>
-                <div className="space-y-2 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Phone Number:</span>
-                    <span className="font-medium text-foreground">{selectedTransaction.customer}</span>
-                  </div>
-                </div>
-              </div>
 
               {/* Actions */}
               <div className="flex gap-3 pt-4 border-t border-border">
@@ -555,13 +419,13 @@ export default function TransactionsPage() {
                   <Download className="w-4 h-4" />
                   Download Receipt
                 </button>
-                {selectedTransaction.status === "success" && (
+                {selectedTransaction.status === "SUCCESS" && (
                   <button className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg text-xs font-semibold hover:bg-orange-600 transition-colors flex items-center justify-center gap-2">
                     <RefreshCw className="w-4 h-4" />
                     Refund
                   </button>
                 )}
-                {selectedTransaction.status === "failed" && (
+                {selectedTransaction.status === "FAILED" && (
                   <button className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg text-xs font-semibold hover:bg-orange-600 transition-colors flex items-center justify-center gap-2">
                     <RefreshCw className="w-4 h-4" />
                     Retry

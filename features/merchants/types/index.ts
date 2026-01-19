@@ -267,3 +267,88 @@ export interface GetPendingProductionSummaryResponse {
 export type PendingKYBSummaryItem = PendingProductionSummaryItem;
 /** @deprecated Use GetPendingProductionSummaryResponse instead */
 export type GetPendingKYBSummaryResponse = GetPendingProductionSummaryResponse;
+
+// Dashboard Types
+export interface DashboardStat {
+    label: string;
+    value: string;
+    currency: string;
+    change: string;
+    trend: 'up' | 'down';
+    subtitle: string;
+}
+
+export interface DashboardStatsResponse {
+    stats: DashboardStat[];
+}
+
+export interface RecentTransaction {
+    id: string;
+    date: string;
+    time: string;
+    type: 'collection' | 'payout' | 'refund';
+    amount: number;
+    currency: string;
+    status: string;
+    gateway: string;
+    customer?: string;
+    recipient?: string;
+    fees: number;
+    netAmount: number;
+    createdAt: string;
+}
+
+export interface RecentTransactionsResponse {
+    transactions: RecentTransaction[];
+    total: number;
+    hasMore: boolean;
+}
+
+// Wallet Operations Types
+export interface TopUpRequest {
+    gateway: 'MTN_MOMO' | 'ORANGE_MONEY';
+    amount: number;
+    currency: string;
+    msisdn: string;
+    environment?: 'sandbox' | 'production';
+}
+
+export interface TopUpResponse {
+    success: boolean;
+    message: string;
+    transactionId: string;
+    gatewayFee: number;
+    netAmount: number;
+}
+
+export interface WithdrawRequest {
+    gateway: 'MTN_MOMO' | 'ORANGE_MONEY';
+    amount: number;
+    currency: string;
+    recipientMsisdn: string;
+    environment?: 'sandbox' | 'production';
+}
+
+export interface WithdrawResponse {
+    success: boolean;
+    message: string;
+    payoutId: string;
+    gatewayFee: number;
+    totalDeducted: number;
+}
+
+export interface WalletOperation {
+    id: string;
+    type: 'TOPUP' | 'WITHDRAWAL';
+    amount: number;
+    currency: string;
+    gatewayFee: number;
+    status: 'PENDING' | 'SUCCESS' | 'FAILED';
+    msisdn: string;
+    createdAt: string;
+}
+
+export interface WalletOperationsResponse {
+    operations: WalletOperation[];
+    total: number;
+}

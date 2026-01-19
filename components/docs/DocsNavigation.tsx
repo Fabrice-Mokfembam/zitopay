@@ -89,14 +89,32 @@ const navigationOrder: Record<string, { prev?: string; next?: string; prevTitle?
         nextTitle: "Webhooks Overview",
     },
     "/docs/webhooks/overview": {
-        prev: "/docs/refunds/create-refund",
-        prevTitle: "Create Refund",
+        prev: "/docs/refunds",
+        prevTitle: "Refunds Overview",
+        next: "/docs/webhooks/register",
+        nextTitle: "Register Endpoint",
+    },
+    "/docs/webhooks/register": {
+        prev: "/docs/webhooks/overview",
+        prevTitle: "Webhooks Overview",
+        next: "/docs/webhooks/events",
+        nextTitle: "Webhook Events",
+    },
+    "/docs/webhooks/events": {
+        prev: "/docs/webhooks/register",
+        prevTitle: "Register Endpoint",
+        next: "/docs/webhooks/security",
+        nextTitle: "Webhook Security",
+    },
+    "/docs/webhooks/security": {
+        prev: "/docs/webhooks/events",
+        prevTitle: "Webhook Events",
         next: "/docs/faq",
         nextTitle: "FAQ",
     },
     "/docs/faq": {
-        prev: "/docs/webhooks/overview",
-        prevTitle: "Webhooks Overview",
+        prev: "/docs/webhooks/security",
+        prevTitle: "Webhook Security",
     },
     "/docs/authentication": {
         next: "/docs/collections",

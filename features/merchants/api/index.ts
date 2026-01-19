@@ -28,6 +28,13 @@ import type {
     RegenerateSandboxCredentialsResponse,
     RegenerateProductionCredentialsResponse,
     GetPendingKYBSubmissionsResponse,
+    DashboardStatsResponse,
+    RecentTransactionsResponse,
+    TopUpRequest,
+    TopUpResponse,
+    WithdrawRequest,
+    WithdrawResponse,
+    WalletOperationsResponse,
 } from '../types/index';
 
 const MERCHANT_BASE_URL = '/merchant/v1/merchants';
@@ -314,6 +321,103 @@ export const regenerateProductionCredentials = async (
 export const getPendingKYBSubmissions = async (): Promise<GetPendingKYBSubmissionsResponse> => {
     const response = await apiClient.get<GetPendingKYBSubmissionsResponse>(
         '/merchant/v1/admin/pending-kyb'
+    );
+    return response.data;
+};
+
+/**
+ * Get Dashboard Overview Stats
+ * Returns 5 key metric cards for the dashboard
+ */
+export const getDashboardStats = async (
+    merchantId: string,
+    period: '7d' | '30d' | '90d' | 'all' = '30d'
+): Promise<DashboardStatsResponse> => {
+    const response = await apiClient.get<DashboardStatsResponse>(
+        `${MERCHANT_BASE_URL}/${merchantId}/dashboard/stats`,
+        {
+            params: { period },
+        }
+    );
+    return response.data;
+};
+
+/**
+ * Get Recent Transactions
+ * Returns the most recent transactions for dashboard display
+ */
+export const getRecentTransactions = async (
+    merchantId: string,
+    limit: number = 10,
+    type?: 'collection' | 'payout' | 'refund'
+): Promise<RecentTransactionsResponse> => {
+    const params: Record<string, string> = {
+        limit: limit.toString(),
+    };
+    if (type) {
+        params.type = type;
+    }
+
+    const response = await apiClient.get<RecentTransactionsResponse>(
+        `${MERCHANT_BASE_URL}/${merchantId}/dashboard/transactions/recent`,
+        {
+            params,
+        }
+    );
+    return response.data;
+};
+
+/**
+ * Top Up Wallet
+ * Add money to merchant wallet via mobile money collection
+ */
+export const topUpWallet = async (
+    merchantId: string,
+    data: TopUpRequest
+): Promise<TopUpResponse> => {
+    const response = await apiClient.post<TopUpResponse>(
+        `${MERCHANT_BASE_URL}/${merchantId}/wallet/topup`,
+        data
+    );
+    return response.data;
+};
+
+/**
+ * Withdraw from Wallet
+ * Withdraw money from merchant wallet to a mobile number
+ */
+export const withdrawFromWallet = async (
+    merchantId: string,
+    data: WithdrawRequest
+): Promise<WithdrawResponse> => {
+    const response = await apiClient.post<WithdrawResponse>(
+        `${MERCHANT_BASE_URL}/${merchantId}/wallet/withdraw`,
+        data
+    );
+    return response.data;
+};
+
+/**
+ * Get Wallet Operation History
+ * Retrieve history of all wallet top-ups and withdrawals
+ */
+export const getWalletOperations = async (
+    merchantId: string,
+    environment?: 'sandbox' | 'production',
+    limit: number = 50
+): Promise<WalletOperationsResponse> => {
+    const params: Record<string, string> = {
+        limit: limit.toString(),
+    };
+    if (environment) {
+        params.environment = environment;
+    }
+
+    const response = await apiClient.get<WalletOperationsResponse>(
+        `${MERCHANT_BASE_URL}/${merchantId}/wallet/operations`,
+        {
+            params,
+        }
     );
     return response.data;
 };

@@ -45,6 +45,9 @@ const refundsSubItems: NavItem[] = [
 
 const webhooksSubItems: NavItem[] = [
     { title: "Overview", href: "/docs/webhooks/overview", isSubItem: true },
+    { title: "Register Endpoint", href: "/docs/webhooks/register", isSubItem: true },
+    { title: "Events", href: "/docs/webhooks/events", isSubItem: true },
+    { title: "Security", href: "/docs/webhooks/security", isSubItem: true },
 ];
 
 const navSections: NavSection[] = [

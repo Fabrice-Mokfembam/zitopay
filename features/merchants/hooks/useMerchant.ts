@@ -17,6 +17,11 @@ import {
     regenerateSandboxCredentials,
     regenerateProductionCredentials,
     getPendingKYBSubmissions,
+    getDashboardStats,
+    getRecentTransactions,
+    topUpWallet,
+    withdrawFromWallet,
+    getWalletOperations,
 } from '../api/index';
 import type {
     CreateMerchantRequest,
@@ -38,6 +43,13 @@ import type {
     RegenerateSandboxCredentialsResponse,
     RegenerateProductionCredentialsResponse,
     GetPendingKYBSubmissionsResponse,
+    DashboardStatsResponse,
+    RecentTransactionsResponse,
+    TopUpRequest,
+    TopUpResponse,
+    WithdrawRequest,
+    WithdrawResponse,
+    WalletOperationsResponse,
 } from '../types/index';
 
 /**
@@ -242,5 +254,81 @@ export const useGetPendingKYBSubmissions = (): UseQueryResult<GetPendingKYBSubmi
     return useQuery({
         queryKey: ['pending-kyb-submissions'],
         queryFn: getPendingKYBSubmissions,
+    });
+};
+
+/**
+ * Hook for fetching dashboard overview stats
+ * Returns 5 key metric cards for the dashboard
+ */
+export const useDashboardStats = (
+    merchantId: string,
+    period: '7d' | '30d' | '90d' | 'all' = '30d',
+    enabled: boolean = true
+): UseQueryResult<DashboardStatsResponse, Error> => {
+    return useQuery({
+        queryKey: ['dashboard', 'stats', merchantId, period],
+        queryFn: () => getDashboardStats(merchantId, period),
+        enabled: enabled && !!merchantId,
+        refetchInterval: 30000, // Refetch every 30 seconds
+    });
+};
+
+/**
+ * Hook for fetching recent transactions
+ * Returns the most recent transactions for dashboard display
+ */
+export const useRecentTransactions = (
+    merchantId: string,
+    limit: number = 10,
+    type?: 'collection' | 'payout' | 'refund',
+    enabled: boolean = true
+): UseQueryResult<RecentTransactionsResponse, Error> => {
+    return useQuery({
+        queryKey: ['dashboard', 'transactions', 'recent', merchantId, limit, type],
+        queryFn: () => getRecentTransactions(merchantId, limit, type),
+        enabled: enabled && !!merchantId,
+        refetchInterval: 60000, // Refetch every 60 seconds
+    });
+};
+
+/**
+ * Hook for topping up wallet
+ * Adds money to merchant wallet via mobile money
+ */
+export const useTopUpWallet = (
+    merchantId: string
+): UseMutationResult<TopUpResponse, Error, TopUpRequest> => {
+    return useMutation({
+        mutationFn: (data: TopUpRequest) => topUpWallet(merchantId, data),
+    });
+};
+
+/**
+ * Hook for withdrawing from wallet
+ * Withdraws money from merchant wallet to a mobile number
+ */
+export const useWithdrawFromWallet = (
+    merchantId: string
+): UseMutationResult<WithdrawResponse, Error, WithdrawRequest> => {
+    return useMutation({
+        mutationFn: (data: WithdrawRequest) => withdrawFromWallet(merchantId, data),
+    });
+};
+
+/**
+ * Hook for fetching wallet operation history
+ * Returns history of all top-ups and withdrawals
+ */
+export const useWalletOperations = (
+    merchantId: string,
+    environment?: 'sandbox' | 'production',
+    limit: number = 50,
+    enabled: boolean = true
+): UseQueryResult<WalletOperationsResponse, Error> => {
+    return useQuery({
+        queryKey: ['wallet', 'operations', merchantId, environment, limit],
+        queryFn: () => getWalletOperations(merchantId, environment, limit),
+        enabled: enabled && !!merchantId,
     });
 };

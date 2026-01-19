@@ -16,8 +16,6 @@ import {
     Globe,
     BarChart3,
     Building2,
-    Users,
-    Bell,
     FileText,
     HelpCircle,
     LogOut,
@@ -62,16 +60,6 @@ const menuSections: MenuSection[] = [
                 icon: ArrowLeftRight,
                 label: "Transactions",
                 href: "/dashboard/transactions",
-            },
-            {
-                icon: ArrowDownToLine,
-                label: "Collections",
-                href: "/dashboard/collections",
-            },
-            {
-                icon: ArrowUpFromLine,
-                label: "Payouts",
-                href: "/dashboard/payouts",
             },
             {
                 icon: RotateCcw,
@@ -142,19 +130,9 @@ const menuSections: MenuSection[] = [
                 href: "/dashboard/settings/business",
             },
             {
-                icon: Users,
-                label: "Team Members",
-                href: "/dashboard/settings/team",
-            },
-            {
                 icon: Globe,
                 label: "Domains",
                 href: "/dashboard/settings/domains",
-            },
-            {
-                icon: Bell,
-                label: "Notifications",
-                href: "/dashboard/settings/notifications",
             },
         ],
     },
