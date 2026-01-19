@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Search,
   Filter,
   Download,
-  Plus,
   Building2,
   MoreVertical,
   CheckCircle2,
@@ -16,93 +15,154 @@ import {
   ChevronRight,
   Ban,
   Rocket,
+  X,
+  Mail,
+  Phone,
+  Globe,
+  User,
+  Calendar,
 } from "lucide-react";
+import { useMerchantUsers } from "@/features/admin/queries";
+import { MerchantUser } from "@/features/admin/types";
 
-// --- Types ---
+// Helper function to format date
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
 
-interface Merchant {
-  id: string;
-  businessName: string;
-  email: string;
-  merchantId: string;
-  kybStatus: "APPROVED" | "PENDING" | "REJECTED" | "NOT_SUBMITTED";
-  environment: "SANDBOX" | "PRODUCTION_ACTIVE" | "PRODUCTION_PENDING" | "PRODUCTION_SUSPENDED";
-  status: "ACTIVE" | "SUSPENDED" | "DISABLED";
-  createdAt: string;
+// Helper function to get environment badge type
+const getEnvironmentType = (sandboxState: string, productionState: string): "SANDBOX" | "PRODUCTION_ACTIVE" | "PRODUCTION_PENDING" | "PRODUCTION_SUSPENDED" => {
+  if (productionState === "ACTIVE") return "PRODUCTION_ACTIVE";
+  if (productionState === "PENDING_APPROVAL") return "PRODUCTION_PENDING";
+  if (productionState === "SUSPENDED") return "PRODUCTION_SUSPENDED";
+  return "SANDBOX";
+};
+
+// Skeleton loader for table rows
+function TableRowSkeleton() {
+  return (
+    <tr className="animate-pulse">
+      <td className="p-3">
+        <div className="w-3.5 h-3.5 bg-gray-200 rounded" />
+      </td>
+      <td className="p-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 bg-gray-200 rounded-lg" />
+          <div>
+            <div className="w-24 h-3 bg-gray-200 rounded mb-1" />
+            <div className="w-32 h-2 bg-gray-200 rounded" />
+          </div>
+        </div>
+      </td>
+      <td className="p-3">
+        <div className="w-20 h-4 bg-gray-200 rounded" />
+      </td>
+      <td className="p-3">
+        <div className="w-20 h-5 bg-gray-200 rounded-full" />
+      </td>
+      <td className="p-3">
+        <div className="w-24 h-5 bg-gray-200 rounded-full" />
+      </td>
+      <td className="p-3">
+        <div className="w-20 h-3 bg-gray-200 rounded" />
+      </td>
+      <td className="p-3">
+        <div className="w-4 h-4 bg-gray-200 rounded" />
+      </td>
+    </tr>
+  );
 }
-
-// --- Dummy Data ---
-
-const DUMMY_MERCHANTS: Merchant[] = [
-  {
-    id: "1",
-    businessName: "ABC Corp",
-    email: "abc@example.com",
-    merchantId: "M-1234",
-    kybStatus: "APPROVED",
-    environment: "PRODUCTION_ACTIVE",
-    status: "ACTIVE",
-    createdAt: "Jan 10, 2026",
-  },
-  {
-    id: "2",
-    businessName: "XYZ Ltd",
-    email: "xyz@example.com",
-    merchantId: "M-5678",
-    kybStatus: "PENDING",
-    environment: "SANDBOX",
-    status: "ACTIVE",
-    createdAt: "Jan 09, 2026",
-  },
-  {
-    id: "3",
-    businessName: "123 Inc",
-    email: "123@example.com",
-    merchantId: "M-9012",
-    kybStatus: "REJECTED",
-    environment: "SANDBOX",
-    status: "ACTIVE",
-    createdAt: "Jan 08, 2026",
-  },
-  {
-    id: "4",
-    businessName: "Tech Solutions",
-    email: "tech@example.com",
-    merchantId: "M-3456",
-    kybStatus: "APPROVED",
-    environment: "PRODUCTION_ACTIVE",
-    status: "SUSPENDED",
-    createdAt: "Jan 07, 2026",
-  },
-  {
-    id: "5",
-    businessName: "Global Local",
-    email: "info@global-local.com",
-    merchantId: "M-7890",
-    kybStatus: "NOT_SUBMITTED",
-    environment: "SANDBOX",
-    status: "ACTIVE",
-    createdAt: "Jan 05, 2026",
-  },
-];
-
-const STATS = [
-  { label: "Total Merchants", value: "1,234", color: "bg-blue-50 text-blue-700", type: "TOTAL" },
-  { label: "Active Merchants", value: "856", color: "bg-green-50 text-green-700", type: "ACTIVE" },
-  { label: "Sandbox Only", value: "366", color: "bg-yellow-50 text-yellow-700", type: "SANDBOX" },
-  { label: "Production", value: "490", color: "bg-teal-50 text-teal-700", type: "PRODUCTION" },
-  { label: "Suspended", value: "12", color: "bg-red-50 text-red-700", type: "SUSPENDED" },
-];
 
 export default function AdminMerchantsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMerchants, setSelectedMerchants] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedMerchant, setSelectedMerchant] = useState<MerchantUser | null>(null);
+  const [showMerchantModal, setShowMerchantModal] = useState(false);
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [kybStatusFilter, setKybStatusFilter] = useState<string>("all");
+  const [environmentFilter, setEnvironmentFilter] = useState<string>("all");
+
+  // Fetch merchant users from API
+  const { data: merchantUsersData, isLoading, error } = useMerchantUsers();
+
+  // Calculate stats from data
+  const stats = useMemo(() => {
+    if (!merchantUsersData?.merchantUsers) {
+      return [
+        { label: "Total Merchants", value: "0", color: "bg-blue-50 text-blue-700", type: "TOTAL" },
+        { label: "Sandbox Only", value: "0", color: "bg-yellow-50 text-yellow-700", type: "SANDBOX" },
+        { label: "Production", value: "0", color: "bg-teal-50 text-teal-700", type: "PRODUCTION" },
+        { label: "Suspended", value: "0", color: "bg-red-50 text-red-700", type: "SUSPENDED" },
+      ];
+    }
+
+    const merchants = merchantUsersData.merchantUsers;
+    const uniqueMerchants = new Set(merchants.map((m) => m.merchantId));
+    const totalMerchants = uniqueMerchants.size;
+    
+    const sandboxOnly = merchants.filter((m) => m.productionState === "NOT_REQUESTED" || m.productionState === "PENDING_APPROVAL").length;
+    const production = merchants.filter((m) => m.productionState === "ACTIVE").length;
+    const suspended = merchants.filter((m) => !m.enabled || m.productionState === "SUSPENDED").length;
+
+    return [
+      { label: "Total Merchants", value: totalMerchants.toLocaleString(), color: "bg-blue-50 text-blue-700", type: "TOTAL" },
+      { label: "Sandbox Only", value: sandboxOnly.toLocaleString(), color: "bg-yellow-50 text-yellow-700", type: "SANDBOX" },
+      { label: "Production", value: production.toLocaleString(), color: "bg-teal-50 text-teal-700", type: "PRODUCTION" },
+      { label: "Suspended", value: suspended.toLocaleString(), color: "bg-red-50 text-red-700", type: "SUSPENDED" },
+    ];
+  }, [merchantUsersData]);
+
+  // Filter and process merchant users
+  const filteredMerchants = useMemo(() => {
+    if (!merchantUsersData?.merchantUsers) return [];
+
+    let filtered = merchantUsersData.merchantUsers;
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter((mu) => 
+        mu.businessName.toLowerCase().includes(query) ||
+        mu.userEmail.toLowerCase().includes(query) ||
+        mu.merchantId.toLowerCase().includes(query) ||
+        mu.userId.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply KYB status filter
+    if (kybStatusFilter !== "all") {
+      filtered = filtered.filter((mu) => mu.kycStatus === kybStatusFilter);
+    }
+
+    // Apply environment filter
+    if (environmentFilter !== "all") {
+      filtered = filtered.filter((mu) => {
+        const envType = getEnvironmentType(mu.sandboxState, mu.productionState);
+        return envType === environmentFilter;
+      });
+    }
+
+    return filtered;
+  }, [merchantUsersData, searchQuery, kybStatusFilter, environmentFilter]);
+
+  // Reset to page 1 when filters change
+  const handleFilterChange = () => {
+    setCurrentPage(1);
+  };
+
+  // Pagination
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filteredMerchants.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedMerchants = filteredMerchants.slice(startIndex, endIndex);
 
   // Handle Select All
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      setSelectedMerchants(DUMMY_MERCHANTS.map((m) => m.id));
+      setSelectedMerchants(paginatedMerchants.map((m) => m.merchantUserId));
     } else {
       setSelectedMerchants([]);
     }
@@ -117,7 +177,7 @@ export default function AdminMerchantsPage() {
   };
 
   // Helper to render Status Badges
-  const renderKybBadge = (status: Merchant["kybStatus"]) => {
+  const renderKybBadge = (status: string) => {
     switch (status) {
       case "APPROVED":
         return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"><CheckCircle2 className="w-3 h-3" /> Approved</span>;
@@ -131,8 +191,9 @@ export default function AdminMerchantsPage() {
     }
   };
 
-  const renderEnvBadge = (env: Merchant["environment"]) => {
-    switch (env) {
+  const renderEnvBadge = (sandboxState: string, productionState: string) => {
+    const envType = getEnvironmentType(sandboxState, productionState);
+    switch (envType) {
       case "PRODUCTION_ACTIVE":
         return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800"><Rocket className="w-3 h-3" /> Prod Active</span>;
       case "PRODUCTION_PENDING":
@@ -145,17 +206,14 @@ export default function AdminMerchantsPage() {
     }
   };
 
-  const renderStatusBadge = (status: Merchant["status"]) => {
-    switch (status) {
-      case "ACTIVE":
-        return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Active</span>;
-      case "SUSPENDED":
-        return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Suspended</span>;
-      case "DISABLED":
-        return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Disabled</span>;
-      default:
-        return null;
-    }
+  const handleMerchantClick = (merchantUser: MerchantUser) => {
+    setSelectedMerchant(merchantUser);
+    setShowMerchantModal(true);
+  };
+
+  const closeModal = () => {
+    setShowMerchantModal(false);
+    setSelectedMerchant(null);
   };
 
   return (
@@ -174,15 +232,20 @@ export default function AdminMerchantsPage() {
           <button className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs font-medium hover:bg-gray-50 text-gray-700">
             <Download className="w-3.5 h-3.5" /> Export
           </button>
-          <button className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 rounded-lg text-xs font-medium hover:bg-blue-700 text-white">
-            <Plus className="w-3.5 h-3.5" /> Add Merchant
-          </button>
         </div>
       </div>
 
+      {/* --- Error Message --- */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-sm text-red-800 font-semibold mb-1">Error loading merchants</p>
+          <p className="text-xs text-red-600">{error.message}</p>
+        </div>
+      )}
+
       {/* --- Quick Stats --- */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-        {STATS.map((stat) => (
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {stats.map((stat) => (
           <div key={stat.type} className={`p-3 rounded-lg border ${stat.color.replace('text-', 'border-').replace('50', '200')} ${stat.color} cursor-pointer hover:opacity-90 transition-opacity`}>
             <p className="text-[10px] font-semibold uppercase tracking-wider opacity-80">{stat.label}</p>
             <p className="text-lg font-bold mt-0.5">{stat.value}</p>
@@ -202,10 +265,115 @@ export default function AdminMerchantsPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <button className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-medium hover:bg-gray-50 text-gray-700">
-            <Filter className="w-3.5 h-3.5" /> Filter <ChevronDown className="w-3 h-3" />
+        <div className="flex items-center gap-2 w-full md:w-auto relative filter-dropdown-container">
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowFilterDropdown(!showFilterDropdown);
+            }}
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-medium hover:bg-gray-50 text-gray-700 relative"
+          >
+            <Filter className="w-3.5 h-3.5" /> 
+            Filter 
+            {(kybStatusFilter !== "all" || environmentFilter !== "all") && (
+              <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-600 rounded-full" />
+            )}
+            <ChevronDown className={`w-3 h-3 transition-transform ${showFilterDropdown ? 'rotate-180' : ''}`} />
           </button>
+          
+          {/* Filter Dropdown */}
+          {showFilterDropdown && (
+            <div 
+              className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[200px] max-h-[300px] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-3 space-y-4">
+                {/* KYB Status Filter */}
+                <div>
+                  <p className="text-xs font-semibold text-gray-700 mb-2">KYB Status</p>
+                  <div className="space-y-1.5">
+                    {[
+                      { value: "all", label: "All Statuses" },
+                      { value: "APPROVED", label: "Approved" },
+                      { value: "PENDING", label: "Pending" },
+                      { value: "REJECTED", label: "Rejected" },
+                      { value: "NOT_SUBMITTED", label: "Not Submitted" },
+                    ].map((option) => (
+                      <label
+                        key={option.value}
+                        className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1.5 rounded"
+                      >
+                        <input
+                          type="radio"
+                          name="kybStatus"
+                          value={option.value}
+                          checked={kybStatusFilter === option.value}
+                          onChange={(e) => {
+                            setKybStatusFilter(e.target.value);
+                            handleFilterChange();
+                          }}
+                          className="w-3.5 h-3.5 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-xs text-gray-700">{option.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="border-t border-gray-200" />
+
+                {/* Environment Filter */}
+                <div>
+                  <p className="text-xs font-semibold text-gray-700 mb-2">Environment</p>
+                  <div className="space-y-1.5">
+                    {[
+                      { value: "all", label: "All Environments" },
+                      { value: "SANDBOX", label: "Sandbox Only" },
+                      { value: "PRODUCTION_ACTIVE", label: "Production Active" },
+                      { value: "PRODUCTION_PENDING", label: "Production Pending" },
+                      { value: "PRODUCTION_SUSPENDED", label: "Production Suspended" },
+                    ].map((option) => (
+                      <label
+                        key={option.value}
+                        className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1.5 rounded"
+                      >
+                        <input
+                          type="radio"
+                          name="environment"
+                          value={option.value}
+                          checked={environmentFilter === option.value}
+                          onChange={(e) => {
+                            setEnvironmentFilter(e.target.value);
+                            handleFilterChange();
+                          }}
+                          className="w-3.5 h-3.5 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-xs text-gray-700">{option.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Clear Filters */}
+                {(kybStatusFilter !== "all" || environmentFilter !== "all") && (
+                  <>
+                    <div className="border-t border-gray-200" />
+                    <button
+                      onClick={() => {
+                        setKybStatusFilter("all");
+                        setEnvironmentFilter("all");
+                        handleFilterChange();
+                      }}
+                      className="w-full text-xs text-blue-600 hover:text-blue-700 font-medium py-1.5"
+                    >
+                      Clear All Filters
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -220,107 +388,302 @@ export default function AdminMerchantsPage() {
                     type="checkbox"
                     className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     onChange={handleSelectAll}
-                    checked={selectedMerchants.length === DUMMY_MERCHANTS.length && DUMMY_MERCHANTS.length > 0}
+                    checked={selectedMerchants.length === paginatedMerchants.length && paginatedMerchants.length > 0}
                   />
                 </th>
                 <th className="p-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Merchant</th>
                 <th className="p-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">ID</th>
                 <th className="p-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">KYB Status</th>
                 <th className="p-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Environment</th>
-                <th className="p-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Status</th>
                 <th className="p-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Created</th>
                 <th className="p-3 w-8"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {DUMMY_MERCHANTS.map((merchant) => (
-                <tr key={merchant.id} className="hover:bg-gray-50 transition-colors group">
-                  <td className="p-3">
-                    <input
-                      type="checkbox"
-                      className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      checked={selectedMerchants.includes(merchant.id)}
-                      onChange={() => handleSelectOne(merchant.id)}
-                    />
-                  </td>
-                  <td className="p-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
-                        <Building2 className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-xs text-gray-900 group-hover:text-blue-600 transition-colors">{merchant.businessName}</p>
-                        <p className="text-[10px] text-gray-500">{merchant.email}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-3">
-                    <span className="text-[10px] font-mono bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">{merchant.merchantId}</span>
-                  </td>
-                  <td className="p-3">
-                    {renderKybBadge(merchant.kybStatus)}
-                  </td>
-                  <td className="p-3">
-                    {renderEnvBadge(merchant.environment)}
-                  </td>
-                  <td className="p-3">
-                    {renderStatusBadge(merchant.status)}
-                  </td>
-                  <td className="p-3 text-xs text-gray-600">
-                    {merchant.createdAt}
-                  </td>
-                  <td className="p-3">
-                    <button className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg">
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
+              {isLoading ? (
+                // Skeleton loaders
+                Array.from({ length: 10 }).map((_, index) => (
+                  <TableRowSkeleton key={index} />
+                ))
+              ) : paginatedMerchants.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-8 text-center">
+                    <p className="text-sm text-gray-500">
+                      {searchQuery ? "No merchants found matching your search." : "No merchants found."}
+                    </p>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                paginatedMerchants.map((merchantUser) => (
+                  <tr 
+                    key={merchantUser.merchantUserId} 
+                    className="hover:bg-gray-50 transition-colors group cursor-pointer"
+                    onClick={() => handleMerchantClick(merchantUser)}
+                  >
+                    <td className="p-3" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        checked={selectedMerchants.includes(merchantUser.merchantUserId)}
+                        onChange={() => handleSelectOne(merchantUser.merchantUserId)}
+                      />
+                    </td>
+                    <td className="p-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                          <Building2 className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-xs text-gray-900 group-hover:text-blue-600 transition-colors">{merchantUser.businessName}</p>
+                          <p className="text-[10px] text-gray-500">{merchantUser.userEmail}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-3">
+                      <span className="text-[10px] font-mono bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">{merchantUser.merchantId.slice(0, 8)}...</span>
+                    </td>
+                    <td className="p-3">
+                      {renderKybBadge(merchantUser.kycStatus)}
+                    </td>
+                    <td className="p-3">
+                      {renderEnvBadge(merchantUser.sandboxState, merchantUser.productionState)}
+                    </td>
+                    <td className="p-3 text-xs text-gray-600">
+                      {formatDate(merchantUser.merchantCreatedAt)}
+                    </td>
+                    <td className="p-3" onClick={(e) => e.stopPropagation()}>
+                      <button className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg">
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
 
         {/* --- Pagination --- */}
-        <div className="p-3 border-t border-gray-200 flex items-center justify-between">
-          <div className="text-xs text-gray-500">
-            Showing <span className="font-medium">1</span> to <span className="font-medium">{DUMMY_MERCHANTS.length}</span> of <span className="font-medium">1,234</span> merchants
-          </div>
-          <div className="flex items-center gap-1.5">
-            <button
-              className="p-1.5 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-            >
-              <ChevronLeft className="w-3.5 h-3.5" />
-            </button>
-            <div className="flex items-center gap-1">
-              {[1, 2, 3].map(page => (
-                <button
-                  key={page}
-                  className={`px-2.5 py-1 rounded-md text-xs font-medium ${currentPage === page ? 'bg-blue-600 text-white' : 'hover:bg-gray-100 text-gray-600'}`}
-                  onClick={() => setCurrentPage(page)}
-                >
-                  {page}
-                </button>
-              ))}
-              <span className="text-gray-400 px-1 text-xs">...</span>
+        {!isLoading && filteredMerchants.length > 0 && (
+          <div className="p-3 border-t border-gray-200 flex items-center justify-between">
+            <div className="text-xs text-gray-500">
+              Showing <span className="font-medium">{startIndex + 1}</span> to <span className="font-medium">{Math.min(endIndex, filteredMerchants.length)}</span> of <span className="font-medium">{filteredMerchants.length}</span> merchants
+            </div>
+            <div className="flex items-center gap-1.5">
               <button
-                className={`px-2.5 py-1 rounded-md text-xs font-medium ${currentPage === 50 ? 'bg-blue-600 text-white' : 'hover:bg-gray-100 text-gray-600'}`}
-                onClick={() => setCurrentPage(50)}
+                className="p-1.5 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               >
-                50
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const page = i + 1;
+                  return (
+                    <button
+                      key={page}
+                      className={`px-2.5 py-1 rounded-md text-xs font-medium ${currentPage === page ? 'bg-blue-600 text-white' : 'hover:bg-gray-100 text-gray-600'}`}
+                      onClick={() => setCurrentPage(page)}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+                {totalPages > 5 && (
+                  <>
+                    <span className="text-gray-400 px-1 text-xs">...</span>
+                    <button
+                      className={`px-2.5 py-1 rounded-md text-xs font-medium ${currentPage === totalPages ? 'bg-blue-600 text-white' : 'hover:bg-gray-100 text-gray-600'}`}
+                      onClick={() => setCurrentPage(totalPages)}
+                    >
+                      {totalPages}
+                    </button>
+                  </>
+                )}
+              </div>
+              <button
+                className="p-1.5 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
-            <button
-              className="p-1.5 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={currentPage === 50}
-              onClick={() => setCurrentPage(prev => Math.min(50, prev + 1))}
-            >
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
+          </div>
+        )}
+      </div>
+
+      {/* --- Merchant Details Modal --- */}
+      {showMerchantModal && selectedMerchant && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={closeModal}>
+          <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
+                  <Building2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">{selectedMerchant.businessName}</h2>
+                  <p className="text-sm text-gray-500">Merchant Details</p>
+                </div>
+              </div>
+              <button
+                onClick={closeModal}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-6">
+              {/* Merchant Information */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <Building2 className="w-4 h-4" />
+                  Merchant Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Business Name</p>
+                    <p className="text-sm font-medium text-gray-900">{selectedMerchant.businessName}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Merchant ID</p>
+                    <p className="text-sm font-mono text-gray-900">{selectedMerchant.merchantId}</p>
+                  </div>
+                  {selectedMerchant.merchantEmail && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
+                        <Mail className="w-3 h-3" /> Business Email
+                      </p>
+                      <p className="text-sm text-gray-900">{selectedMerchant.merchantEmail}</p>
+                    </div>
+                  )}
+                  {selectedMerchant.merchantPhone && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
+                        <Phone className="w-3 h-3" /> Business Phone
+                      </p>
+                      <p className="text-sm text-gray-900">{selectedMerchant.merchantPhone}</p>
+                    </div>
+                  )}
+                  {selectedMerchant.businessType && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1">Business Type</p>
+                      <p className="text-sm text-gray-900">{selectedMerchant.businessType}</p>
+                    </div>
+                  )}
+                  {selectedMerchant.country && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
+                        <Globe className="w-3 h-3" /> Country
+                      </p>
+                      <p className="text-sm text-gray-900">{selectedMerchant.country}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* User Information */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  User Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">User Email</p>
+                    <p className="text-sm font-medium text-gray-900">{selectedMerchant.userEmail}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">User ID</p>
+                    <p className="text-sm font-mono text-gray-900">{selectedMerchant.userId}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Role in Merchant</p>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
+                      {selectedMerchant.role}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Email Verified</p>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${selectedMerchant.emailVerified ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                      {selectedMerchant.emailVerified ? 'Verified' : 'Not Verified'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status & Environment */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4" />
+                  Status & Environment
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-2">KYC Status</p>
+                    {renderKybBadge(selectedMerchant.kycStatus)}
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-2">Environment</p>
+                    {renderEnvBadge(selectedMerchant.sandboxState, selectedMerchant.productionState)}
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Enabled</p>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${selectedMerchant.enabled ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                      {selectedMerchant.enabled ? 'Enabled' : 'Disabled'}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Rate Limit</p>
+                    <p className="text-sm text-gray-900">{selectedMerchant.rateLimitPerMinute} requests/min</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Timestamps */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Timestamps
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Merchant Created</p>
+                    <p className="text-sm text-gray-900">{formatDate(selectedMerchant.merchantCreatedAt)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Merchant Updated</p>
+                    <p className="text-sm text-gray-900">{formatDate(selectedMerchant.merchantUpdatedAt)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">User Created</p>
+                    <p className="text-sm text-gray-900">{formatDate(selectedMerchant.userCreatedAt)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">User Added to Merchant</p>
+                    <p className="text-sm text-gray-900">{formatDate(selectedMerchant.merchantUserCreatedAt)}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200">
+              <button
+                onClick={closeModal}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
     </div>
   );

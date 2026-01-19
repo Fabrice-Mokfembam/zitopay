@@ -16,8 +16,6 @@ import {
     Globe,
     BarChart3,
     Building2,
-    FileText,
-    HelpCircle,
     LogOut,
     Store,
     Menu,
@@ -133,23 +131,6 @@ const menuSections: MenuSection[] = [
                 icon: Globe,
                 label: "Domains",
                 href: "/dashboard/settings/domains",
-            },
-        ],
-    },
-    // HELP
-    {
-        title: "HELP",
-        collapsible: true,
-        items: [
-            {
-                icon: FileText,
-                label: "Documentation",
-                href: "/dashboard/documentation",
-            },
-            {
-                icon: HelpCircle,
-                label: "Help & Support",
-                href: "/dashboard/support",
             },
         ],
     },

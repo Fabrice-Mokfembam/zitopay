@@ -7,17 +7,13 @@ import {
     Home,
     Building2,
     Clock,
-    Rocket,
     CreditCard,
-    RefreshCw,
     Landmark,
     BarChart3,
     FileText,
     Settings,
     Shield,
     Users,
-    Book,
-    HelpCircle,
     ChevronDown,
     ChevronRight,
     Menu,
@@ -78,13 +74,6 @@ export function AdminSidebar() {
                     badge: 12,
                     badgeColor: "bg-orange-500",
                 },
-                {
-                    icon: Rocket,
-                    label: "Pending Production",
-                    href: "/admin/merchants/pending-production",
-                    badge: 5,
-                    badgeColor: "bg-green-500",
-                },
             ],
         },
         // MONITORING
@@ -96,13 +85,6 @@ export function AdminSidebar() {
                     icon: CreditCard,
                     label: "Transactions",
                     href: "/admin/transactions",
-                },
-                {
-                    icon: RefreshCw,
-                    label: "Reconciliation",
-                    href: "/admin/reconciliation",
-                    badge: 8,
-                    badgeColor: "bg-red-500",
                 },
                 {
                     icon: Landmark,
@@ -139,32 +121,10 @@ export function AdminSidebar() {
                     href: "/admin/settings",
                 },
                 {
-                    icon: Shield,
-                    label: "Audit Logs",
-                    href: "/admin/audit-logs",
-                },
-                {
                     icon: Users,
                     label: "Admin Users",
                     href: "/admin/users",
                     badge: 8,
-                },
-            ],
-        },
-        // HELP
-        {
-            title: "HELP",
-            collapsible: true,
-            items: [
-                {
-                    icon: Book,
-                    label: "Documentation",
-                    href: "/admin/documentation",
-                },
-                {
-                    icon: HelpCircle,
-                    label: "Support",
-                    href: "/admin/support",
                 },
             ],
         },
