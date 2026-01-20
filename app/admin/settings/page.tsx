@@ -7,17 +7,10 @@ import {
     Shield,
     Save,
     RotateCcw,
-    Trash2,
-    Database,
-    Smartphone,
     Mail,
-    Globe,
     AlertTriangle,
     Lock,
-    Wifi,
     CheckCircle2,
-    Activity,
-    AlertOctagon,
     User
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -31,8 +24,6 @@ export default function PlatformSettingsPage() {
     
     // Admin profile state
     const [email, setEmail] = useState("");
-    const [fullName, setFullName] = useState("");
-    const [phone, setPhone] = useState("");
     
     // Hooks
     const { data: adminData, isLoading: adminLoading } = useCurrentAdmin();
@@ -184,10 +175,10 @@ export default function PlatformSettingsPage() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.2 }}
-                    className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+                    className="space-y-6"
                 >
                     {/* Main Settings Panel */}
-                    <div className="lg:col-span-2 space-y-6">
+                    <div className="space-y-6">
                         {activeTab === "profile" && (
                             <>
                                 {/* Profile Settings */}
@@ -210,16 +201,6 @@ export default function PlatformSettingsPage() {
                                     ) : (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div className="space-y-2">
-                                                <label className="text-sm font-medium text-gray-700">Full Name</label>
-                                                <input
-                                                    type="text"
-                                                    value={fullName}
-                                                    onChange={(e) => setFullName(e.target.value)}
-                                                    placeholder="Enter your full name"
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
                                                 <label className="text-sm font-medium text-gray-700">Email Address <span className="text-red-500">*</span></label>
                                                 <div className="relative">
                                                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -235,19 +216,6 @@ export default function PlatformSettingsPage() {
                                                 {adminData?.admin && !adminData.admin.emailVerified && (
                                                     <p className="text-xs text-orange-600">Email not verified. Please verify your email address.</p>
                                                 )}
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label className="text-sm font-medium text-gray-700">Phone Number</label>
-                                                <div className="relative">
-                                                    <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                                    <input
-                                                        type="text"
-                                                        value={phone}
-                                                        onChange={(e) => setPhone(e.target.value)}
-                                                        placeholder="+237 600 000 000"
-                                                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
-                                                    />
-                                                </div>
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-sm font-medium text-gray-700">Role</label>
@@ -398,57 +366,6 @@ export default function PlatformSettingsPage() {
                                 </div>
                             </div>
                         )}
-                    </div>
-
-                    {/* Right Sidebar - System Actions */}
-                    <div className="lg:col-span-1 space-y-6">
-                        <div className="bg-gray-900 text-white rounded-lg p-5 shadow-sm">
-                            <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
-                                <Activity className="w-4 h-4 text-blue-400" />
-                                System Status
-                            </h3>
-                            <div className="space-y-3">
-                                <div className="flex justify-between items-center text-sm">
-                                    <span className="text-gray-400 text-xs">Database Load</span>
-                                    <span className="text-green-400 font-mono text-xs">12%</span>
-                                </div>
-                                <div className="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
-                                    <div className="bg-green-400 h-full w-[12%]"></div>
-                                </div>
-                                <div className="flex justify-between items-center text-sm">
-                                    <span className="text-gray-400 text-xs">API Latency</span>
-                                    <span className="text-green-400 font-mono text-xs">45ms</span>
-                                </div>
-                                <div className="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
-                                    <div className="bg-green-400 h-full w-[25%]"></div>
-                                </div>
-                                <div className="flex justify-between items-center text-sm">
-                                    <span className="text-gray-400 text-xs">Error Rate</span>
-                                    <span className="text-green-400 font-mono text-xs">0.01%</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
-                            <h3 className="font-semibold text-gray-900 text-sm mb-4 flex items-center gap-2">
-                                <Database className="w-4 h-4 text-gray-500" />
-                                Maintenance Actions
-                            </h3>
-                            <div className="space-y-2">
-                                <button className="w-full flex items-center justify-between px-3 py-2.5 bg-gray-50 hover:bg-gray-100 rounded-lg text-sm transition-colors text-left group">
-                                    <span className="font-medium text-gray-700 text-xs">Clear System Cache</span>
-                                    <RotateCcw className="w-4 h-4 text-gray-400 group-hover:text-blue-600" />
-                                </button>
-                                <button className="w-full flex items-center justify-between px-3 py-2.5 bg-gray-50 hover:bg-gray-100 rounded-lg text-sm transition-colors text-left group">
-                                    <span className="font-medium text-gray-700 text-xs">Purge Temp Files</span>
-                                    <Trash2 className="w-4 h-4 text-gray-400 group-hover:text-red-500" />
-                                </button>
-                                <button className="w-full flex items-center justify-between px-3 py-2.5 bg-gray-50 hover:bg-gray-100 rounded-lg text-sm transition-colors text-left group">
-                                    <span className="font-medium text-gray-700 text-xs">Restart Webhooks</span>
-                                    <Wifi className="w-4 h-4 text-gray-400 group-hover:text-blue-500" />
-                                </button>
-                            </div>
-                        </div>
                     </div>
                 </motion.div>
             </AnimatePresence>

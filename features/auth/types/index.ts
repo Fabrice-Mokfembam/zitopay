@@ -84,6 +84,10 @@ export interface CreateAdminResponse {
     };
 }
 
+export interface DeleteAdminResponse {
+    message: string;
+}
+
 // ============ RESPONSE TYPES ============
 
 export interface RegisterResponse {

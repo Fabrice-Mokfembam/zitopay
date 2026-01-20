@@ -22,6 +22,7 @@ import type {
     GetAllAdminsResponse,
     CreateAdminRequest,
     CreateAdminResponse,
+    DeleteAdminResponse,
 } from '../types/index';
 
 /**
@@ -166,5 +167,14 @@ export const getAllAdmins = async (): Promise<GetAllAdminsResponse> => {
  */
 export const createAdmin = async (payload: CreateAdminRequest): Promise<CreateAdminResponse> => {
     const { data } = await apiClient.post<CreateAdminResponse>('/auth/v1/admin/create', payload);
+    return data;
+};
+
+/**
+ * Delete admin account
+ * Includes safety checks: cannot delete yourself, cannot delete last admin
+ */
+export const deleteAdmin = async (adminId: string): Promise<DeleteAdminResponse> => {
+    const { data } = await apiClient.delete<DeleteAdminResponse>(`/auth/v1/admin/${adminId}`);
     return data;
 };

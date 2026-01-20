@@ -1,7 +1,7 @@
 import { useMutation, useQuery, UseMutationResult, UseQueryResult, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useAuthContext } from '../context/AuthContext';
-import { register, verifyEmail, resendVerificationCode, login, adminLogin, logout, updateAdminProfile, getCurrentAdmin, getAllAdmins, createAdmin } from '../api/index';
+import { register, verifyEmail, resendVerificationCode, login, adminLogin, logout, updateAdminProfile, getCurrentAdmin, getAllAdmins, createAdmin, deleteAdmin } from '../api/index';
 // storeAuthData/clearAuthData removed as we use context now
 import type {
     RegisterRequest,
@@ -19,6 +19,7 @@ import type {
     GetAllAdminsResponse,
     CreateAdminRequest,
     CreateAdminResponse,
+    DeleteAdminResponse,
 } from '../types/index';
 
 /**
@@ -191,6 +192,21 @@ export const useCreateAdmin = (): UseMutationResult<CreateAdminResponse, Error, 
     
     return useMutation({
         mutationFn: (payload: CreateAdminRequest) => createAdmin(payload),
+        onSuccess: () => {
+            // Invalidate admins list to refresh
+            queryClient.invalidateQueries({ queryKey: ['auth', 'admin', 'all'] });
+        },
+    });
+};
+
+/**
+ * Hook for deleting admin account
+ */
+export const useDeleteAdmin = (): UseMutationResult<DeleteAdminResponse, Error, string> => {
+    const queryClient = useQueryClient();
+    
+    return useMutation({
+        mutationFn: (adminId: string) => deleteAdmin(adminId),
         onSuccess: () => {
             // Invalidate admins list to refresh
             queryClient.invalidateQueries({ queryKey: ['auth', 'admin', 'all'] });

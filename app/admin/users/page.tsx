@@ -4,16 +4,17 @@ import { useState } from "react";
 import {
     Users,
     UserPlus,
-    MoreVertical,
     Mail,
     CheckCircle2,
     X,
     Loader2,
     Eye,
-    EyeOff
+    EyeOff,
+    Trash2,
+    AlertTriangle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAllAdmins, useCreateAdmin } from "@/features/auth/hooks/useAuth";
+import { useAllAdmins, useCreateAdmin, useDeleteAdmin, useCurrentAdmin } from "@/features/auth/hooks/useAuth";
 import { toast } from "sonner";
 
 // Helper function to get initials from email
@@ -73,6 +74,8 @@ function TableRowSkeleton() {
 
 export default function AdminUsersPage() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [adminToDelete, setAdminToDelete] = useState<{ id: string; email: string } | null>(null);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -81,7 +84,9 @@ export default function AdminUsersPage() {
 
     // Hooks
     const { data, isLoading, error } = useAllAdmins();
+    const { data: currentAdminData } = useCurrentAdmin();
     const createAdminMutation = useCreateAdmin();
+    const deleteAdminMutation = useDeleteAdmin();
 
     const handleCreateAdmin = async () => {
         if (!email.trim()) {
@@ -121,6 +126,36 @@ export default function AdminUsersPage() {
             toast.error(error.response?.data?.message || "Failed to create admin account");
         }
     };
+
+    const handleDeleteClick = (adminId: string, adminEmail: string) => {
+        setAdminToDelete({ id: adminId, email: adminEmail });
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!adminToDelete) return;
+
+        try {
+            await deleteAdminMutation.mutateAsync(adminToDelete.id);
+            toast.success("Admin account deleted successfully");
+            setIsDeleteModalOpen(false);
+            setAdminToDelete(null);
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            const errorMessage = error.response?.data?.message || "Failed to delete admin account";
+            
+            // Handle specific error cases
+            if (errorMessage.includes("your own")) {
+                toast.error("You cannot delete your own account");
+            } else if (errorMessage.includes("last admin")) {
+                toast.error("Cannot delete the last admin account. At least one admin must remain.");
+            } else {
+                toast.error(errorMessage);
+            }
+        }
+    };
+
+    const currentAdminId = currentAdminData?.admin?.id;
 
     return (
         <div className="space-y-6">
@@ -214,9 +249,19 @@ export default function AdminUsersPage() {
                                             <span className="text-xs text-gray-500">{formatDate(admin.updatedAt)}</span>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all">
-                                                <MoreVertical className="w-4 h-4" />
-                                            </button>
+                                            <div className="flex items-center justify-end gap-2">
+                                                {admin.id === currentAdminId ? (
+                                                    <span className="text-xs text-gray-400 italic">Current user</span>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => handleDeleteClick(admin.id, admin.email)}
+                                                        className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                                        title="Delete admin"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))
@@ -362,6 +407,89 @@ export default function AdminUsersPage() {
                                         <>
                                             <UserPlus className="w-4 h-4" />
                                             Create Admin
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Delete Admin Confirmation Modal */}
+            <AnimatePresence>
+                {isDeleteModalOpen && adminToDelete && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => !deleteAdminMutation.isPending && setIsDeleteModalOpen(false)}>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="relative w-full max-w-md bg-white rounded-lg shadow-xl overflow-hidden"
+                        >
+                            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+                                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                    <AlertTriangle className="w-5 h-5 text-red-600" />
+                                    Delete Admin Account
+                                </h2>
+                                {!deleteAdminMutation.isPending && (
+                                    <button
+                                        onClick={() => setIsDeleteModalOpen(false)}
+                                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                    >
+                                        <X className="w-5 h-5 text-gray-500" />
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="p-6 space-y-4">
+                                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                                    <p className="text-sm font-semibold text-red-900 mb-2">⚠️ Warning</p>
+                                    <p className="text-sm text-red-800">
+                                        Are you sure you want to delete admin account <span className="font-semibold">{adminToDelete.email}</span>?
+                                    </p>
+                                </div>
+                                <div className="space-y-2">
+                                    <p className="text-sm text-gray-700">
+                                        This action <span className="font-semibold text-red-600">cannot be undone</span>. The admin will immediately lose access to the system.
+                                    </p>
+                                    <ul className="text-xs text-gray-600 space-y-1 list-disc list-inside ml-2">
+                                        <li>All admin access will be revoked immediately</li>
+                                        <li>The account cannot be recovered</li>
+                                        <li>This action is permanent</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div className="p-6 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
+                                {!deleteAdminMutation.isPending && (
+                                    <button
+                                        onClick={() => setIsDeleteModalOpen(false)}
+                                        className="px-4 py-2 text-gray-600 text-sm font-medium hover:bg-gray-200 rounded-lg transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                )}
+                                <button
+                                    onClick={handleDeleteConfirm}
+                                    disabled={deleteAdminMutation.isPending}
+                                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                >
+                                    {deleteAdminMutation.isPending ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            Deleting...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Trash2 className="w-4 h-4" />
+                                            Delete Admin
                                         </>
                                     )}
                                 </button>
