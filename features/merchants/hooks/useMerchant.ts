@@ -348,8 +348,8 @@ export const useUpdateMerchantProfile = (): UseMutationResult<UpdateMerchantProf
         mutationFn: (updates: UpdateMerchantProfileRequest) => updateMerchantProfile(updates),
         onSuccess: () => {
             // Invalidate merchant queries to refresh data
-            queryClient.invalidateQueries({ queryKey: ['merchants', 'first'] });
-            queryClient.invalidateQueries({ queryKey: ['merchants'] });
+            queryClient.invalidateQueries({ queryKey: ['merchant', 'first'] });
+            queryClient.invalidateQueries({ queryKey: ['merchant'] });
         },
     });
 };
