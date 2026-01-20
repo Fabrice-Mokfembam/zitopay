@@ -19,6 +19,7 @@ import {
   CreateFeeRuleResponse,
   UpdateFeeRuleRequest,
   DeactivateFeeRuleResponse,
+  ActivateFeeRuleResponse,
   FeeTiersResponse,
   CreateFeeTierRequest,
   CreateFeeTierResponse,
@@ -147,6 +148,11 @@ export const createFeeRule = async (data: CreateFeeRuleRequest): Promise<CreateF
 
 export const updateFeeRule = async (id: string, data: UpdateFeeRuleRequest): Promise<FeeRuleResponse> => {
   const response = await apiClient.patch<FeeRuleResponse>(`${FEE_BASE_URL}/fee-rules/${id}`, data);
+  return response.data;
+};
+
+export const activateFeeRule = async (id: string): Promise<ActivateFeeRuleResponse> => {
+  const response = await apiClient.post<ActivateFeeRuleResponse>(`${FEE_BASE_URL}/fee-rules/${id}/activate`);
   return response.data;
 };
 

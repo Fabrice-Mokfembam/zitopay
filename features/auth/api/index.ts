@@ -99,6 +99,17 @@ export const resendResetCode = async (payload: ResendVerificationRequest): Promi
 };
 
 /**
+ * Refresh access token using refresh token
+ * Returns new access token and user data
+ */
+export const refreshToken = async (refreshTokenValue: string): Promise<LoginResponse> => {
+    const { data } = await apiClient.post<LoginResponse>('/public/v1/auth/refresh', {
+        refreshToken: refreshTokenValue,
+    });
+    return data;
+};
+
+/**
  * Get current authenticated user
  * Requires valid access token
  */

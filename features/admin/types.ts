@@ -244,6 +244,11 @@ export interface DeactivateFeeRuleResponse {
   message: string;
 }
 
+export interface ActivateFeeRuleResponse {
+  message: string;
+  feeRule: FeeRule;
+}
+
 export interface FeeTier {
   id: string;
   feeRuleId: string;

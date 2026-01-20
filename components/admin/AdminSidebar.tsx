@@ -18,6 +18,7 @@ import {
     ChevronRight,
     Menu,
     X,
+    DollarSign,
 } from "lucide-react";
 
 interface MenuItem {
@@ -65,14 +66,11 @@ export function AdminSidebar() {
                     icon: Building2,
                     label: "Merchants",
                     href: "/admin/merchants",
-                    badge: "1,234",
                 },
                 {
                     icon: Clock,
                     label: "Pending KYB",
                     href: "/admin/merchants/pending-kyb",
-                    badge: 12,
-                    badgeColor: "bg-orange-500",
                 },
             ],
         },
@@ -119,6 +117,11 @@ export function AdminSidebar() {
                     icon: Settings,
                     label: "Settings",
                     href: "/admin/settings",
+                },
+                {
+                    icon: DollarSign,
+                    label: "Fees",
+                    href: "/admin/settings/fees",
                 },
                 {
                     icon: Users,

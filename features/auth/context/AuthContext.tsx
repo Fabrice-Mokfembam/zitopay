@@ -1,8 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, AuthData, getAuthData, storeAuthData, clearAuthData, getAccessToken } from '../utils/storage';
-import { getCurrentUser } from '../api/index';
+import { User, AuthData, getAuthData, storeAuthData, clearAuthData, getAccessToken, getRefreshToken } from '../utils/storage';
+import { getCurrentUser, refreshToken } from '../api/index';
 
 // Context type definition
 interface AuthContextType {
@@ -30,10 +30,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const loadUser = async () => {
             try {
                 const token = getAccessToken();
+                const refreshTokenValue = getRefreshToken();
                 const authData = getAuthData();
 
-                // If no token, user is not authenticated
-                if (!token) {
+                // If no token and no refresh token, user is not authenticated
+                if (!token && !refreshTokenValue) {
                     setUser(null);
                     setIsLoading(false);
                     return;
@@ -58,11 +59,99 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                             user: freshUser,
                         });
                     }
-                } catch (error) {
-                    // If API call fails (token invalid/expired), clear auth
-                    console.error('Failed to fetch current user:', error);
-                    clearAuthData();
-                    setUser(null);
+                } catch (error: any) {
+                    // Check error type
+                    const is401 = error?.response?.status === 401 || error?.status === 401;
+                    const is403 = error?.response?.status === 403 || error?.status === 403;
+                    const isNetworkError = error?.code === 'ERR_NETWORK' || 
+                                         error?.message === 'Network Error' ||
+                                         !error?.response; // No response means network/server issue
+                    
+                    // If it's a network error (server unreachable, CORS, etc.), keep user logged in
+                    // Don't clear auth on network errors - user might be offline or server might be down
+                    if (isNetworkError) {
+                        console.warn('Network error fetching user data, keeping cached user:', error?.message || error);
+                        // Keep the user from localStorage - don't clear auth
+                        // The user is still authenticated, just can't verify with server right now
+                        if (authData?.user) {
+                            setUser(authData.user);
+                        }
+                        return; // Exit early, keep user logged in
+                    }
+                    
+                    // If it's a 401 (unauthorized), try to refresh token
+                    if (is401 && refreshTokenValue) {
+                        try {
+                            console.log('Access token expired, attempting refresh...');
+                            // Attempt to refresh the token
+                            const refreshResponse = await refreshToken(refreshTokenValue);
+                            
+                            // Store new tokens
+                            storeAuthData({
+                                user: refreshResponse.user,
+                                accessToken: refreshResponse.accessToken,
+                                refreshToken: refreshResponse.refreshToken || refreshTokenValue,
+                            });
+                            
+                            // Update context with refreshed user data
+                            setUser(refreshResponse.user);
+                            
+                            // Try to get fresh user data again
+                            try {
+                                const freshUser = await getCurrentUser();
+                                setUser(freshUser);
+                                if (authData) {
+                                    storeAuthData({
+                                        user: freshUser,
+                                        accessToken: refreshResponse.accessToken,
+                                        refreshToken: refreshResponse.refreshToken || refreshTokenValue,
+                                    });
+                                }
+                            } catch (retryError: any) {
+                                // Check if retry also failed due to network
+                                const isRetryNetworkError = retryError?.code === 'ERR_NETWORK' || 
+                                                           retryError?.message === 'Network Error' ||
+                                                           !retryError?.response;
+                                if (isRetryNetworkError) {
+                                    // Network error on retry - keep refresh response user
+                                    console.warn('Network error on retry, using refresh response user');
+                                } else {
+                                    // Even after refresh, getCurrentUser failed - but we have valid tokens
+                                    // Keep the user from refresh response
+                                    console.warn('Failed to fetch fresh user after refresh, using refresh response:', retryError);
+                                }
+                            }
+                        } catch (refreshError: any) {
+                            // Check if refresh failed due to network error
+                            const isRefreshNetworkError = refreshError?.code === 'ERR_NETWORK' || 
+                                                         refreshError?.message === 'Network Error' ||
+                                                         !refreshError?.response;
+                            
+                            if (isRefreshNetworkError) {
+                                // Network error during refresh - keep user logged in with cached data
+                                console.warn('Network error during token refresh, keeping cached user');
+                                if (authData?.user) {
+                                    setUser(authData.user);
+                                }
+                            } else {
+                                // Refresh failed (invalid refresh token, expired, etc.), clear auth and logout
+                                console.error('Token refresh failed:', refreshError);
+                                clearAuthData();
+                                setUser(null);
+                            }
+                        }
+                    } else if (is401 || is403) {
+                        // 401/403 but no refresh token or refresh not attempted - clear auth
+                        console.error('Unauthorized access, clearing auth:', error);
+                        clearAuthData();
+                        setUser(null);
+                    } else {
+                        // Other error (500, etc.) - don't clear auth, keep cached user
+                        console.warn('Error fetching user data (non-auth error), keeping cached user:', error?.response?.status || error?.message);
+                        if (authData?.user) {
+                            setUser(authData.user);
+                        }
+                    }
                 }
             } catch (error) {
                 console.error('Error loading user:', error);

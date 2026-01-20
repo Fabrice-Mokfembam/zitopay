@@ -15,6 +15,7 @@ import {
   getFeeRule,
   createFeeRule,
   updateFeeRule,
+  activateFeeRule,
   deactivateFeeRule,
   getFeeTiers,
   createFeeTier,
@@ -43,6 +44,7 @@ import {
   CreateFeeRuleRequest,
   CreateFeeRuleResponse,
   UpdateFeeRuleRequest,
+  ActivateFeeRuleResponse,
   DeactivateFeeRuleResponse,
   FeeTiersResponse,
   CreateFeeTierRequest,
@@ -203,6 +205,16 @@ export function useUpdateFeeRule() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["admin", "fee-rules"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "fee-rules", variables.id] });
+    },
+  });
+}
+
+export function useActivateFeeRule() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => activateFeeRule(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "fee-rules"] });
     },
   });
 }

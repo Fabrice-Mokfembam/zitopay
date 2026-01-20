@@ -19,8 +19,12 @@ import {
     TrendingUp,
     ShieldCheck,
     XCircle,
+    Building2,
+    Users,
+    DollarSign,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePlatformSummary } from "@/features/reports/queries";
 
 // Types
 interface ReportJob {
@@ -99,6 +103,9 @@ const SCHEDULED_REPORTS: ScheduledReport[] = [
 export default function ReportsPage() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [selectedTemplate, setSelectedTemplate] = useState("Transaction Master");
+    
+    // Fetch platform summary
+    const { data: platformSummary, isLoading: isLoadingSummary } = usePlatformSummary();
 
     const StatusBadge = ({ status }: { status: ReportJob['status'] }) => {
         const styles = {
@@ -148,41 +155,114 @@ export default function ReportsPage() {
                 </div>
             </div>
 
-            {/* Quick Stats Grid - Matching Merchant Page Style */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 rounded-xl border border-blue-200 bg-blue-50">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
-                            <FileSpreadsheet className="w-5 h-5" />
+            {/* Platform Summary Stats */}
+            {isLoadingSummary ? (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="p-4 rounded-xl border border-gray-200 bg-white animate-pulse">
+                            <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+                            <div className="h-8 bg-gray-200 rounded w-3/4"></div>
                         </div>
-                        <p className="text-xs font-semibold uppercase tracking-wider text-blue-700 opacity-80">Total Exported</p>
-                    </div>
-                    <h3 className="text-2xl font-bold text-gray-900">1.2 TB</h3>
-                    <p className="text-xs text-blue-600 mt-1">Last 30 days data</p>
+                    ))}
                 </div>
+            ) : platformSummary ? (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="p-4 rounded-xl border border-blue-200 bg-blue-50">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                                <Building2 className="w-5 h-5" />
+                            </div>
+                            <p className="text-xs font-semibold uppercase tracking-wider text-blue-700 opacity-80">Total Merchants</p>
+                        </div>
+                        <h3 className="text-2xl font-bold text-gray-900">{platformSummary.totalMerchants}</h3>
+                        <p className="text-xs text-blue-600 mt-1">
+                            {platformSummary.activeMerchants} active, {platformSummary.inactiveMerchants} inactive
+                        </p>
+                    </div>
 
-                <div className="p-4 rounded-xl border border-gray-200 bg-white shadow-sm">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-gray-100 text-gray-600 rounded-lg">
-                            <Mail className="w-5 h-5" />
+                    <div className="p-4 rounded-xl border border-green-200 bg-green-50">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-green-100 text-green-600 rounded-lg">
+                                <Users className="w-5 h-5" />
+                            </div>
+                            <p className="text-xs font-semibold uppercase tracking-wider text-green-700 opacity-80">Active Merchants</p>
                         </div>
-                        <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Automation</p>
+                        <h3 className="text-2xl font-bold text-gray-900">{platformSummary.activeMerchants}</h3>
+                        <p className="text-xs text-green-600 mt-1">Currently enabled</p>
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900">14/day</h3>
-                    <p className="text-xs text-gray-500 mt-1">Scheduled deliveries</p>
-                </div>
 
-                <div className="p-4 rounded-xl border border-green-200 bg-green-50">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-green-100 text-green-600 rounded-lg">
-                            <ShieldCheck className="w-5 h-5" />
+                    <div className="p-4 rounded-xl border border-purple-200 bg-purple-50">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-purple-100 text-purple-600 rounded-lg">
+                                <TrendingUp className="w-5 h-5" />
+                            </div>
+                            <p className="text-xs font-semibold uppercase tracking-wider text-purple-700 opacity-80">Total Transactions</p>
                         </div>
-                        <p className="text-xs font-semibold uppercase tracking-wider text-green-700 opacity-80">Compliance</p>
+                        <h3 className="text-2xl font-bold text-gray-900">
+                            {new Intl.NumberFormat('en-US').format(platformSummary.totalTransactions)}
+                        </h3>
+                        <p className="text-xs text-purple-600 mt-1">All time</p>
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-900">100%</h3>
-                    <p className="text-xs text-green-600 mt-1">Audit ready</p>
+
+                    <div className="p-4 rounded-xl border border-orange-200 bg-orange-50">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-orange-100 text-orange-600 rounded-lg">
+                                <DollarSign className="w-5 h-5" />
+                            </div>
+                            <p className="text-xs font-semibold uppercase tracking-wider text-orange-700 opacity-80">Platform Revenue</p>
+                        </div>
+                        <h3 className="text-2xl font-bold text-gray-900">
+                            {new Intl.NumberFormat('en-US', {
+                                style: 'currency',
+                                currency: 'XAF',
+                                minimumFractionDigits: 0,
+                            }).format(parseFloat(platformSummary.totalPlatformRevenue))}
+                        </h3>
+                        <p className="text-xs text-orange-600 mt-1">Total fees collected</p>
+                    </div>
                 </div>
-            </div>
+            ) : null}
+
+            {/* Gateway Performance */}
+            {platformSummary && platformSummary.gatewayPerformance && platformSummary.gatewayPerformance.length > 0 && (
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                    <h3 className="font-semibold text-gray-900 mb-4">Gateway Performance</h3>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                            <thead className="bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                    <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Gateway</th>
+                                    <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Success Rate</th>
+                                    <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Total Transactions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {platformSummary.gatewayPerformance.map((gateway, index) => (
+                                    <tr key={index} className="hover:bg-gray-50 transition-colors">
+                                        <td className="px-4 py-3">
+                                            <span className="text-sm font-medium text-gray-900">{gateway.gateway}</span>
+                                        </td>
+                                        <td className="px-4 py-3 text-right">
+                                            <span className={`text-sm font-semibold ${
+                                                gateway.successRate >= 95 ? 'text-green-600' :
+                                                gateway.successRate >= 90 ? 'text-blue-600' :
+                                                gateway.successRate >= 85 ? 'text-yellow-600' : 'text-red-600'
+                                            }`}>
+                                                {gateway.successRate}%
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-right">
+                                            <span className="text-sm font-medium text-gray-900">
+                                                {new Intl.NumberFormat('en-US').format(gateway.totalTransactions)}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
 
             {/* Main Content Area */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

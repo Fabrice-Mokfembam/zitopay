@@ -27,6 +27,9 @@ export function middleware(request: NextRequest) {
   // Admin routes
   const isAdminRoute = pathname.startsWith("/admin");
 
+  // Dashboard routes (client-side protected)
+  const isDashboardRoute = pathname.startsWith("/dashboard");
+
   // Merchant routes (protected)
   const isMerchantRoute =
     pathname.startsWith("/transactions") ||
@@ -41,20 +44,23 @@ export function middleware(request: NextRequest) {
   // Get auth token from cookies or headers
   const token = request.cookies.get("accessToken")?.value;
 
-  // If accessing a protected route without a token, redirect to login
-  if (!isPublicRoute && !token) {
-    if (isAdminRoute) {
-      return NextResponse.redirect(new URL("/admin/login", request.url));
-    }
+  // For dashboard and admin routes, allow them to load even without cookie
+  // This prevents race conditions on page refresh where cookie might not be set yet
+  // but localStorage still has valid tokens. Client-side layouts will handle auth validation.
+  // For other protected routes, we still check for token
+  const isClientProtectedRoute = isDashboardRoute || isAdminRoute;
+  
+  if (!isPublicRoute && !token && !isClientProtectedRoute) {
+    // For non-dashboard/admin protected routes, redirect if no token
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // If accessing login/register while authenticated, redirect to dashboard
+  // If accessing login/register while authenticated (cookie exists), redirect to dashboard
   if ((pathname === "/login" || pathname === "/register") && token) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  // If accessing marketing pages while authenticated, redirect to dashboard
+  // If accessing marketing pages while authenticated (cookie exists), redirect to dashboard
   if (token && (
     pathname === "/" ||
     pathname.startsWith("/solutions") ||

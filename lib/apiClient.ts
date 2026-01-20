@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosError } from 'axios';
 import { API_BASE_URL } from '@/constants/api';
-import { getAccessToken, getRefreshToken, storeAuthData, clearAuthData } from '@/features/auth/utils/storage';
+import { getAccessToken, getRefreshToken, getAuthData, storeAuthData, clearAuthData } from '@/features/auth/utils/storage';
 
 /**
  * Main API client instance
@@ -11,7 +11,13 @@ const apiClient: AxiosInstance = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
+    timeout: 30000, // 30 seconds timeout
 });
+
+// Log API base URL in development for debugging
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+    console.log('API Base URL:', API_BASE_URL);
+}
 
 /**
  * Request interceptor
@@ -55,6 +61,16 @@ apiClient.interceptors.response.use(
     async (error: AxiosError) => {
         const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
+        // Check if this is a network error (no response from server)
+        const isNetworkError = error.code === 'ERR_NETWORK' || 
+                              error.message === 'Network Error' ||
+                              !error.response;
+
+        // If it's a network error, don't try to refresh - just pass it through
+        if (isNetworkError) {
+            return Promise.reject(error);
+        }
+
         // Extract error message from API response if available
         // This ensures that all parts of the app receive the user-friendly message from the server
         if (error.response?.data && typeof error.response.data === 'object') {
@@ -97,15 +113,15 @@ apiClient.interceptors.response.use(
                         refreshToken,
                     });
 
-                    // Store new access token (keep existing user and refresh token)
-                    const currentAuth = getAccessToken();
-                    if (currentAuth) {
-                        storeAuthData({
-                            user: data.user,
-                            accessToken: data.accessToken,
-                            refreshToken: refreshToken, // Keep same refresh token
-                        });
-                    }
+                    // Store new access token
+                    // storeAuthData will automatically update the cookie
+                    // Get current auth data to preserve user if not in response
+                    const currentAuthData = getAuthData();
+                    storeAuthData({
+                        user: data.user || currentAuthData?.user || { id: '', email: '', role: 'merchant-user' },
+                        accessToken: data.accessToken,
+                        refreshToken: data.refreshToken || refreshToken, // Use new refresh token if provided, otherwise keep old one
+                    });
 
                     // Retry original request with new token
                     if (originalRequest.headers) {
