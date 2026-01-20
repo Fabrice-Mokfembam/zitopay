@@ -1,7 +1,7 @@
-import { useMutation, UseMutationResult } from '@tanstack/react-query';
+import { useMutation, useQuery, UseMutationResult, UseQueryResult, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useAuthContext } from '../context/AuthContext';
-import { register, verifyEmail, resendVerificationCode, login, adminLogin, logout } from '../api/index';
+import { register, verifyEmail, resendVerificationCode, login, adminLogin, logout, updateAdminProfile, getCurrentAdmin, getAllAdmins, createAdmin } from '../api/index';
 // storeAuthData/clearAuthData removed as we use context now
 import type {
     RegisterRequest,
@@ -13,6 +13,12 @@ import type {
     LoginRequest,
     LoginResponse,
     LogoutResponse,
+    UpdateAdminProfileRequest,
+    UpdateAdminProfileResponse,
+    GetCurrentAdminResponse,
+    GetAllAdminsResponse,
+    CreateAdminRequest,
+    CreateAdminResponse,
 } from '../types/index';
 
 /**
@@ -135,6 +141,59 @@ export const useLogout = (): UseMutationResult<LogoutResponse, Error, void> => {
             // Even if API call fails, clear local data and redirect
             authLogout();
             router.push('/login');
+        },
+    });
+};
+
+/**
+ * Hook for updating admin profile (email)
+ */
+export const useUpdateAdminProfile = (): UseMutationResult<UpdateAdminProfileResponse, Error, UpdateAdminProfileRequest> => {
+    const queryClient = useQueryClient();
+    
+    return useMutation({
+        mutationFn: (payload: UpdateAdminProfileRequest) => updateAdminProfile(payload),
+        onSuccess: () => {
+            // Invalidate admin queries to refresh data
+            queryClient.invalidateQueries({ queryKey: ['admin', 'profile'] });
+            queryClient.invalidateQueries({ queryKey: ['auth', 'admin', 'me'] });
+        },
+    });
+};
+
+/**
+ * Hook for getting current admin details
+ */
+export const useCurrentAdmin = (): UseQueryResult<GetCurrentAdminResponse, Error> => {
+    return useQuery({
+        queryKey: ['auth', 'admin', 'me'],
+        queryFn: () => getCurrentAdmin(),
+        staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+};
+
+/**
+ * Hook for getting all admins
+ */
+export const useAllAdmins = (): UseQueryResult<GetAllAdminsResponse, Error> => {
+    return useQuery({
+        queryKey: ['auth', 'admin', 'all'],
+        queryFn: () => getAllAdmins(),
+        staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+};
+
+/**
+ * Hook for creating new admin account
+ */
+export const useCreateAdmin = (): UseMutationResult<CreateAdminResponse, Error, CreateAdminRequest> => {
+    const queryClient = useQueryClient();
+    
+    return useMutation({
+        mutationFn: (payload: CreateAdminRequest) => createAdmin(payload),
+        onSuccess: () => {
+            // Invalidate admins list to refresh
+            queryClient.invalidateQueries({ queryKey: ['auth', 'admin', 'all'] });
         },
     });
 };

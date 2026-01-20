@@ -1,10 +1,11 @@
-import { useMutation, useQuery, UseMutationResult, UseQueryResult } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, UseMutationResult, UseQueryResult } from '@tanstack/react-query';
 import {
     createMerchant,
     getUserMerchants,
     getMerchant,
     getFirstMerchant,
     updateMerchant,
+    updateMerchantProfile,
     submitKYB,
     approveKYB,
     rejectKYB,
@@ -31,6 +32,8 @@ import type {
     GetUserMerchantsResponse,
     UpdateMerchantRequest,
     UpdateMerchantResponse,
+    UpdateMerchantProfileRequest,
+    UpdateMerchantProfileResponse,
     SubmitKYBResponse,
     ApproveKYBResponse,
     RejectKYBResponse,
@@ -330,5 +333,23 @@ export const useWalletOperations = (
         queryKey: ['wallet', 'operations', merchantId, environment, limit],
         queryFn: () => getWalletOperations(merchantId, environment, limit),
         enabled: enabled && !!merchantId,
+    });
+};
+
+/**
+ * Hook for updating merchant profile
+ * Updates the first merchant account linked to the authenticated user
+ * All fields are optional - only provided fields will be updated
+ */
+export const useUpdateMerchantProfile = (): UseMutationResult<UpdateMerchantProfileResponse, Error, UpdateMerchantProfileRequest> => {
+    const queryClient = useQueryClient();
+    
+    return useMutation({
+        mutationFn: (updates: UpdateMerchantProfileRequest) => updateMerchantProfile(updates),
+        onSuccess: () => {
+            // Invalidate merchant queries to refresh data
+            queryClient.invalidateQueries({ queryKey: ['merchants', 'first'] });
+            queryClient.invalidateQueries({ queryKey: ['merchants'] });
+        },
     });
 };

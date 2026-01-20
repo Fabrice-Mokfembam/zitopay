@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     Settings,
-    CreditCard,
     Server,
     Shield,
     Save,
@@ -16,17 +15,37 @@ import {
     AlertTriangle,
     Lock,
     Wifi,
-    FileText,
     CheckCircle2,
     Activity,
-    AlertOctagon
+    AlertOctagon,
+    User
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useCurrentAdmin, useUpdateAdminProfile } from "@/features/auth/hooks/useAuth";
+import { toast } from "sonner";
 
 export default function PlatformSettingsPage() {
-    const [activeTab, setActiveTab] = useState("general");
+    const [activeTab, setActiveTab] = useState("profile");
     const [maintenanceMode, setMaintenanceMode] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    
+    // Admin profile state
+    const [email, setEmail] = useState("");
+    const [fullName, setFullName] = useState("");
+    const [phone, setPhone] = useState("");
+    
+    // Hooks
+    const { data: adminData, isLoading: adminLoading } = useCurrentAdmin();
+    const updateProfileMutation = useUpdateAdminProfile();
+    
+    // Load admin data into form
+    useEffect(() => {
+        if (adminData?.admin) {
+            setEmail(adminData.admin.email);
+            // Note: Full name and phone are not in the API response, so we'll leave them empty
+            // or you can add them to the API response if needed
+        }
+    }, [adminData]);
 
     // Mock States for Toggles
     const [gateways, setGateways] = useState({
@@ -46,9 +65,28 @@ export default function PlatformSettingsPage() {
         setTimeout(() => setIsSaving(false), 1500);
     };
 
+    const handleProfileUpdate = async () => {
+        if (!email.trim()) {
+            toast.error("Email is required");
+            return;
+        }
+
+        try {
+            const result = await updateProfileMutation.mutateAsync({ email: email.trim() });
+            toast.success(result.message || "Profile updated successfully");
+            
+            // Show verification reminder if email changed
+            if (result.message?.includes("verify")) {
+                toast.info("Please verify your new email address");
+            }
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            toast.error(error.response?.data?.message || "Failed to update profile");
+        }
+    };
+
     const tabs = [
-        { id: "general", label: "General", icon: Settings },
-        { id: "payments", label: "Payments & Fees", icon: CreditCard },
+        { id: "profile", label: "Profile Settings", icon: User },
         { id: "gateways", label: "Gateways", icon: Server },
         { id: "security", label: "Security", icon: Shield },
     ];
@@ -69,27 +107,51 @@ export default function PlatformSettingsPage() {
                         <RotateCcw className="w-4 h-4" />
                         Reset Defaults
                     </button>
-                    <button
-                        onClick={handleSave}
-                        disabled={isSaving}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all disabled:opacity-70"
-                    >
-                        {isSaving ? (
-                            <>
-                                <motion.div
-                                    animate={{ rotate: 360 }}
-                                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                                    className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
-                                />
-                                Saving...
-                            </>
-                        ) : (
-                            <>
-                                <Save className="w-4 h-4" />
-                                Save Changes
-                            </>
-                        )}
-                    </button>
+                    {activeTab === "profile" ? (
+                        <button
+                            onClick={handleProfileUpdate}
+                            disabled={updateProfileMutation.isPending || !email.trim()}
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all disabled:opacity-70"
+                        >
+                            {updateProfileMutation.isPending ? (
+                                <>
+                                    <motion.div
+                                        animate={{ rotate: 360 }}
+                                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                        className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
+                                    />
+                                    Updating...
+                                </>
+                            ) : (
+                                <>
+                                    <Save className="w-4 h-4" />
+                                    Update Profile
+                                </>
+                            )}
+                        </button>
+                    ) : (
+                        <button
+                            onClick={handleSave}
+                            disabled={isSaving}
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all disabled:opacity-70"
+                        >
+                            {isSaving ? (
+                                <>
+                                    <motion.div
+                                        animate={{ rotate: 360 }}
+                                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                        className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
+                                    />
+                                    Saving...
+                                </>
+                            ) : (
+                                <>
+                                    <Save className="w-4 h-4" />
+                                    Save Changes
+                                </>
+                            )}
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -126,135 +188,107 @@ export default function PlatformSettingsPage() {
                 >
                     {/* Main Settings Panel */}
                     <div className="lg:col-span-2 space-y-6">
-                        {activeTab === "general" && (
+                        {activeTab === "profile" && (
                             <>
-                                {/* General Settings */}
+                                {/* Profile Settings */}
                                 <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
                                     <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                                        <Globe className="w-5 h-5 text-gray-500" />
-                                        Platform Identity
+                                        <User className="w-5 h-5 text-gray-500" />
+                                        Personal Information
                                     </h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-medium text-gray-700">Platform Name</label>
-                                            <input
-                                                type="text"
-                                                defaultValue="ZitoPay"
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-medium text-gray-700">Support Email</label>
-                                            <div className="relative">
-                                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                                <input
-                                                    type="email"
-                                                    defaultValue="support@zitopay.africa"
-                                                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
-                                                />
+                                    {adminLoading ? (
+                                        <div className="space-y-4">
+                                            <div className="animate-pulse space-y-2">
+                                                <div className="h-3 bg-gray-200 rounded w-24"></div>
+                                                <div className="h-10 bg-gray-200 rounded"></div>
+                                            </div>
+                                            <div className="animate-pulse space-y-2">
+                                                <div className="h-3 bg-gray-200 rounded w-24"></div>
+                                                <div className="h-10 bg-gray-200 rounded"></div>
                                             </div>
                                         </div>
-                                        <div className="space-y-2">
-                                            <label className="text-sm font-medium text-gray-700">Support Phone</label>
-                                            <div className="relative">
-                                                <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium text-gray-700">Full Name</label>
                                                 <input
                                                     type="text"
-                                                    defaultValue="+237 600 000 000"
-                                                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                                                    value={fullName}
+                                                    onChange={(e) => setFullName(e.target.value)}
+                                                    placeholder="Enter your full name"
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium text-gray-700">Email Address <span className="text-red-500">*</span></label>
+                                                <div className="relative">
+                                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                                    <input
+                                                        type="email"
+                                                        value={email}
+                                                        onChange={(e) => setEmail(e.target.value)}
+                                                        placeholder="admin@zitopay.com"
+                                                        required
+                                                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                                                    />
+                                                </div>
+                                                {adminData?.admin && !adminData.admin.emailVerified && (
+                                                    <p className="text-xs text-orange-600">Email not verified. Please verify your email address.</p>
+                                                )}
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium text-gray-700">Phone Number</label>
+                                                <div className="relative">
+                                                    <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                                    <input
+                                                        type="text"
+                                                        value={phone}
+                                                        onChange={(e) => setPhone(e.target.value)}
+                                                        placeholder="+237 600 000 000"
+                                                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium text-gray-700">Role</label>
+                                                <input
+                                                    type="text"
+                                                    value={adminData?.admin?.role === "admin" ? "Super Admin" : adminData?.admin?.role || "Admin"}
+                                                    disabled
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm text-gray-500 cursor-not-allowed"
                                                 />
                                             </div>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
 
-                                {/* Maintenance Mode */}
-                                <div className={`border rounded-lg p-5 transition-colors ${maintenanceMode ? 'bg-orange-50 border-orange-200' : 'bg-white border-gray-200'}`}>
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-start gap-3">
-                                            <div className={`p-2 rounded-lg ${maintenanceMode ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-500'}`}>
-                                                <AlertOctagon className="w-5 h-5" />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-sm font-semibold text-gray-900">Maintenance Mode</h3>
-                                                <p className="text-xs text-gray-500 mt-1">When enabled, the dashboard is read-only for merchants. APIs return 503.</p>
-                                                {maintenanceMode && (
-                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700 border border-orange-200 mt-2">
-                                                        <Activity className="w-3 h-3" />
-                                                        System Offline
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                        <button
-                                            onClick={() => setMaintenanceMode(!maintenanceMode)}
-                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${maintenanceMode ? 'bg-orange-500' : 'bg-gray-300'}`}
-                                        >
-                                            <span
-                                                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition ${maintenanceMode ? 'translate-x-6' : 'translate-x-1'}`}
-                                            />
-                                        </button>
-                                    </div>
-                                </div>
-                            </>
-                        )}
-
-                        {activeTab === "payments" && (
-                            <div className="space-y-6">
+                                {/* Account Settings */}
                                 <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
                                     <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                                        <FileText className="w-5 h-5 text-gray-500" />
-                                        Default Fee Structure
+                                        <Settings className="w-5 h-5 text-gray-500" />
+                                        Account Settings
                                     </h3>
                                     <div className="space-y-4">
                                         <div className="space-y-2">
-                                            <label className="text-sm font-medium text-gray-700">Active Fee Version</label>
-                                            <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm">
-                                                <option>v2026.01.v1 (Current)</option>
-                                                <option>v2025.12.v3 (Legacy)</option>
-                                            </select>
+                                            <label className="text-sm font-medium text-gray-700">Change Password</label>
+                                            <input
+                                                type="password"
+                                                placeholder="Enter new password"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                                            />
+                                            <p className="text-xs text-gray-500">Leave blank to keep current password</p>
                                         </div>
-                                    </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-100">
-                                        <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                                            <div className="text-xs font-semibold text-blue-600 uppercase tracking-wide">Mobile Money Fee</div>
-                                            <div className="text-2xl font-bold text-gray-900 mt-1">2.5%</div>
-                                        </div>
-                                        <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
-                                            <div className="text-xs font-semibold text-purple-600 uppercase tracking-wide">Card Process Fee</div>
-                                            <div className="text-2xl font-bold text-gray-900 mt-1">3.8%</div>
-                                        </div>
-                                        <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                                            <div className="text-xs font-semibold text-green-600 uppercase tracking-wide">Payout Fee</div>
-                                            <div className="text-2xl font-bold text-gray-900 mt-1">100 FCFA</div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium text-gray-700">Confirm New Password</label>
+                                            <input
+                                                type="password"
+                                                placeholder="Confirm new password"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                                            />
                                         </div>
                                     </div>
                                 </div>
-
-                                <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Currency Configuration</h3>
-                                    <div className="space-y-3">
-                                        {[
-                                            { code: 'XAF', name: 'West/Central African CFA', flag: '🇨🇲' },
-                                            { code: 'EUR', name: 'Euro', flag: '🇪🇺' },
-                                            { code: 'USD', name: 'US Dollar', flag: '🇺🇸' }
-                                        ].map((curr) => (
-                                            <div key={curr.code} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors border border-gray-100">
-                                                <div className="flex items-center gap-3">
-                                                    <span className="text-2xl">{curr.flag}</span>
-                                                    <div>
-                                                        <div className="font-semibold text-gray-900 text-sm">{curr.code}</div>
-                                                        <div className="text-xs text-gray-500">{curr.name}</div>
-                                                    </div>
-                                                </div>
-                                                <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${curr.code === 'XAF' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                                                    {curr.code === 'XAF' ? 'PRIMARY' : 'ENABLED'}
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
+                            </>
                         )}
 
                         {activeTab === "gateways" && (

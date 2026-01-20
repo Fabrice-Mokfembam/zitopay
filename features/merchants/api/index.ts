@@ -7,6 +7,8 @@ import type {
     GetUserMerchantsResponse,
     UpdateMerchantRequest,
     UpdateMerchantResponse,
+    UpdateMerchantProfileRequest,
+    UpdateMerchantProfileResponse,
     SubmitKYBResponse,
     ApproveKYBResponse,
     RejectKYBResponse,
@@ -418,6 +420,21 @@ export const getWalletOperations = async (
         {
             params,
         }
+    );
+    return response.data;
+};
+
+/**
+ * Update merchant profile
+ * Updates the first merchant account linked to the authenticated user
+ * All fields are optional - only provided fields will be updated
+ */
+export const updateMerchantProfile = async (
+    updates: UpdateMerchantProfileRequest
+): Promise<UpdateMerchantProfileResponse> => {
+    const response = await apiClient.put<UpdateMerchantProfileResponse>(
+        '/merchant/v1/profile',
+        updates
     );
     return response.data;
 };

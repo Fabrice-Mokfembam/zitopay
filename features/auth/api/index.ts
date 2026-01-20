@@ -16,6 +16,12 @@ import type {
     ResetPasswordResponse,
     GetCurrentUserResponse,
     LogoutResponse,
+    UpdateAdminProfileRequest,
+    UpdateAdminProfileResponse,
+    GetCurrentAdminResponse,
+    GetAllAdminsResponse,
+    CreateAdminRequest,
+    CreateAdminResponse,
 } from '../types/index';
 
 /**
@@ -124,5 +130,41 @@ export const getCurrentUser = async (): Promise<GetCurrentUserResponse> => {
  */
 export const logout = async (): Promise<LogoutResponse> => {
     const { data } = await apiClient.post<LogoutResponse>('/auth/v1/logout');
+    return data;
+};
+
+/**
+ * Update admin profile (email)
+ * Requires admin authentication
+ */
+export const updateAdminProfile = async (payload: UpdateAdminProfileRequest): Promise<UpdateAdminProfileResponse> => {
+    const { data } = await apiClient.put<UpdateAdminProfileResponse>('/auth/v1/admin/profile', payload);
+    return data;
+};
+
+/**
+ * Get current admin details
+ * Returns detailed admin information including email verification status
+ */
+export const getCurrentAdmin = async (): Promise<GetCurrentAdminResponse> => {
+    const { data } = await apiClient.get<GetCurrentAdminResponse>('/auth/v1/admin/me');
+    return data;
+};
+
+/**
+ * Get all admin users
+ * Returns list of all admins on the platform
+ */
+export const getAllAdmins = async (): Promise<GetAllAdminsResponse> => {
+    const { data } = await apiClient.get<GetAllAdminsResponse>('/auth/v1/admin/all');
+    return data;
+};
+
+/**
+ * Create new admin account
+ * Only existing admins can create new admin accounts
+ */
+export const createAdmin = async (payload: CreateAdminRequest): Promise<CreateAdminResponse> => {
+    const { data } = await apiClient.post<CreateAdminResponse>('/auth/v1/admin/create', payload);
     return data;
 };

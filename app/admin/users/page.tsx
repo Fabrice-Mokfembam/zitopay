@@ -5,77 +5,120 @@ import {
     Users,
     UserPlus,
     MoreVertical,
-    Shield,
     Mail,
-    Lock,
-    Unlock,
-    Trash2,
     CheckCircle2,
-    X
+    X,
+    Loader2,
+    Eye,
+    EyeOff
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAllAdmins, useCreateAdmin } from "@/features/auth/hooks/useAuth";
+import { toast } from "sonner";
 
-// Types
-interface AdminUser {
-    id: string;
-    name: string;
-    email: string;
-    role: "Super Admin" | "Finance Admin" | "Compliance Admin" | "Support Admin";
-    status: "active" | "inactive" | "locked";
-    lastLogin: string;
-    avatarInitials: string;
+// Helper function to get initials from email
+const getInitials = (email: string): string => {
+    if (!email) return "A";
+    const parts = email.split("@")[0].split(".");
+    if (parts.length >= 2) {
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return email.substring(0, 2).toUpperCase();
+};
+
+// Helper function to format date
+const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? "s" : ""} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+};
+
+// Skeleton loader for table rows
+function TableRowSkeleton() {
+    return (
+        <tr className="animate-pulse">
+            <td className="px-6 py-4">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gray-200 rounded-full" />
+                    <div className="space-y-2">
+                        <div className="w-24 h-3 bg-gray-200 rounded" />
+                        <div className="w-32 h-3 bg-gray-200 rounded" />
+                    </div>
+                </div>
+            </td>
+            <td className="px-6 py-4">
+                <div className="w-20 h-5 bg-gray-200 rounded-full" />
+            </td>
+            <td className="px-6 py-4">
+                <div className="w-16 h-5 bg-gray-200 rounded-full" />
+            </td>
+            <td className="px-6 py-4">
+                <div className="w-24 h-3 bg-gray-200 rounded" />
+            </td>
+            <td className="px-6 py-4 text-right">
+                <div className="w-8 h-8 bg-gray-200 rounded-lg ml-auto" />
+            </td>
+        </tr>
+    );
 }
 
-// Mock Data
-const MOCK_USERS: AdminUser[] = [
-    {
-        id: "ADM-001",
-        name: "John Doe",
-        email: "john@zitopay.africa",
-        role: "Super Admin",
-        status: "active",
-        lastLogin: "5 mins ago",
-        avatarInitials: "JD"
-    },
-    {
-        id: "ADM-002",
-        name: "Jane Smith",
-        email: "jane@zitopay.africa",
-        role: "Compliance Admin",
-        status: "active",
-        lastLogin: "2 hours ago",
-        avatarInitials: "JS"
-    },
-    {
-        id: "ADM-003",
-        name: "Mark Support",
-        email: "mark@zitopay.africa",
-        role: "Support Admin",
-        status: "locked",
-        lastLogin: "3 days ago",
-        avatarInitials: "MS"
-    },
-    {
-        id: "ADM-004",
-        name: "Sarah Finance",
-        email: "sarah@zitopay.africa",
-        role: "Finance Admin",
-        status: "active",
-        lastLogin: "1 day ago",
-        avatarInitials: "SF"
-    }
-];
-
 export default function AdminUsersPage() {
-    const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-    const [users, setUsers] = useState(MOCK_USERS);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-    const getRoleBadgeColor = (role: string) => {
-        switch (role) {
-            case "Super Admin": return "bg-purple-100 text-purple-700 border-purple-200";
-            case "Finance Admin": return "bg-green-100 text-green-700 border-green-200";
-            case "Compliance Admin": return "bg-blue-100 text-blue-700 border-blue-200";
-            default: return "bg-gray-100 text-gray-700 border-gray-200";
+    // Hooks
+    const { data, isLoading, error } = useAllAdmins();
+    const createAdminMutation = useCreateAdmin();
+
+    const handleCreateAdmin = async () => {
+        if (!email.trim()) {
+            toast.error("Email is required");
+            return;
+        }
+
+        if (!password.trim()) {
+            toast.error("Password is required");
+            return;
+        }
+
+        if (password.length < 8) {
+            toast.error("Password must be at least 8 characters");
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            toast.error("Passwords do not match");
+            return;
+        }
+
+        try {
+            await createAdminMutation.mutateAsync({
+                email: email.trim(),
+                password: password,
+            });
+            toast.success("Admin account created successfully. Email is automatically verified.");
+            setIsCreateModalOpen(false);
+            setEmail("");
+            setPassword("");
+            setConfirmPassword("");
+            setShowPassword(false);
+            setShowConfirmPassword(false);
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: { message?: string } } };
+            toast.error(error.response?.data?.message || "Failed to create admin account");
         }
     };
 
@@ -86,18 +129,28 @@ export default function AdminUsersPage() {
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                         <Users className="w-8 h-8 text-blue-600" />
-                        Admin Team Management
+                        Admin Users
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">Manage internal users, roles, and access permissions</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                        {data ? `Total admins: ${data.total}` : "Manage admin user accounts"}
+                    </p>
                 </div>
                 <button
-                    onClick={() => setIsInviteModalOpen(true)}
+                    onClick={() => setIsCreateModalOpen(true)}
                     className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-all"
                 >
                     <UserPlus className="w-4 h-4" />
-                    Invite New Admin
+                    Add Admin
                 </button>
             </div>
+
+            {/* Error Message */}
+            {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <p className="text-sm text-red-800 font-semibold mb-1">Error loading admin users</p>
+                    <p className="text-xs text-red-600">{error.message}</p>
+                </div>
+            )}
 
             {/* Users Table */}
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
@@ -105,138 +158,212 @@ export default function AdminUsersPage() {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-gray-50 border-b border-gray-200">
-                                <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Admin User</th>
-                                <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
-                                <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Last Login</th>
-                                <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Actions</th>
+                                <th className="px-6 py-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Admin User</th>
+                                <th className="px-6 py-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Email Status</th>
+                                <th className="px-6 py-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Created</th>
+                                <th className="px-6 py-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Last Updated</th>
+                                <th className="px-6 py-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wider text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                            {users.map((user) => (
-                                <tr key={user.id} className="group hover:bg-gray-50 transition-colors">
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 text-white flex items-center justify-center font-semibold text-sm">
-                                                {user.avatarInitials}
-                                            </div>
-                                            <div>
-                                                <div className="font-medium text-gray-900 text-sm">{user.name}</div>
-                                                <div className="text-xs text-gray-500 flex items-center gap-1">
-                                                    <Mail className="w-3 h-3" />
-                                                    {user.email}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${getRoleBadgeColor(user.role)}`}>
-                                            {user.role}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-2">
-                                            {user.status === 'active' ? (
-                                                <div className="flex items-center gap-1.5 text-green-600 text-xs font-medium">
-                                                    <span className="relative flex h-2 w-2">
-                                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                                                    </span>
-                                                    Active
-                                                </div>
-                                            ) : (
-                                                <div className="flex items-center gap-1.5 text-red-600 text-xs font-medium">
-                                                    <Lock className="w-3 h-3" />
-                                                    Locked
-                                                </div>
-                                            )}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className="text-xs text-gray-500">{user.lastLogin}</span>
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all">
-                                            <MoreVertical className="w-4 h-4" />
-                                        </button>
+                            {isLoading ? (
+                                Array.from({ length: 5 }).map((_, index) => (
+                                    <TableRowSkeleton key={index} />
+                                ))
+                            ) : !data?.admins || data.admins.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-8 text-center">
+                                        <p className="text-sm text-gray-500">No admin users found. Create your first admin account.</p>
                                     </td>
                                 </tr>
-                            ))}
+                            ) : (
+                                data.admins.map((admin) => (
+                                    <tr key={admin.id} className="group hover:bg-gray-50 transition-colors">
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center font-semibold text-sm">
+                                                    {getInitials(admin.email)}
+                                                </div>
+                                                <div>
+                                                    <div className="font-medium text-gray-900 text-sm">{admin.email}</div>
+                                                    <div className="text-xs text-gray-500 flex items-center gap-1">
+                                                        <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+                                                            {admin.role}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {admin.emailVerified ? (
+                                                <div className="flex items-center gap-1.5 text-green-600 text-xs font-medium">
+                                                    <CheckCircle2 className="w-4 h-4" />
+                                                    Verified
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center gap-1.5 text-orange-600 text-xs font-medium">
+                                                    <Mail className="w-4 h-4" />
+                                                    Unverified
+                                                </div>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className="text-xs text-gray-500">{formatDate(admin.createdAt)}</span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className="text-xs text-gray-500">{formatDate(admin.updatedAt)}</span>
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all">
+                                                <MoreVertical className="w-4 h-4" />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            {/* Invite Modal */}
+            {/* Create Admin Modal */}
             <AnimatePresence>
-                {isInviteModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                {isCreateModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => !createAdminMutation.isPending && setIsCreateModalOpen(false)}>
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            onClick={() => setIsInviteModalOpen(false)}
-                            className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
+                            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
                         />
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                            className="relative w-full max-w-lg bg-white rounded-lg shadow-2xl overflow-hidden"
+                            onClick={(e) => e.stopPropagation()}
+                            className="relative w-full max-w-md bg-white rounded-lg shadow-xl overflow-hidden"
                         >
-                            <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-                                <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+                                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                                     <UserPlus className="w-5 h-5 text-blue-600" />
-                                    Invite New Admin
+                                    Create New Admin
                                 </h2>
-                                <button
-                                    onClick={() => setIsInviteModalOpen(false)}
-                                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                                >
-                                    <X className="w-4 h-4 text-gray-500" />
-                                </button>
+                                {!createAdminMutation.isPending && (
+                                    <button
+                                        onClick={() => setIsCreateModalOpen(false)}
+                                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                    >
+                                        <X className="w-5 h-5 text-gray-500" />
+                                    </button>
+                                )}
                             </div>
 
-                            <div className="p-5 space-y-4">
+                            <div className="p-6 space-y-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-700">Full Name</label>
-                                    <input
-                                        type="text"
-                                        placeholder="e.g. Alex Johnson"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
-                                    />
+                                    <label className="text-sm font-medium text-gray-700">
+                                        Email Address <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="relative">
+                                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                        <input
+                                            type="email"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            placeholder="admin@zitopay.com"
+                                            required
+                                            disabled={createAdminMutation.isPending}
+                                            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm disabled:bg-gray-50 disabled:cursor-not-allowed"
+                                        />
+                                    </div>
+                                    <p className="text-xs text-gray-500">The admin's email will be automatically verified and they can log in immediately.</p>
                                 </div>
+
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-700">Email Address</label>
-                                    <input
-                                        type="email"
-                                        placeholder="alex@zitopay.africa"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
-                                    />
+                                    <label className="text-sm font-medium text-gray-700">
+                                        Password <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type={showPassword ? "text" : "password"}
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            placeholder="Enter password (min 8 characters)"
+                                            required
+                                            minLength={8}
+                                            disabled={createAdminMutation.isPending}
+                                            className="w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm disabled:bg-gray-50 disabled:cursor-not-allowed"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            disabled={createAdminMutation.isPending}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {showPassword ? (
+                                                <EyeOff className="w-4 h-4" />
+                                            ) : (
+                                                <Eye className="w-4 h-4" />
+                                            )}
+                                        </button>
+                                    </div>
+                                    <p className="text-xs text-gray-500">Password must be at least 8 characters long.</p>
                                 </div>
+
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-700">Role Assignment</label>
-                                    <div className="grid grid-cols-1 gap-2">
-                                        {['Super Admin', 'Finance Admin', 'Compliance Admin', 'Support Admin'].map((role) => (
-                                            <label key={role} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 hover:border-blue-300 transition-all has-checked:bg-blue-50 has-checked:border-blue-500">
-                                                <input type="radio" name="role" className="w-4 h-4 text-blue-600 focus:ring-blue-500" />
-                                                <span className="text-sm font-medium text-gray-700">{role}</span>
-                                            </label>
-                                        ))}
+                                    <label className="text-sm font-medium text-gray-700">
+                                        Confirm Password <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type={showConfirmPassword ? "text" : "password"}
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            placeholder="Confirm password"
+                                            required
+                                            disabled={createAdminMutation.isPending}
+                                            className="w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm disabled:bg-gray-50 disabled:cursor-not-allowed"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                            disabled={createAdminMutation.isPending}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {showConfirmPassword ? (
+                                                <EyeOff className="w-4 h-4" />
+                                            ) : (
+                                                <Eye className="w-4 h-4" />
+                                            )}
+                                        </button>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="p-5 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+                            <div className="p-6 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
+                                {!createAdminMutation.isPending && (
+                                    <button
+                                        onClick={() => setIsCreateModalOpen(false)}
+                                        className="px-4 py-2 text-gray-600 text-sm font-medium hover:bg-gray-200 rounded-lg transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                )}
                                 <button
-                                    onClick={() => setIsInviteModalOpen(false)}
-                                    className="px-4 py-2 text-gray-600 text-sm font-medium hover:bg-gray-200 rounded-lg transition-colors"
+                                    onClick={handleCreateAdmin}
+                                    disabled={createAdminMutation.isPending || !email.trim() || !password.trim() || password !== confirmPassword}
+                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                                 >
-                                    Cancel
-                                </button>
-                                <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-all flex items-center gap-2">
-                                    <SendInviteIcon className="w-4 h-4" />
-                                    Send Invitation
+                                    {createAdminMutation.isPending ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            Creating...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <UserPlus className="w-4 h-4" />
+                                            Create Admin
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </motion.div>
@@ -244,14 +371,5 @@ export default function AdminUsersPage() {
                 )}
             </AnimatePresence>
         </div>
-    );
-}
-
-function SendInviteIcon({ className }: { className?: string }) {
-    return (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-            <line x1="22" y1="2" x2="11" y2="13"></line>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-        </svg>
     );
 }

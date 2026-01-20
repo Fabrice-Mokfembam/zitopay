@@ -6,18 +6,21 @@ import {
     Search,
     Bell,
     User,
-    Settings,
-    Shield,
-    Activity,
     LogOut,
     ChevronDown,
+    X,
+    Settings,
+    Shield,
 } from "lucide-react";
+import { clearAuthData } from "@/features/auth/utils/storage";
 
 export function AdminNavbar() {
     const router = useRouter();
     const [showNotifications, setShowNotifications] = useState(false);
     const [showProfile, setShowProfile] = useState(false);
     const [showSearch, setShowSearch] = useState(false);
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     const notifications = [
         {
@@ -43,9 +46,32 @@ export function AdminNavbar() {
         },
     ];
 
-    const handleLogout = () => {
-        localStorage.removeItem("zitopay_admin_auth");
-        router.push("/admin/login");
+    const handleLogoutClick = () => {
+        setShowProfile(false);
+        setShowLogoutModal(true);
+    };
+
+    const handleLogoutConfirm = async () => {
+        setIsLoggingOut(true);
+        
+        // Simulate logout process with 5-10 second delay
+        const delay = Math.floor(Math.random() * 5000) + 5000; // 5-10 seconds
+        
+        setTimeout(() => {
+            // Clear SecureStorage and cookies
+            clearAuthData();
+            
+            // Also clear any admin-specific storage
+            localStorage.removeItem("zitopay_admin_auth");
+            
+            // Redirect to admin login page
+            router.push("/admin/login");
+        }, delay);
+    };
+
+    const handleProfileClick = () => {
+        setShowProfile(false);
+        router.push("/admin/settings");
     };
 
     return (
@@ -187,27 +213,18 @@ export function AdminNavbar() {
                             </div>
 
                             <div className="p-2">
-                                <button className="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg text-sm text-gray-700 transition-colors">
+                                <button 
+                                    onClick={handleProfileClick}
+                                    className="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg text-sm text-gray-700 transition-colors"
+                                >
                                     <User className="w-4 h-4" />
                                     My Profile
-                                </button>
-                                <button className="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg text-sm text-gray-700 transition-colors">
-                                    <Settings className="w-4 h-4" />
-                                    Settings
-                                </button>
-                                <button className="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg text-sm text-gray-700 transition-colors">
-                                    <Shield className="w-4 h-4" />
-                                    Security
-                                </button>
-                                <button className="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg text-sm text-gray-700 transition-colors">
-                                    <Activity className="w-4 h-4" />
-                                    Activity Log
                                 </button>
                             </div>
 
                             <div className="p-2 border-t border-gray-200">
                                 <button
-                                    onClick={handleLogout}
+                                    onClick={handleLogoutClick}
                                     className="w-full flex items-center gap-3 px-3 py-2 hover:bg-red-50 rounded-lg text-sm text-red-600 transition-colors"
                                 >
                                     <LogOut className="w-4 h-4" />
@@ -218,6 +235,54 @@ export function AdminNavbar() {
                     )}
                 </div>
             </div>
+
+            {/* Logout Confirmation Modal */}
+            {showLogoutModal && (
+                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => !isLoggingOut && setShowLogoutModal(false)}>
+                    <div className="bg-white rounded-lg max-w-md w-full shadow-xl" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                            <h2 className="text-lg font-bold text-gray-900">Confirm Logout</h2>
+                            {!isLoggingOut && (
+                                <button
+                                    onClick={() => setShowLogoutModal(false)}
+                                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                >
+                                    <X className="w-5 h-5 text-gray-500" />
+                                </button>
+                            )}
+                        </div>
+                        <div className="p-6">
+                            {!isLoggingOut ? (
+                                <>
+                                    <p className="text-sm text-gray-600 mb-6">
+                                        Are you sure you want to logout? You will need to login again to access the admin dashboard.
+                                    </p>
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            onClick={() => setShowLogoutModal(false)}
+                                            className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={handleLogoutConfirm}
+                                            className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors"
+                                        >
+                                            Logout
+                                        </button>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center py-8">
+                                    <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+                                    <p className="text-sm font-medium text-gray-900">Logging out...</p>
+                                    <p className="text-xs text-gray-500 mt-1">Please wait while we securely log you out</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </header>
     );
 }

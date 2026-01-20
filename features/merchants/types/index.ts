@@ -76,6 +76,33 @@ export interface UpdateMerchantRequest {
     country?: string;
 }
 
+export interface UpdateMerchantProfileRequest {
+    businessName?: string;
+    email?: string;
+    phone?: string;
+    businessType?: string;
+    country?: string;
+}
+
+export interface UpdateMerchantProfileResponse {
+    merchant: {
+        id: string;
+        businessName: string;
+        email: string | null;
+        phone: string | null;
+        businessType: string | null;
+        country: string | null;
+        enabled: boolean;
+        kycStatus: KYCStatus;
+        sandboxState: SandboxState;
+        productionState: ProductionState;
+        rateLimitPerMinute: number;
+        allowedIps: string[];
+        createdAt: string;
+        updatedAt: string;
+    };
+}
+
 export interface AddDomainRequest {
     domain: string;
 }

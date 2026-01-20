@@ -5,6 +5,7 @@ export {
     useGetMerchant,
     useGetFirstMerchant,
     useUpdateMerchant,
+    useUpdateMerchantProfile,
     useSubmitKYB,
     useApproveKYB,
     useRejectKYB,
@@ -16,6 +17,11 @@ export {
     useReactivateProduction,
     useRegenerateSandboxCredentials,
     useRegenerateProductionCredentials,
+    useDashboardStats,
+    useRecentTransactions,
+    useTopUpWallet,
+    useWithdrawFromWallet,
+    useWalletOperations,
 } from './useMerchant';
 
 // Domain Management Hooks

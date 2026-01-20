@@ -40,6 +40,50 @@ export interface RefreshTokenRequest {
     refreshToken: string;
 }
 
+export interface UpdateAdminProfileRequest {
+    email: string;
+}
+
+export interface UpdateAdminProfileResponse {
+    user: {
+        id: string;
+        email: string;
+        role: string;
+    };
+    message: string;
+}
+
+export interface AdminDetails {
+    id: string;
+    email: string;
+    role: string;
+    emailVerified: boolean;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface GetCurrentAdminResponse {
+    admin: AdminDetails;
+}
+
+export interface GetAllAdminsResponse {
+    admins: AdminDetails[];
+    total: number;
+}
+
+export interface CreateAdminRequest {
+    email: string;
+    password: string;
+}
+
+export interface CreateAdminResponse {
+    user: {
+        id: string;
+        email: string;
+        role: string;
+    };
+}
+
 // ============ RESPONSE TYPES ============
 
 export interface RegisterResponse {
