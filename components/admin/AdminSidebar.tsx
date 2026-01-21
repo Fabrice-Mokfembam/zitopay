@@ -20,6 +20,7 @@ import {
     X,
     DollarSign,
     FileSearch,
+    RotateCcw,
 } from "lucide-react";
 
 interface MenuItem {
@@ -89,6 +90,11 @@ export function AdminSidebar() {
                     icon: Landmark,
                     label: "Settlements",
                     href: "/admin/settlements",
+                },
+                {
+                    icon: RotateCcw,
+                    label: "Refunds",
+                    href: "/admin/refunds",
                 },
                 {
                     icon: FileSearch,

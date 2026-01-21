@@ -1,25 +1,22 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Plus } from "lucide-react";
-import { useUserMerchantData } from "@/features/merchants/context/MerchantContext";
 import {
-  useMerchantRefunds,
-  useMerchantRefundDetails,
+  useAllRefunds,
+  useAdminRefundDetails,
 } from "@/features/refunds/queries";
-import { RefundStatsCards } from "./components/RefundStatsCards";
-import { RefundFilters } from "./components/RefundFilters";
-import { RefundsTable } from "./components/RefundsTable";
-import { RefundDetailsModal } from "./components/RefundDetailsModal";
+import { AdminRefundStatsCards } from "./components/AdminRefundStatsCards";
+import { AdminRefundFilters } from "./components/AdminRefundFilters";
+import { AdminRefundsTable } from "./components/AdminRefundsTable";
+import { RefundDetailsModal } from "@/app/dashboard/refunds/components/RefundDetailsModal";
 import { Refund } from "@/features/refunds/types";
 
-export default function RefundsPage() {
-  const { merchantId } = useUserMerchantData();
-
+export default function AdminRefundsPage() {
   // State
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [environmentFilter, setEnvironmentFilter] = useState("");
+  const [merchantFilter, setMerchantFilter] = useState("");
   const [page, setPage] = useState(1);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedRefundId, setSelectedRefundId] = useState<string | null>(null);
@@ -27,6 +24,7 @@ export default function RefundsPage() {
   // Query params
   const queryParams = useMemo(() => {
     const params: {
+      merchantId?: string;
       environment?: "sandbox" | "production";
       status?: "PENDING" | "PROCESSING" | "SUCCESS" | "FAILED";
       page: number;
@@ -36,6 +34,9 @@ export default function RefundsPage() {
       limit: 20,
     };
 
+    if (merchantFilter) {
+      params.merchantId = merchantFilter;
+    }
     if (environmentFilter) {
       params.environment = environmentFilter as "sandbox" | "production";
     }
@@ -44,19 +45,19 @@ export default function RefundsPage() {
     }
 
     return params;
-  }, [statusFilter, environmentFilter, page]);
+  }, [merchantFilter, statusFilter, environmentFilter, page]);
 
   // Fetch refunds
   const {
     data: refundsData,
     isLoading: refundsLoading,
-  } = useMerchantRefunds(merchantId, queryParams, !!merchantId);
+  } = useAllRefunds(queryParams, true);
 
   // Selected refund details
   const {
     data: refundDetails,
     isLoading: detailsLoading,
-  } = useMerchantRefundDetails(merchantId, selectedRefundId);
+  } = useAdminRefundDetails(selectedRefundId);
 
   // Filter refunds by search query
   const filteredRefunds = useMemo(() => {
@@ -68,6 +69,8 @@ export default function RefundsPage() {
       (r) =>
         r.id.toLowerCase().includes(query) ||
         r.transaction.id.toLowerCase().includes(query) ||
+        r.merchant?.name.toLowerCase().includes(query) ||
+        r.merchant?.businessName.toLowerCase().includes(query) ||
         (r.customer.msisdn?.toLowerCase().includes(query) ?? false)
     );
   }, [refundsData?.refunds, searchQuery]);
@@ -109,20 +112,13 @@ export default function RefundsPage() {
         <div>
           <h1 className="text-xl font-bold text-foreground">Refunds</h1>
           <p className="text-xs text-muted-foreground mt-1">
-            Process refunds for customer payments
+            Monitor all refunds across all merchants
           </p>
         </div>
-        <button
-          className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600 transition-colors flex items-center gap-2"
-          disabled
-        >
-          <Plus className="w-4 h-4" />
-          New Refund
-        </button>
       </div>
 
       {/* STATS CARDS */}
-      <RefundStatsCards
+      <AdminRefundStatsCards
         total={stats.total}
         successful={stats.successful}
         pending={stats.pending}
@@ -131,17 +127,19 @@ export default function RefundsPage() {
       />
 
       {/* FILTERS & SEARCH */}
-      <RefundFilters
+      <AdminRefundFilters
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         status={statusFilter}
         onStatusChange={setStatusFilter}
         environment={environmentFilter}
         onEnvironmentChange={setEnvironmentFilter}
+        merchantId={merchantFilter}
+        onMerchantChange={setMerchantFilter}
       />
 
       {/* TABLE */}
-      <RefundsTable
+      <AdminRefundsTable
         refunds={filteredRefunds}
         isLoading={refundsLoading}
         onRowClick={handleRowClick}
