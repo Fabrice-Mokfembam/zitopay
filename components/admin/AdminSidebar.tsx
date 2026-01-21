@@ -19,6 +19,7 @@ import {
     Menu,
     X,
     DollarSign,
+    FileSearch,
 } from "lucide-react";
 
 interface MenuItem {
@@ -88,6 +89,11 @@ export function AdminSidebar() {
                     icon: Landmark,
                     label: "Settlements",
                     href: "/admin/settlements",
+                },
+                {
+                    icon: FileSearch,
+                    label: "Reconciliation",
+                    href: "/admin/reconciliation",
                 },
             ],
         },
