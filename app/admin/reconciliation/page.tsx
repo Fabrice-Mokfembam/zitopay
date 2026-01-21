@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   FileSearch,
   Search,
@@ -31,7 +31,43 @@ export default function ReconciliationPage() {
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [showResolveModal, setShowResolveModal] = useState(false);
 
-  const { data, isLoading } = useReconciliationQueue(filters);
+  // Convert filter values to proper types
+  const queryParams = useMemo(() => {
+    const params: {
+      gateway?: "MTN_MOMO" | "ORANGE_MONEY";
+      matchStatus?: "MISSING_IN_ZITOPAY" | "MISSING_IN_GATEWAY" | "AMOUNT_MISMATCH";
+      resolved?: boolean;
+      page: number;
+      limit: number;
+    } = {
+      page: filters.page,
+      limit: filters.limit,
+    };
+
+    if (filters.gateway) {
+      if (filters.gateway === "MTN_MOMO" || filters.gateway === "ORANGE_MONEY") {
+        params.gateway = filters.gateway;
+      }
+    }
+
+    if (filters.matchStatus) {
+      if (
+        filters.matchStatus === "MISSING_IN_ZITOPAY" ||
+        filters.matchStatus === "MISSING_IN_GATEWAY" ||
+        filters.matchStatus === "AMOUNT_MISMATCH"
+      ) {
+        params.matchStatus = filters.matchStatus;
+      }
+    }
+
+    if (filters.resolved !== "") {
+      params.resolved = filters.resolved === "true";
+    }
+
+    return params;
+  }, [filters]);
+
+  const { data, isLoading } = useReconciliationQueue(queryParams);
   const linkMutation = useLinkTransaction();
   const resolveMutation = useMarkResolved();
 

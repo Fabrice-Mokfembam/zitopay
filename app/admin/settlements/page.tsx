@@ -78,10 +78,10 @@ export default function AdminSettlementsPage() {
   // Filter settlements by search query
   const filteredSettlements = useMemo(() => {
     if (!settlementsData?.settlements) return [];
-    if (!searchQuery) return settlementsData.settlements;
+    if (!searchQuery) return settlementsData.settlements as AdminSettlement[];
 
     const query = searchQuery.toLowerCase();
-    return settlementsData.settlements.filter(
+    return (settlementsData.settlements as AdminSettlement[]).filter(
       (s) =>
         s.id.toLowerCase().includes(query) ||
         s.merchantName?.toLowerCase().includes(query) ||
@@ -95,7 +95,7 @@ export default function AdminSettlementsPage() {
       return { pending: 0, processing: 0, completed: 0, totalNet: 0 };
     }
 
-    const settlements = settlementsData.settlements;
+    const settlements = settlementsData.settlements as AdminSettlement[];
     return {
       pending: settlements.filter((s) => s.status === "PENDING").length,
       processing: settlements.filter((s) => s.status === "PROCESSING").length,
@@ -111,7 +111,7 @@ export default function AdminSettlementsPage() {
   const merchants = useMemo(() => {
     if (!settlementsData?.settlements) return [];
     const merchantMap = new Map<string, { id: string; businessName: string }>();
-    settlementsData.settlements.forEach((s) => {
+    (settlementsData.settlements as AdminSettlement[]).forEach((s) => {
       if (s.merchantId && !merchantMap.has(s.merchantId)) {
         merchantMap.set(s.merchantId, {
           id: s.merchantId,
