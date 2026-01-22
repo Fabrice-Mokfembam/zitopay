@@ -163,23 +163,9 @@ export default function WalletPage() {
                     <p className="text-2xl font-bold text-foreground mb-1">
                         FCFA {balanceData!.available.toLocaleString()}
                     </p>
-                    <p className="text-xs text-muted-foreground mb-4">
+                    <p className="text-xs text-muted-foreground">
                         Last updated: {balanceData!.lastUpdated}
                     </p>
-                    <div className="flex gap-2">
-                        <button
-                            onClick={() => setShowWithdrawModal(true)}
-                            className="flex-1 px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-semibold hover:bg-green-700 transition-colors"
-                        >
-                            💸 Withdraw
-                        </button>
-                        <button
-                            onClick={() => setShowTopUpModal(true)}
-                            className="flex-1 px-3 py-1.5 bg-background border border-border text-foreground rounded-lg text-xs font-semibold hover:bg-muted transition-colors"
-                        >
-                            ➕ Top Up
-                        </button>
-                    </div>
                 </div>
 
                 {/* Pending Balance */}
@@ -195,12 +181,9 @@ export default function WalletPage() {
                     <p className="text-2xl font-bold text-foreground mb-1">
                         FCFA {balanceData!.pending.toLocaleString()}
                     </p>
-                    <p className="text-xs text-muted-foreground mb-4">
+                    <p className="text-xs text-muted-foreground">
                         3 transactions processing
                     </p>
-                    <button className="w-full px-3 py-1.5 bg-background border border-border text-foreground rounded-lg text-xs font-semibold hover:bg-muted transition-colors">
-                        View Details →
-                    </button>
                 </div>
 
                 {/* Total Collected */}
@@ -216,10 +199,7 @@ export default function WalletPage() {
                     <p className="text-2xl font-bold text-foreground mb-1">
                         FCFA {balanceData!.totalCollected.toLocaleString()}
                     </p>
-                    <p className="text-xs text-muted-foreground mb-4">This month</p>
-                    <button className="w-full px-3 py-1.5 bg-background border border-border text-foreground rounded-lg text-xs font-semibold hover:bg-muted transition-colors">
-                        View Transactions →
-                    </button>
+                    <p className="text-xs text-muted-foreground">This month</p>
                 </div>
 
                 {/* Total Withdrawn */}
@@ -235,10 +215,7 @@ export default function WalletPage() {
                     <p className="text-2xl font-bold text-foreground mb-1">
                         FCFA {balanceData!.totalWithdrawn.toLocaleString()}
                     </p>
-                    <p className="text-xs text-muted-foreground mb-4">This month</p>
-                    <button className="w-full px-3 py-1.5 bg-background border border-border text-foreground rounded-lg text-xs font-semibold hover:bg-muted transition-colors">
-                        View History →
-                    </button>
+                    <p className="text-xs text-muted-foreground">This month</p>
                 </div>
             </div>
 

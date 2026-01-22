@@ -18,6 +18,7 @@ import {
     regenerateSandboxCredentials,
     regenerateProductionCredentials,
     getPendingKYBSubmissions,
+    getPendingProductionSummary,
     getDashboardStats,
     getRecentTransactions,
     topUpWallet,
@@ -46,6 +47,7 @@ import type {
     RegenerateSandboxCredentialsResponse,
     RegenerateProductionCredentialsResponse,
     GetPendingKYBSubmissionsResponse,
+    GetPendingProductionSummaryResponse,
     DashboardStatsResponse,
     RecentTransactionsResponse,
     TopUpRequest,
@@ -257,6 +259,17 @@ export const useGetPendingKYBSubmissions = (): UseQueryResult<GetPendingKYBSubmi
     return useQuery({
         queryKey: ['pending-kyb-submissions'],
         queryFn: getPendingKYBSubmissions,
+    });
+};
+
+/**
+ * Hook for fetching pending production summary (Admin only)
+ * Returns merchants with approved KYB awaiting production access
+ */
+export const useGetPendingProductionSummary = (): UseQueryResult<GetPendingProductionSummaryResponse, Error> => {
+    return useQuery({
+        queryKey: ['pending-production-summary'],
+        queryFn: getPendingProductionSummary,
     });
 };
 

@@ -21,6 +21,8 @@ import {
     DollarSign,
     FileSearch,
     RotateCcw,
+    FileCheck,
+    Rocket,
 } from "lucide-react";
 
 interface MenuItem {
@@ -73,6 +75,11 @@ export function AdminSidebar() {
                     icon: Clock,
                     label: "Pending KYB",
                     href: "/admin/merchants/pending-kyb",
+                },
+                {
+                    icon: Rocket,
+                    label: "Pending Production",
+                    href: "/admin/merchants/pending-production",
                 },
             ],
         },
@@ -134,6 +141,11 @@ export function AdminSidebar() {
                     icon: DollarSign,
                     label: "Fees",
                     href: "/admin/settings/fees",
+                },
+                {
+                    icon: FileCheck,
+                    label: "Audit Logs",
+                    href: "/admin/audit-logs",
                 },
                 {
                     icon: Users,

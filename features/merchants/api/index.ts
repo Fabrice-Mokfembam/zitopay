@@ -30,6 +30,7 @@ import type {
     RegenerateSandboxCredentialsResponse,
     RegenerateProductionCredentialsResponse,
     GetPendingKYBSubmissionsResponse,
+    GetPendingProductionSummaryResponse,
     DashboardStatsResponse,
     RecentTransactionsResponse,
     TopUpRequest,
@@ -323,6 +324,17 @@ export const regenerateProductionCredentials = async (
 export const getPendingKYBSubmissions = async (): Promise<GetPendingKYBSubmissionsResponse> => {
     const response = await apiClient.get<GetPendingKYBSubmissionsResponse>(
         '/merchant/v1/admin/pending-kyb'
+    );
+    return response.data;
+};
+
+/**
+ * Get pending production summary (Admin only)
+ * Returns merchants with approved KYB awaiting production access
+ */
+export const getPendingProductionSummary = async (): Promise<GetPendingProductionSummaryResponse> => {
+    const response = await apiClient.get<GetPendingProductionSummaryResponse>(
+        '/merchant/v1/admin/pending-production-summary'
     );
     return response.data;
 };

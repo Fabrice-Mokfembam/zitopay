@@ -117,6 +117,9 @@ export default function KYBUploadSection({
                                 Upload your business documents to verify your business. You can upload as many
                                 documents as needed. At least one document is required before submitting for review.
                             </p>
+                            <p className="text-xs text-blue-600 dark:text-blue-400 mt-2 font-medium">
+                                ⓘ After submitting, your documents will be reviewed by our team. Once approved, you'll be able to request production access.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -133,6 +136,9 @@ export default function KYBUploadSection({
                             <p className="text-xs text-orange-700 dark:text-orange-300 mt-1">
                                 Your documents are being reviewed by our compliance team. This typically takes 2-3
                                 business days.
+                            </p>
+                            <p className="text-xs text-orange-600 dark:text-orange-400 mt-2 font-medium">
+                                ⓘ Once your documents are approved, you'll be able to request production access to start accepting real payments.
                             </p>
                         </div>
                     </div>

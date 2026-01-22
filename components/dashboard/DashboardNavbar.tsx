@@ -71,13 +71,21 @@ export function DashboardNavbar() {
                 </button>
 
                 {/* Sandbox/Live Mode Toggle - Hidden on mobile */}
-                <div className="hidden md:flex items-center gap-3 px-3 py-1.5 bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-full">
-                    <span className="text-xs font-semibold uppercase text-orange-600 dark:text-orange-400">
+                <div className={`hidden md:flex items-center gap-3 px-3 py-1.5 rounded-full transition-colors ${
+                    isSandboxMode 
+                        ? 'bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800' 
+                        : 'bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800'
+                }`}>
+                    <span className={`text-xs font-semibold uppercase ${
+                        isSandboxMode 
+                            ? 'text-orange-600 dark:text-orange-400' 
+                            : 'text-green-600 dark:text-green-400'
+                    }`}>
                         {isSandboxMode ? 'Sandbox Mode' : 'Live Mode'}
                     </span>
                     <button
                         onClick={handleToggleClick}
-                        className={`relative w-11 h-6 rounded-full transition-colors ${isSandboxMode ? 'bg-gray-300 dark:bg-gray-600' : 'bg-green-500'
+                        className={`relative w-11 h-6 rounded-full transition-colors ${isSandboxMode ? 'bg-gray-300 dark:bg-gray-600' : 'bg-green-400'
                             }`}
                         aria-label="Toggle sandbox mode"
                     >

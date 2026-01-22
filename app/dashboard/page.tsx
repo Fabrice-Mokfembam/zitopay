@@ -558,32 +558,32 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* HEADER */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Business Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="text-xl font-semibold text-foreground">Business Dashboard</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
             Monitor your transactions and business performance
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Environment Badge */}
-          <div className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 ${
+          <div className={`px-2.5 py-1 rounded-md text-[10px] font-medium flex items-center gap-1.5 ${
             environment === "sandbox"
               ? "bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400"
               : "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400"
           }`}>
-            <div className={`w-2 h-2 rounded-full animate-pulse ${
+            <div className={`w-1.5 h-1.5 rounded-full ${
               environment === "sandbox" ? "bg-orange-500" : "bg-green-500"
             }`} />
-            {environment === "sandbox" ? "Sandbox Mode" : "Production Mode"}
+            {environment === "sandbox" ? "Sandbox" : "Production"}
           </div>
 
           {/* Date Range Selector */}
-          <button className="px-3 py-1.5 bg-background border border-border rounded-lg text-xs font-medium text-foreground hover:bg-muted transition-colors flex items-center gap-2">
-            📅 {getPeriodLabel(period)}
+          <button className="px-2.5 py-1 bg-background border border-border rounded-md text-[10px] font-medium text-foreground hover:bg-muted transition-colors flex items-center gap-1.5">
+            {getPeriodLabel(period)}
             <ChevronDown className="w-3 h-3" />
           </button>
 
@@ -596,9 +596,9 @@ export default function DashboardPage() {
               }
               setWithdrawModalOpen(true);
             }}
-            className="px-4 py-1.5 bg-orange-500 text-white rounded-lg text-xs font-semibold hover:bg-orange-600 transition-colors flex items-center gap-2"
+            className="px-3 py-1 bg-orange-500 text-white rounded-md text-[10px] font-semibold hover:bg-orange-600 transition-colors flex items-center gap-1.5"
           >
-            <ArrowDownToLine className="w-4 h-4" />
+            <ArrowDownToLine className="w-3 h-3" />
             Withdraw
           </button>
           <button
@@ -609,30 +609,30 @@ export default function DashboardPage() {
               }
               setTopUpModalOpen(true);
             }}
-            className="px-4 py-1.5 bg-background border border-border text-foreground rounded-lg text-xs font-semibold hover:bg-muted transition-colors flex items-center gap-2"
+            className="px-3 py-1 bg-background border border-border text-foreground rounded-md text-[10px] font-semibold hover:bg-muted transition-colors flex items-center gap-1.5"
           >
-            <ArrowUpFromLine className="w-4 h-4" />
+            <ArrowUpFromLine className="w-3 h-3" />
             Top Up
           </button>
         </div>
       </div>
 
       {/* SECTION 1: KEY METRICS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
         {isLoadingStats ? (
           // Skeleton Loaders
           Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}
-              className="bg-background rounded-xl p-4 border border-border animate-pulse"
+              className="bg-background rounded-lg p-3 border border-border animate-pulse"
             >
-              <div className="flex items-start justify-between mb-3">
-                <div className="w-10 h-10 bg-muted rounded-lg" />
-                <div className="w-12 h-4 bg-muted rounded" />
+              <div className="flex items-start justify-between mb-2">
+                <div className="w-8 h-8 bg-muted rounded-lg" />
+                <div className="w-10 h-3 bg-muted rounded" />
               </div>
-              <div className="w-24 h-3 bg-muted rounded mb-2" />
-              <div className="w-32 h-6 bg-muted rounded mb-2" />
-              <div className="w-20 h-3 bg-muted rounded" />
+              <div className="w-20 h-2.5 bg-muted rounded mb-1.5" />
+              <div className="w-28 h-5 bg-muted rounded mb-1" />
+              <div className="w-16 h-2.5 bg-muted rounded" />
             </div>
           ))
         ) : (
@@ -642,35 +642,35 @@ export default function DashboardPage() {
             return (
               <div
                 key={index}
-                className={`${colors.bg} rounded-xl p-4 border ${colors.border} hover:shadow-md transition-shadow`}
+                className={`${colors.bg} rounded-lg p-3 border ${colors.border} hover:shadow-sm transition-shadow`}
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="w-10 h-10 bg-white dark:bg-background rounded-lg flex items-center justify-center shadow-sm">
-                    <Icon className={`w-5 h-5 ${colors.icon}`} />
+                <div className="flex items-start justify-between mb-2">
+                  <div className="w-8 h-8 bg-white dark:bg-background rounded-lg flex items-center justify-center">
+                    <Icon className={`w-4 h-4 ${colors.icon}`} />
                   </div>
                   <span
-                    className={`text-xs font-semibold flex items-center gap-1 ${
+                    className={`text-[10px] font-medium flex items-center gap-0.5 ${
                       stat.trend === "up"
                         ? "text-green-600 dark:text-green-400"
                         : "text-red-600 dark:text-red-400"
                     }`}
                   >
                     {stat.trend === "up" ? (
-                      <TrendingUp className="w-3 h-3" />
+                      <TrendingUp className="w-2.5 h-2.5" />
                     ) : (
-                      <TrendingDown className="w-3 h-3" />
+                      <TrendingDown className="w-2.5 h-2.5" />
                     )}
                     {stat.change}
                   </span>
                 </div>
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
+                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">
                   {stat.label}
                 </p>
-                <p className="text-xl font-bold text-foreground mb-1">
+                <p className="text-base font-semibold text-foreground mb-0.5">
                   {stat.value} {stat.currency}
                 </p>
                 {stat.subtitle && (
-                  <p className="text-xs text-muted-foreground">{stat.subtitle}</p>
+                  <p className="text-[10px] text-muted-foreground">{stat.subtitle}</p>
                 )}
               </div>
             );
@@ -679,12 +679,12 @@ export default function DashboardPage() {
       </div>
 
       {/* SECTION 2: RECENT TRANSACTIONS */}
-      <div className="bg-background rounded-xl p-6 border border-border">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-base font-semibold text-foreground">Recent Transactions</h3>
+      <div className="bg-background rounded-lg p-4 border border-border">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-foreground">Recent Transactions</h3>
           <button
             onClick={() => router.push('/dashboard/transactions')}
-            className="text-xs text-orange-600 dark:text-orange-400 hover:underline font-medium flex items-center gap-1"
+            className="text-[10px] text-orange-600 dark:text-orange-400 hover:underline font-medium flex items-center gap-1"
           >
             View All
             <ArrowRight className="w-3 h-3" />
@@ -695,25 +695,25 @@ export default function DashboardPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                <th className="text-left py-2 px-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
                   Date & Time
                 </th>
-                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                <th className="text-left py-2 px-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
                   Transaction ID
                 </th>
-                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                <th className="text-left py-2 px-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
                   Type
                 </th>
-                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                <th className="text-left py-2 px-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
                   Status
                 </th>
-                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                <th className="text-left py-2 px-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
                   Amount
                 </th>
-                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                <th className="text-left py-2 px-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
                   Gateway
                 </th>
-                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                <th className="text-left py-2 px-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
                   Actions
                 </th>
               </tr>
@@ -721,61 +721,61 @@ export default function DashboardPage() {
             <tbody>
               {isLoadingTransactions ? (
                 // Skeleton Loaders
-                Array.from({ length: 6 }).map((_, i) => (
+                Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="border-b border-border last:border-0">
-                    <td className="py-3 px-4">
-                      <div className="w-20 h-3 bg-muted rounded mb-1 animate-pulse" />
-                      <div className="w-16 h-3 bg-muted rounded animate-pulse" />
+                    <td className="py-2 px-3">
+                      <div className="w-18 h-2.5 bg-muted rounded mb-1 animate-pulse" />
+                      <div className="w-14 h-2.5 bg-muted rounded animate-pulse" />
                     </td>
-                    <td className="py-3 px-4">
-                      <div className="w-32 h-3 bg-muted rounded animate-pulse" />
+                    <td className="py-2 px-3">
+                      <div className="w-28 h-2.5 bg-muted rounded animate-pulse" />
                     </td>
-                    <td className="py-3 px-4">
-                      <div className="w-16 h-3 bg-muted rounded animate-pulse" />
+                    <td className="py-2 px-3">
+                      <div className="w-14 h-2.5 bg-muted rounded animate-pulse" />
                     </td>
-                    <td className="py-3 px-4">
-                      <div className="w-20 h-6 bg-muted rounded animate-pulse" />
+                    <td className="py-2 px-3">
+                      <div className="w-18 h-5 bg-muted rounded animate-pulse" />
                     </td>
-                    <td className="py-3 px-4">
-                      <div className="w-24 h-3 bg-muted rounded mb-1 animate-pulse" />
-                      <div className="w-16 h-3 bg-muted rounded animate-pulse" />
+                    <td className="py-2 px-3">
+                      <div className="w-20 h-2.5 bg-muted rounded mb-1 animate-pulse" />
+                      <div className="w-14 h-2.5 bg-muted rounded animate-pulse" />
                     </td>
-                    <td className="py-3 px-4">
-                      <div className="w-20 h-3 bg-muted rounded animate-pulse" />
+                    <td className="py-2 px-3">
+                      <div className="w-18 h-2.5 bg-muted rounded animate-pulse" />
                     </td>
-                    <td className="py-3 px-4">
-                      <div className="w-4 h-4 bg-muted rounded animate-pulse" />
+                    <td className="py-2 px-3">
+                      <div className="w-3 h-3 bg-muted rounded animate-pulse" />
                     </td>
                   </tr>
                 ))
               ) : transactionsData?.transactions && transactionsData.transactions.length > 0 ? (
-                transactionsData.transactions.slice(0, 6).map((tx) => (
+                transactionsData.transactions.slice(0, 5).map((tx) => (
                   <tr
                     key={tx.id}
-                    className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors"
+                    className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors"
                   >
-                    <td className="py-3 px-4">
-                      <div className="text-xs text-foreground font-medium">{tx.date}</div>
-                      <div className="text-xs text-muted-foreground">{tx.time}</div>
+                    <td className="py-2 px-3">
+                      <div className="text-[10px] text-foreground font-medium">{tx.date}</div>
+                      <div className="text-[10px] text-muted-foreground">{tx.time}</div>
                     </td>
-                    <td className="py-3 px-4">
-                      <div className="text-xs text-foreground font-mono">
-                        {tx.id.slice(0, 20)}...
+                    <td className="py-2 px-3">
+                      <div className="text-[10px] text-foreground font-mono">
+                        {tx.id.slice(0, 18)}...
                       </div>
                     </td>
-                    <td className="py-3 px-4">
-                      <span className="text-xs font-medium text-foreground capitalize">
+                    <td className="py-2 px-3">
+                      <span className="text-[10px] font-medium text-foreground capitalize">
                         {tx.type}
                       </span>
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="py-2 px-3">
                       <span
-                        className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${getStatusColor(
+                        className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${getStatusColor(
                           tx.status
                         )}`}
                       >
                         <span
-                          className={`w-1.5 h-1.5 rounded-full ${
+                          className={`w-1 h-1 rounded-full ${
                             tx.status === "SUCCESS"
                               ? "bg-green-500"
                               : tx.status === "PENDING_GATEWAY"
@@ -786,32 +786,32 @@ export default function DashboardPage() {
                         {tx.status.replace("_", " ")}
                       </span>
                     </td>
-                    <td className="py-3 px-4">
-                      <div className="text-xs font-semibold text-foreground">
+                    <td className="py-2 px-3">
+                      <div className="text-[10px] font-semibold text-foreground">
                         {formatAmount(tx.amount, tx.currency)}
                       </div>
                       {tx.fees > 0 && (
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-[10px] text-muted-foreground">
                           Fee: {formatAmount(tx.fees, tx.currency)}
                         </div>
                       )}
                     </td>
-                    <td className="py-3 px-4">
-                      <span className="text-xs text-foreground">
+                    <td className="py-2 px-3">
+                      <span className="text-[10px] text-foreground">
                         {tx.gateway.replace("_", " ")}
                       </span>
                     </td>
-                    <td className="py-3 px-4">
-                      <button className="p-1 hover:bg-muted rounded transition-colors">
-                        <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                    <td className="py-2 px-3">
+                      <button className="p-0.5 hover:bg-muted rounded transition-colors">
+                        <MoreVertical className="w-3.5 h-3.5 text-muted-foreground" />
                       </button>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center">
-                    <p className="text-sm text-muted-foreground">No transactions found</p>
+                  <td colSpan={7} className="py-8 text-center">
+                    <p className="text-xs text-muted-foreground">No transactions found</p>
                   </td>
                 </tr>
               )}

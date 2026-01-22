@@ -61,7 +61,10 @@ export default function ProductionAccessSection({
                                 KYB Approval Required
                             </h4>
                             <p className="text-xs text-orange-700 dark:text-orange-300 mt-1">
-                                You must complete KYB verification before requesting production access.
+                                You must complete KYB verification before requesting production access. Please submit your business documents and wait for admin approval.
+                            </p>
+                            <p className="text-xs text-orange-600 dark:text-orange-400 mt-2 font-medium">
+                                ⓘ After submitting your documents, our team will review them. Once approved, you&apos;ll be able to request production access here.
                             </p>
                         </div>
                     </div>

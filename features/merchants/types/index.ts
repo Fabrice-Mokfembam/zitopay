@@ -252,6 +252,7 @@ export interface KYBSubmission {
         businessType: string;
         country: string;
         countryCode: string;
+        kycStatus?: string;
     };
     submittedAt: string;
     documents: KYBDocument[];

@@ -22,7 +22,7 @@ import {
     Rocket,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useGetPendingKYBSubmissions, useApproveProduction } from "@/features/merchants/hooks/useMerchant";
+import { useGetPendingKYBSubmissions, useApproveProduction, useApproveKYB } from "@/features/merchants/hooks/useMerchant";
 import { useUpdateKYCDocumentStatus } from "@/features/files/hooks";
 import type { KYBSubmission } from "@/features/merchants/types/index";
 import { toast } from "sonner";
@@ -43,6 +43,11 @@ export default function PendingKYBPage() {
 
     // Query client for invalidation
     const queryClient = useQueryClient();
+
+    // KYB approval mutation
+    const { mutate: approveKYBMutation, isPending: isApprovingKYB } = useApproveKYB(
+        selectedMerchant?.id || ''
+    );
 
     // Production approval mutation
     const { mutate: approveProductionMutation, isPending: isApprovingProduction } = useApproveProduction(
@@ -72,6 +77,23 @@ export default function PendingKYBPage() {
         setProductionMerchant(null);
     };
 
+    const handleApproveKYB = () => {
+        if (!selectedMerchant) return;
+
+        approveKYBMutation(undefined, {
+            onSuccess: () => {
+                toast.success(`KYB approved for ${selectedMerchant.merchant.businessName}`);
+                // Invalidate queries to refresh data
+                queryClient.invalidateQueries({ queryKey: ['pending-kyb-submissions'] });
+                queryClient.invalidateQueries({ queryKey: ['merchants'] });
+                refetch();
+            },
+            onError: (error: Error) => {
+                toast.error(error.message || 'Failed to approve KYB');
+            },
+        });
+    };
+
     const handleGrantProduction = () => {
         if (!productionMerchant) return;
 
@@ -89,6 +111,10 @@ export default function PendingKYBPage() {
             },
         });
     };
+
+    // Check if at least one document is approved
+    const hasApprovedDocuments = selectedMerchant?.documents.some(doc => doc.reviewStatus === 'APPROVED') || false;
+    const isKYBApproved = selectedMerchant?.merchant.kycStatus === 'APPROVED';
 
     // Skeleton Loader Component
     const SkeletonCard = () => (
@@ -638,18 +664,33 @@ export default function PendingKYBPage() {
                                     </div>
 
                                     {/* Footer Actions */}
-                                    <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-                                        {/* Grant Production Access Button - Always Visible */}
-                                        <button
-                                            onClick={() => openProductionConfirm(selectedMerchant)}
-                                            className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-all text-xs shadow-sm hover:shadow-md"
-                                        >
-                                            <Rocket className="w-4 h-4" />
-                                            Grant Production Access
-                                        </button>
+                                    <div className="flex justify-between items-center pt-4 border-t border-gray-200 gap-3">
+                                        <div className="flex gap-2">
+                                            {/* Bulk Approve KYB Button - Show when at least one doc is approved but KYB is not approved */}
+                                            {hasApprovedDocuments && !isKYBApproved && (
+                                                <button
+                                                    onClick={handleApproveKYB}
+                                                    disabled={isApprovingKYB}
+                                                    className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all text-xs shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    <ShieldCheck className="w-4 h-4" />
+                                                    {isApprovingKYB ? 'Approving KYB...' : 'Approve KYB'}
+                                                </button>
+                                            )}
+                                            {/* Grant Production Access Button - Show only when KYB is approved */}
+                                            {isKYBApproved && (
+                                                <button
+                                                    onClick={() => openProductionConfirm(selectedMerchant)}
+                                                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg transition-all text-xs shadow-sm hover:shadow-md"
+                                                >
+                                                    <Rocket className="w-4 h-4" />
+                                                    Grant Production Access
+                                                </button>
+                                            )}
+                                        </div>
                                         <button
                                             onClick={closeReviewModal}
-                                            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors text-xs ml-auto"
+                                            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors text-xs"
                                         >
                                             Close
                                         </button>
@@ -678,8 +719,8 @@ export default function PendingKYBPage() {
                             exit={{ scale: 0.95, opacity: 0 }}
                             className="relative w-full max-w-md bg-white rounded-xl shadow-xl overflow-hidden"
                         >
-                            {productionMerchant.documents.every(doc => doc.reviewStatus === 'APPROVED') ? (
-                                // All documents approved - Show success confirmation
+                            {productionMerchant.merchant.kycStatus === 'APPROVED' ? (
+                                // KYB approved - Show success confirmation
                                 <>
                                     <div className="p-6 text-center">
                                         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -689,7 +730,7 @@ export default function PendingKYBPage() {
                                             Grant Production Access?
                                         </h3>
                                         <p className="text-sm text-gray-600 mb-1">
-                                            All documents for <span className="font-semibold text-gray-900">{productionMerchant.merchant.businessName}</span> have been approved.
+                                            KYB has been approved for <span className="font-semibold text-gray-900">{productionMerchant.merchant.businessName}</span>.
                                         </p>
                                         <p className="text-sm text-gray-600">
                                             Are you sure you want to grant production access to this merchant?
@@ -723,17 +764,17 @@ export default function PendingKYBPage() {
                                     </div>
                                 </>
                             ) : (
-                                // Not all documents approved - Show warning
+                                // KYB not approved - Show warning
                                 <>
                                     <div className="p-6 text-center">
                                         <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                             <AlertCircle className="w-8 h-8 text-orange-600" />
                                         </div>
                                         <h3 className="text-lg font-bold text-gray-900 mb-2">
-                                            Documents Not Fully Approved
+                                            KYB Not Approved
                                         </h3>
                                         <p className="text-sm text-gray-600 mb-3">
-                                            <span className="font-semibold text-gray-900">{productionMerchant.merchant.businessName}</span> has not completed the KYB review process.
+                                            <span className="font-semibold text-gray-900">{productionMerchant.merchant.businessName}</span> has not completed the KYB review process. Please approve their KYB first before granting production access.
                                         </p>
                                         <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-4">
                                             <p className="text-xs text-orange-800 font-medium">
