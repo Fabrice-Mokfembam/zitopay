@@ -56,6 +56,13 @@ export default function GatewaysPage() {
     const { mutate: configureGateway, isPending: isConfiguring } = useConfigureGateway(merchantId || "");
     const { data: gatewayData } = useGetGateways(merchantId || "");
 
+    // Determine environment based on merchant state
+    const environment: "sandbox" | "production" =
+        merchant?.productionState === "ACTIVE" ? "production" : "sandbox";
+
+    // Currency display
+    const currency = environment === "production" ? "FCFA" : "XAF";
+
     const [showConfigModal, setShowConfigModal] = useState(false);
     const [selectedGateway, setSelectedGateway] = useState<Gateway | null>(null);
 
@@ -196,15 +203,15 @@ export default function GatewaysPage() {
                             <div className="mb-4 space-y-2 text-xs text-muted-foreground">
                                 <div className="flex items-center justify-between">
                                     <span>Min Amount:</span>
-                                    <span className="font-medium text-foreground">{gateway.minAmount.toLocaleString()} FCFA</span>
+                                    <span className="font-medium text-foreground">{gateway.minAmount.toLocaleString()} {currency}</span>
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <span>Max Amount:</span>
-                                    <span className="font-medium text-foreground">{gateway.maxAmount.toLocaleString()} FCFA</span>
+                                    <span className="font-medium text-foreground">{gateway.maxAmount.toLocaleString()} {currency}</span>
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <span>Daily Limit:</span>
-                                    <span className="font-medium text-foreground">{gateway.dailyLimit.toLocaleString()} FCFA</span>
+                                    <span className="font-medium text-foreground">{gateway.dailyLimit.toLocaleString()} {currency}</span>
                                 </div>
                             </div>
                         )}
@@ -290,7 +297,7 @@ export default function GatewaysPage() {
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
                                         <label className="text-xs font-medium text-foreground">Transaction Limits</label>
-                                        <span className="text-xs text-muted-foreground font-medium">FCFA</span>
+                                        <span className="text-xs text-muted-foreground font-medium">{currency}</span>
                                     </div>
 
                                     <div className="space-y-3">
@@ -303,7 +310,7 @@ export default function GatewaysPage() {
                                                     onChange={(e) => setSelectedGateway({ ...selectedGateway, minAmount: parseFloat(e.target.value) || 0 })}
                                                     className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-xs font-mono text-foreground pr-16"
                                                 />
-                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground text-xs">FCFA</div>
+                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground text-xs">{currency}</div>
                                             </div>
                                         </div>
 
@@ -316,7 +323,7 @@ export default function GatewaysPage() {
                                                     onChange={(e) => setSelectedGateway({ ...selectedGateway, maxAmount: parseFloat(e.target.value) || 0 })}
                                                     className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-xs font-mono text-foreground pr-16"
                                                 />
-                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground text-xs">FCFA</div>
+                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground text-xs">{currency}</div>
                                             </div>
                                         </div>
 
@@ -329,7 +336,7 @@ export default function GatewaysPage() {
                                                     onChange={(e) => setSelectedGateway({ ...selectedGateway, dailyLimit: parseFloat(e.target.value) || 0 })}
                                                     className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-xs font-mono text-foreground pr-16"
                                                 />
-                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground text-xs">FCFA</div>
+                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground text-xs">{currency}</div>
                                             </div>
                                         </div>
                                     </div>

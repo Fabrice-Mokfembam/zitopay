@@ -2,6 +2,7 @@
 
 import { CheckCircle2, Clock, XCircle, FileText, Eye } from "lucide-react";
 import { Settlement } from "@/features/settlements/types";
+import { useUserMerchantData } from "@/features/merchants/context/MerchantContext";
 
 interface SettlementsTableProps {
   settlements: Settlement[];
@@ -16,6 +17,14 @@ export function SettlementsTable({
   onRowClick,
   onDownloadStatement,
 }: SettlementsTableProps) {
+  const { merchant } = useUserMerchantData();
+  
+  // Determine environment based on merchant state
+  const environment: "sandbox" | "production" =
+    merchant?.productionState === "ACTIVE" ? "production" : "sandbox";
+
+  // Currency display
+  const currency = environment === "production" ? "FCFA" : "XAF";
   const getStatusColor = (status: string) => {
     switch (status) {
       case "COMPLETED":
@@ -110,7 +119,7 @@ export function SettlementsTable({
                   {formatPeriod(settlement.periodStart, settlement.periodEnd)}
                 </td>
                 <td className="py-3 px-4 text-xs font-semibold text-foreground">
-                  {parseFloat(settlement.netAmount).toLocaleString()} FCFA
+                  {parseFloat(settlement.netAmount).toLocaleString()} {currency}
                 </td>
                 <td className="py-3 px-4">
                   <span

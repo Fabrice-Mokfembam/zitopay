@@ -1,6 +1,7 @@
 "use client";
 
 import { DollarSign, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { useUserMerchantData } from "@/features/merchants/context/MerchantContext";
 
 interface RefundStatsCardsProps {
   total: number;
@@ -17,6 +18,14 @@ export function RefundStatsCards({
   failed,
   isLoading = false,
 }: RefundStatsCardsProps) {
+  const { merchant } = useUserMerchantData();
+  
+  // Determine environment based on merchant state
+  const environment: "sandbox" | "production" =
+    merchant?.productionState === "ACTIVE" ? "production" : "sandbox";
+
+  // Currency display
+  const currency = environment === "production" ? "FCFA" : "XAF";
   if (isLoading) {
     return (
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -41,7 +50,7 @@ export function RefundStatsCards({
           TOTAL
         </p>
         <p className="text-xl font-bold text-foreground">
-          {total.toLocaleString()} FCFA
+          {total.toLocaleString()} {currency}
         </p>
       </div>
       <div className="bg-green-50 dark:bg-green-900/10 rounded-xl p-4 border border-green-200 dark:border-green-800">

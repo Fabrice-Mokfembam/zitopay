@@ -24,6 +24,10 @@ export default function ReportsPage() {
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportFormat, setExportFormat] = useState<"CSV" | "EXCEL">("CSV");
 
+  // Determine environment based on merchant state
+  const environment: "sandbox" | "production" =
+    merchant?.productionState === "ACTIVE" ? "production" : "sandbox";
+
   // API Hooks
   const { data: summary, isLoading: summaryLoading } = useDashboardSummary();
   const { data: stats, isLoading: statsLoading } = useDashboardStats(
@@ -73,12 +77,13 @@ export default function ReportsPage() {
 
   const formatCurrency = (amount: string): string => {
     const num = parseFloat(amount);
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "XAF",
+    // Display FCFA instead of XAF in production mode
+    const formatted = new Intl.NumberFormat("en-US", {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(num);
+    // Append FCFA in production mode, XAF in sandbox
+    return environment === "production" ? `${formatted} FCFA` : `${formatted} XAF`;
   };
 
   return (

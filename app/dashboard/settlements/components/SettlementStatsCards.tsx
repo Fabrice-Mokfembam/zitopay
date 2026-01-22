@@ -1,6 +1,7 @@
 "use client";
 
 import { Clock, CheckCircle2, AlertCircle, TrendingUp } from "lucide-react";
+import { useUserMerchantData } from "@/features/merchants/context/MerchantContext";
 
 interface SettlementStatsCardsProps {
   pending: number;
@@ -17,6 +18,14 @@ export function SettlementStatsCards({
   totalNet,
   isLoading = false,
 }: SettlementStatsCardsProps) {
+  const { merchant } = useUserMerchantData();
+  
+  // Determine environment based on merchant state
+  const environment: "sandbox" | "production" =
+    merchant?.productionState === "ACTIVE" ? "production" : "sandbox";
+
+  // Currency display
+  const currency = environment === "production" ? "FCFA" : "XAF";
   if (isLoading) {
     return (
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -63,7 +72,7 @@ export function SettlementStatsCards({
             TOTAL NET
           </p>
           <p className="text-xl font-bold text-foreground">
-            {totalNet.toLocaleString()} FCFA
+            {totalNet.toLocaleString()} {currency}
           </p>
         </div>
       )}

@@ -18,10 +18,19 @@ import {
     ChevronRight,
     RefreshCw,
 } from "lucide-react";
+import { useUserMerchantData } from "@/features/merchants/context/MerchantContext";
 
 export default function CollectionsPage() {
+    const { merchant } = useUserMerchantData();
     const [searchQuery, setSearchQuery] = useState("");
     const [showNewPaymentModal, setShowNewPaymentModal] = useState(false);
+
+    // Determine environment based on merchant state
+    const environment: "sandbox" | "production" =
+        merchant?.productionState === "ACTIVE" ? "production" : "sandbox";
+
+    // Currency display
+    const currency = environment === "production" ? "FCFA" : "XAF";
 
     const stats = {
         total: 2500000,
@@ -99,7 +108,7 @@ export default function CollectionsPage() {
                         TOTAL
                     </p>
                     <p className="text-xl font-bold text-foreground">
-                        FCFA {stats.total.toLocaleString()}
+                        {currency} {stats.total.toLocaleString()}
                     </p>
                 </div>
                 <div className="bg-green-50 dark:bg-green-900/10 rounded-xl p-4 border border-green-200 dark:border-green-800">
@@ -193,7 +202,7 @@ export default function CollectionsPage() {
                                     <td className="py-3 px-4 text-xs font-mono text-foreground">{item.id}</td>
                                     <td className="py-3 px-4 text-xs text-foreground">{item.customer}</td>
                                     <td className="py-3 px-4 text-xs font-semibold text-foreground">
-                                        {item.amount.toLocaleString()} FCFA
+                                        {item.amount.toLocaleString()} {currency}
                                     </td>
                                     <td className="py-3 px-4 text-xs text-foreground">{item.gateway}</td>
                                     <td className="py-3 px-4">
@@ -254,7 +263,7 @@ export default function CollectionsPage() {
                         <div className="space-y-4">
                             <div>
                                 <label className="text-xs font-medium text-foreground mb-2 block">
-                                    Amount (FCFA)
+                                    Amount ({currency})
                                 </label>
                                 <input
                                     type="number"

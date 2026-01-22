@@ -2,6 +2,7 @@
 
 import { X, Download, CheckCircle2, Clock, XCircle, ArrowLeft } from "lucide-react";
 import { SettlementDetails } from "@/features/settlements/types";
+import { useUserMerchantData } from "@/features/merchants/context/MerchantContext";
 
 interface SettlementDetailsModalProps {
   isOpen: boolean;
@@ -20,6 +21,15 @@ export function SettlementDetailsModal({
   onComplete,
   isLoading = false,
 }: SettlementDetailsModalProps) {
+  const { merchant } = useUserMerchantData();
+  
+  // Determine environment based on merchant state
+  const environment: "sandbox" | "production" =
+    merchant?.productionState === "ACTIVE" ? "production" : "sandbox";
+
+  // Currency display
+  const currency = environment === "production" ? "FCFA" : "XAF";
+
   if (!isOpen) return null;
 
   const getStatusColor = (status: string) => {
@@ -122,7 +132,7 @@ export function SettlementDetailsModal({
                 Total Collections
               </p>
               <p className="text-lg font-bold text-green-600 dark:text-green-400">
-                {parseFloat(settlement.totalCollections).toLocaleString()} FCFA
+                {parseFloat(settlement.totalCollections).toLocaleString()} {currency}
               </p>
             </div>
             <div className="bg-red-50 dark:bg-red-900/10 rounded-lg p-4 border border-red-200 dark:border-red-800">
@@ -130,7 +140,7 @@ export function SettlementDetailsModal({
                 Total Payouts
               </p>
               <p className="text-lg font-bold text-red-600 dark:text-red-400">
-                {parseFloat(settlement.totalPayouts).toLocaleString()} FCFA
+                {parseFloat(settlement.totalPayouts).toLocaleString()} {currency}
               </p>
             </div>
             <div className="bg-orange-50 dark:bg-orange-900/10 rounded-lg p-4 border border-orange-200 dark:border-orange-800">
@@ -138,7 +148,7 @@ export function SettlementDetailsModal({
                 Total Refunds
               </p>
               <p className="text-lg font-bold text-orange-600 dark:text-orange-400">
-                {parseFloat(settlement.totalRefunds).toLocaleString()} FCFA
+                {parseFloat(settlement.totalRefunds).toLocaleString()} {currency}
               </p>
             </div>
             <div className="bg-gray-50 dark:bg-gray-900/10 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
@@ -146,7 +156,7 @@ export function SettlementDetailsModal({
                 Total Fees
               </p>
               <p className="text-lg font-bold text-gray-600 dark:text-gray-400">
-                {parseFloat(settlement.totalFees).toLocaleString()} FCFA
+                {parseFloat(settlement.totalFees).toLocaleString()} {currency}
               </p>
             </div>
           </div>
@@ -157,7 +167,7 @@ export function SettlementDetailsModal({
               Net Settlement Amount
             </p>
             <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-              {parseFloat(settlement.netAmount).toLocaleString()} FCFA
+              {parseFloat(settlement.netAmount).toLocaleString()} {currency}
             </p>
           </div>
 
@@ -202,10 +212,10 @@ export function SettlementDetailsModal({
                           </span>
                         </td>
                         <td className="py-2 px-3 font-medium">
-                          {parseFloat(item.amount).toLocaleString()} FCFA
+                          {parseFloat(item.amount).toLocaleString()} {currency}
                         </td>
                         <td className="py-2 px-3">
-                          {parseFloat(item.fees).toLocaleString()} FCFA
+                          {parseFloat(item.fees).toLocaleString()} {currency}
                         </td>
                         <td className="py-2 px-3 text-muted-foreground">
                           {formatDate(item.createdAt)}

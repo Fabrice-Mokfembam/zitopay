@@ -2,6 +2,7 @@
 
 import { CheckCircle2, Clock, XCircle, MoreVertical, Eye } from "lucide-react";
 import { Refund } from "@/features/refunds/types";
+import { useUserMerchantData } from "@/features/merchants/context/MerchantContext";
 
 interface RefundsTableProps {
   refunds: Refund[];
@@ -20,6 +21,16 @@ export function RefundsTable({
   totalPages,
   onPageChange,
 }: RefundsTableProps) {
+  const { merchant } = useUserMerchantData();
+  
+  // Determine environment based on merchant state
+  const environment: "sandbox" | "production" =
+    merchant?.productionState === "ACTIVE" ? "production" : "sandbox";
+
+  // Format currency for display
+  const formatCurrency = (currency: string) => {
+    return currency === "XAF" && environment === "production" ? "FCFA" : currency;
+  };
   const getStatusColor = (status: string) => {
     switch (status) {
       case "SUCCESS":
@@ -126,7 +137,7 @@ export function RefundsTable({
                     </div>
                   </td>
                   <td className="py-3 px-4 text-xs font-semibold text-foreground">
-                    {parseFloat(refund.amount).toLocaleString()} FCFA
+                    {parseFloat(refund.amount).toLocaleString()} {formatCurrency(refund.transaction.currency || "XAF")}
                   </td>
                   <td className="py-3 px-4">
                     <span className="inline-flex items-center px-2 py-1 bg-purple-100 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 rounded text-xs font-medium">

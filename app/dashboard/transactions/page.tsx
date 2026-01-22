@@ -20,12 +20,16 @@ import { useRecentTransactions } from "@/features/merchants/hooks/useMerchant";
 type TransactionType = "all" | "collection" | "payout";
 
 export default function TransactionsPage() {
-  const { merchantId } = useUserMerchantData();
+  const { merchantId, merchant } = useUserMerchantData();
   const [activeTab, setActiveTab] = useState<TransactionType>("all");
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  // Determine environment based on merchant state
+  const environment: "sandbox" | "production" =
+    merchant?.productionState === "ACTIVE" ? "production" : "sandbox";
 
   // Fetch transactions using the same hook as dashboard
   // Pass type filter based on activeTab
@@ -52,7 +56,9 @@ export default function TransactionsPage() {
   };
 
   const formatAmount = (amount: number, currency: string = "XAF") => {
-    return `${amount.toLocaleString()} ${currency}`;
+    // Display FCFA instead of XAF in production mode
+    const displayCurrency = currency === "XAF" && environment === "production" ? "FCFA" : currency;
+    return `${amount.toLocaleString()} ${displayCurrency}`;
   };
 
   const getStatusIcon = (status: string) => {
@@ -434,7 +440,7 @@ export default function TransactionsPage() {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Transaction Amount:</span>
                     <span className="font-semibold text-foreground">
-                      {selectedTransaction.amount.toLocaleString()} {selectedTransaction.currency}
+                      {formatAmount(selectedTransaction.amount, selectedTransaction.currency)}
                     </span>
                   </div>
                   {selectedTransaction.fees > 0 && (

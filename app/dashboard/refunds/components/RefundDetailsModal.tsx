@@ -2,6 +2,7 @@
 
 import { X, CheckCircle2, Clock, XCircle, AlertCircle } from "lucide-react";
 import { Refund } from "@/features/refunds/types";
+import { useUserMerchantData } from "@/features/merchants/context/MerchantContext";
 
 interface RefundDetailsModalProps {
   refund: Refund | null;
@@ -14,6 +15,16 @@ export function RefundDetailsModal({
   isOpen,
   onClose,
 }: RefundDetailsModalProps) {
+  const { merchant } = useUserMerchantData();
+  
+  // Determine environment based on merchant state
+  const environment: "sandbox" | "production" =
+    merchant?.productionState === "ACTIVE" ? "production" : "sandbox";
+
+  // Format currency for display
+  const formatCurrency = (currency: string) => {
+    return currency === "XAF" && environment === "production" ? "FCFA" : currency;
+  };
   if (!isOpen || !refund) return null;
 
   const getStatusColor = (status: string) => {
@@ -90,7 +101,7 @@ export function RefundDetailsModal({
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">Amount</span>
                 <span className="text-sm font-semibold text-foreground">
-                  {parseFloat(refund.amount).toLocaleString()} FCFA
+                  {parseFloat(refund.amount).toLocaleString()} {formatCurrency(refund.transaction.currency || "XAF")}
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -146,7 +157,7 @@ export function RefundDetailsModal({
                 <span className="text-xs text-muted-foreground">Amount</span>
                 <span className="text-sm font-semibold text-foreground">
                   {parseFloat(refund.transaction.amount).toLocaleString()}{" "}
-                  {refund.transaction.currency}
+                  {formatCurrency(refund.transaction.currency)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -173,7 +184,7 @@ export function RefundDetailsModal({
                 </span>
                 <span className="text-sm text-foreground">
                   {parseFloat(refund.transaction.refundedAmount).toLocaleString()}{" "}
-                  {refund.transaction.currency}
+                  {formatCurrency(refund.transaction.currency)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -241,7 +252,7 @@ export function RefundDetailsModal({
                   Refund Amount
                 </span>
                 <span className="text-sm font-semibold text-foreground">
-                  {parseFloat(refund.amount).toLocaleString()} FCFA
+                  {parseFloat(refund.amount).toLocaleString()} {formatCurrency(refund.transaction.currency || "XAF")}
                 </span>
               </div>
               <div className="flex items-center justify-between">

@@ -15,11 +15,20 @@ import {
     ChevronRight,
     RefreshCw,
 } from "lucide-react";
+import { useUserMerchantData } from "@/features/merchants/context/MerchantContext";
 
 export default function PayoutsPage() {
+    const { merchant } = useUserMerchantData();
     const [searchQuery, setSearchQuery] = useState("");
     const [showSinglePayoutModal, setShowSinglePayoutModal] = useState(false);
     const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
+
+    // Determine environment based on merchant state
+    const environment: "sandbox" | "production" =
+        merchant?.productionState === "ACTIVE" ? "production" : "sandbox";
+
+    // Currency display
+    const currency = environment === "production" ? "FCFA" : "XAF";
 
     const stats = {
         total: 850000,
@@ -106,7 +115,7 @@ export default function PayoutsPage() {
                         TOTAL
                     </p>
                     <p className="text-xl font-bold text-foreground">
-                        FCFA {stats.total.toLocaleString()}
+                        {currency} {stats.total.toLocaleString()}
                     </p>
                 </div>
                 <div className="bg-green-50 dark:bg-green-900/10 rounded-xl p-4 border border-green-200 dark:border-green-800">
@@ -200,7 +209,7 @@ export default function PayoutsPage() {
                                     <td className="py-3 px-4 text-xs font-mono text-foreground">{item.id}</td>
                                     <td className="py-3 px-4 text-xs text-foreground">{item.recipient}</td>
                                     <td className="py-3 px-4 text-xs font-semibold text-foreground">
-                                        {item.amount.toLocaleString()} FCFA
+                                        {item.amount.toLocaleString()} {currency}
                                     </td>
                                     <td className="py-3 px-4 text-xs text-foreground">{item.gateway}</td>
                                     <td className="py-3 px-4">
@@ -271,7 +280,7 @@ export default function PayoutsPage() {
                             </div>
                             <div>
                                 <label className="text-xs font-medium text-foreground mb-2 block">
-                                    Amount (FCFA)
+                                    Amount ({currency})
                                 </label>
                                 <input
                                     type="number"
@@ -302,15 +311,15 @@ export default function PayoutsPage() {
                             <div className="bg-muted/50 rounded-lg p-3 text-xs">
                                 <div className="flex justify-between mb-1">
                                     <span className="text-muted-foreground">Amount:</span>
-                                    <span className="font-medium">50,000 FCFA</span>
+                                    <span className="font-medium">50,000 {currency}</span>
                                 </div>
                                 <div className="flex justify-between mb-1">
                                     <span className="text-muted-foreground">Fee:</span>
-                                    <span className="font-medium">500 FCFA</span>
+                                    <span className="font-medium">500 {currency}</span>
                                 </div>
                                 <div className="flex justify-between pt-2 border-t border-border">
                                     <span className="font-semibold">Total:</span>
-                                    <span className="font-bold">50,500 FCFA</span>
+                                    <span className="font-bold">50,500 {currency}</span>
                                 </div>
                             </div>
                             <button className="w-full px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600 transition-colors">
