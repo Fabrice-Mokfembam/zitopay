@@ -176,7 +176,7 @@ function WithdrawModal({
 
           <div>
             <label className="text-sm font-medium text-foreground mb-2 block">
-              Withdrawal Amount ({environment === "sandbox" ? "EUR" : "XAF"})
+              Withdrawal Amount ({environment === "sandbox" ? "EUR" : "FCFA"})
             </label>
             <input
               type="number"
@@ -389,7 +389,7 @@ function TopUpModal({
 
           <div>
             <label className="text-sm font-medium text-foreground mb-2 block">
-              Amount ({environment === "sandbox" ? "EUR" : "XAF"})
+              Amount ({environment === "sandbox" ? "EUR" : "FCFA"})
             </label>
             <input
               type="number"
@@ -544,7 +544,9 @@ export default function DashboardPage() {
   };
 
   const formatAmount = (amount: number, currency: string = "XAF") => {
-    return `${amount.toLocaleString()} ${currency}`;
+    // Display FCFA instead of XAF in production mode
+    const displayCurrency = currency === "XAF" && environment === "production" ? "FCFA" : currency;
+    return `${amount.toLocaleString()} ${displayCurrency}`;
   };
 
   const getPeriodLabel = (period: string) => {
