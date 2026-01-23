@@ -45,7 +45,7 @@ export interface Refund {
   updatedAt: string;
   transaction: RefundTransaction;
   customer: RefundCustomer;
-  payout: RefundPayout;
+  payout: RefundPayout | null;
   merchant?: RefundMerchant; // Admin only
 }
 

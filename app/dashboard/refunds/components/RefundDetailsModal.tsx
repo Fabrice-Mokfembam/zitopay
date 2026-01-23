@@ -255,51 +255,59 @@ export function RefundDetailsModal({
                   {parseFloat(refund.amount).toLocaleString()} {formatCurrency(refund.transaction.currency || "XAF")}
                 </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">
-                  Gateway Fee
-                </span>
-                <span className="text-sm text-foreground">
-                  {parseFloat(refund.payout.gatewayFee).toLocaleString()} FCFA
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">
-                  Platform Fee
-                </span>
-                <span className="text-sm text-foreground">
-                  {parseFloat(refund.payout.platformFee).toLocaleString()} FCFA
-                </span>
-              </div>
-              <div className="flex items-center justify-between border-t border-border pt-3">
-                <span className="text-xs font-semibold text-foreground">
-                  Total Cost
-                </span>
-                <span className="text-sm font-bold text-foreground">
-                  {parseFloat(refund.payout.totalCost).toLocaleString()} FCFA
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">
-                  Payout Status
-                </span>
-                <span className="text-sm text-foreground">
-                  {refund.payout.status}
-                </span>
-              </div>
-              {refund.payout.failureReason && (
-                <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-3">
-                  <div className="flex items-start gap-2">
-                    <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-xs font-medium text-red-700 dark:text-red-400">
-                        Failure Reason
-                      </p>
-                      <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                        {refund.payout.failureReason}
-                      </p>
-                    </div>
+              {refund.payout ? (
+                <>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">
+                      Gateway Fee
+                    </span>
+                    <span className="text-sm text-foreground">
+                      {parseFloat(refund.payout.gatewayFee).toLocaleString()} {formatCurrency(refund.transaction.currency || "XAF")}
+                    </span>
                   </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">
+                      Platform Fee
+                    </span>
+                    <span className="text-sm text-foreground">
+                      {parseFloat(refund.payout.platformFee).toLocaleString()} {formatCurrency(refund.transaction.currency || "XAF")}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between border-t border-border pt-3">
+                    <span className="text-xs font-semibold text-foreground">
+                      Total Cost
+                    </span>
+                    <span className="text-sm font-bold text-foreground">
+                      {parseFloat(refund.payout.totalCost).toLocaleString()} {formatCurrency(refund.transaction.currency || "XAF")}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">
+                      Payout Status
+                    </span>
+                    <span className="text-sm text-foreground">
+                      {refund.payout.status}
+                    </span>
+                  </div>
+                  {refund.payout.failureReason && (
+                    <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-3">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="text-xs font-medium text-red-700 dark:text-red-400">
+                            Failure Reason
+                          </p>
+                          <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                            {refund.payout.failureReason}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-xs text-muted-foreground italic">
+                  Payout information not available
                 </div>
               )}
             </div>
