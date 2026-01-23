@@ -31,6 +31,11 @@ export default function WalletPage() {
     const { data: balanceData, isLoading: isLoadingSummary, error: summaryError } = useWalletSummary();
     const { data: recentActivity, isLoading: isLoadingActivity, error: activityError } = useWalletActivity({ limit: 20 });
 
+    // Format number with dot as thousands separator
+    const formatNumber = (num: number): string => {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    };
+
     const getTypeIcon = (type: string) => {
         switch (type) {
             case "credit":
@@ -161,7 +166,7 @@ export default function WalletPage() {
                         💰 AVAILABLE BALANCE
                     </p>
                     <p className="text-2xl font-bold text-foreground mb-1">
-                        FCFA {balanceData!.available.toLocaleString()}
+                        FCFA {formatNumber(balanceData!.available)}
                     </p>
                     <p className="text-xs text-muted-foreground">
                         Last updated: {balanceData!.lastUpdated}
@@ -179,7 +184,7 @@ export default function WalletPage() {
                         🔒 PENDING BALANCE
                     </p>
                     <p className="text-2xl font-bold text-foreground mb-1">
-                        FCFA {balanceData!.pending.toLocaleString()}
+                        FCFA {formatNumber(balanceData!.pending)}
                     </p>
                     <p className="text-xs text-muted-foreground">
                         3 transactions processing
@@ -197,7 +202,7 @@ export default function WalletPage() {
                         📊 TOTAL COLLECTED
                     </p>
                     <p className="text-2xl font-bold text-foreground mb-1">
-                        FCFA {balanceData!.totalCollected.toLocaleString()}
+                        FCFA {formatNumber(balanceData!.totalCollected)}
                     </p>
                     <p className="text-xs text-muted-foreground">This month</p>
                 </div>
@@ -213,7 +218,7 @@ export default function WalletPage() {
                         📤 TOTAL WITHDRAWN
                     </p>
                     <p className="text-2xl font-bold text-foreground mb-1">
-                        FCFA {balanceData!.totalWithdrawn.toLocaleString()}
+                        FCFA {formatNumber(balanceData!.totalWithdrawn)}
                     </p>
                     <p className="text-xs text-muted-foreground">This month</p>
                 </div>
@@ -275,7 +280,7 @@ export default function WalletPage() {
                                     Amount
                                 </th>
                                 <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase">
-                                    Balance After
+                                    Balance Before
                                 </th>
                                 <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase">
                                     Status
@@ -309,11 +314,11 @@ export default function WalletPage() {
                                                 }`}
                                         >
                                             {activity.amount > 0 ? "+" : ""}
-                                            {activity.amount.toLocaleString()} FCFA
+                                            {formatNumber(activity.amount)} FCFA
                                         </span>
                                     </td>
                                     <td className="py-3 px-4 text-xs font-medium text-foreground">
-                                        {activity.balanceAfter.toLocaleString()} FCFA
+                                        {formatNumber(activity.balanceAfter)} FCFA
                                     </td>
                                     <td className="py-3 px-4">
                                         <span
@@ -370,7 +375,7 @@ export default function WalletPage() {
                             <div className="bg-muted/50 rounded-lg p-3 text-xs">
                                 <span className="text-muted-foreground">Available Balance:</span>
                                 <span className="font-bold text-foreground ml-2">
-                                    FCFA {balanceData!.available.toLocaleString()}
+                                    FCFA {formatNumber(balanceData!.available)}
                                 </span>
                             </div>
 
@@ -386,12 +391,12 @@ export default function WalletPage() {
                                         type="number"
                                         value={withdrawAmount}
                                         onChange={(e) => setWithdrawAmount(e.target.value)}
-                                        placeholder="100,000"
+                                        placeholder="100.000"
                                         className="w-full pl-14 pr-4 py-2 bg-muted border border-border rounded-lg text-sm"
                                     />
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                    Min: 10,000 FCFA | Max: {balanceData!.available.toLocaleString()} FCFA
+                                    Min: 10.000 FCFA | Max: {formatNumber(balanceData!.available)} FCFA
                                 </p>
                             </div>
 
@@ -440,7 +445,7 @@ export default function WalletPage() {
                                             <div className="text-xs font-medium text-foreground">Bank Transfer</div>
                                             <div className="text-xs text-muted-foreground">Account: **** **** 1234</div>
                                             <div className="text-xs text-muted-foreground">
-                                                Fee: 1,000 FCFA | Time: 1-2 business days
+                                                Fee: 1.000 FCFA | Time: 1-2 business days
                                             </div>
                                         </div>
                                     </label>
@@ -471,12 +476,12 @@ export default function WalletPage() {
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground">Processing Fee:</span>
-                                    <span className="font-medium">{withdrawMethod === "bank" ? "1,000" : "500"} FCFA</span>
+                                    <span className="font-medium">{withdrawMethod === "bank" ? "1.000" : "500"} FCFA</span>
                                 </div>
                                 <div className="flex justify-between pt-2 border-t border-border">
                                     <span className="font-semibold">You will receive:</span>
                                     <span className="font-bold">
-                                        {(parseInt(withdrawAmount || "0") - (withdrawMethod === "bank" ? 1000 : 500)).toLocaleString()} FCFA
+                                        {formatNumber(parseInt(withdrawAmount || "0") - (withdrawMethod === "bank" ? 1000 : 500))} FCFA
                                     </span>
                                 </div>
                             </div>
@@ -507,7 +512,7 @@ export default function WalletPage() {
                             <div className="bg-muted/50 rounded-lg p-3 text-xs">
                                 <span className="text-muted-foreground">Current Balance:</span>
                                 <span className="font-bold text-foreground ml-2">
-                                    FCFA {balanceData!.available.toLocaleString()}
+                                    FCFA {formatNumber(balanceData!.available)}
                                 </span>
                             </div>
 
@@ -523,12 +528,12 @@ export default function WalletPage() {
                                         type="number"
                                         value={topUpAmount}
                                         onChange={(e) => setTopUpAmount(e.target.value)}
-                                        placeholder="50,000"
+                                        placeholder="50.000"
                                         className="w-full pl-14 pr-4 py-2 bg-muted border border-border rounded-lg text-sm"
                                     />
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                    Min: 5,000 FCFA | Max: 1,000,000 FCFA
+                                    Min: 5.000 FCFA | Max: 1.000.000 FCFA
                                 </p>
                             </div>
 
@@ -611,10 +616,10 @@ export default function WalletPage() {
                                 <div className="flex justify-between pt-2 border-t border-border">
                                     <span className="font-semibold">Total to pay:</span>
                                     <span className="font-bold">
-                                        {(
+                                        {formatNumber(
                                             parseInt(topUpAmount || "0") +
                                             (topUpMethod === "mobile" ? Math.round(parseInt(topUpAmount || "0") * 0.02) : 0)
-                                        ).toLocaleString()}{" "}
+                                        )}{" "}
                                         FCFA
                                     </span>
                                 </div>
