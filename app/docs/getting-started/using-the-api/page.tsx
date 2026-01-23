@@ -148,8 +148,22 @@ export default function UsingTheAPIPage() {
                     signature = HMAC-SHA256(secretKey, stringToSign)
                 </p>
             </div>
+            <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-4 my-4">
+                <div className="flex items-start gap-3">
+                    <span className="text-red-700 dark:text-red-400 text-lg mt-0.5">⚠️</span>
+                    <div className="flex-1 text-sm text-red-900 dark:text-red-100">
+                        <p className="font-semibold mb-2">Critical Formatting Rules</p>
+                        <ul className="list-disc list-inside space-y-1">
+                            <li><strong>NO separators:</strong> All components must be concatenated directly without newlines, spaces, or special characters</li>
+                            <li><strong>NO prefix:</strong> The signature header must contain ONLY the hexadecimal hash (no <code>sha256=</code> prefix)</li>
+                            <li><strong>Query sorting:</strong> Query parameters must be sorted alphabetically before inclusion</li>
+                            <li><strong>Canonical JSON:</strong> Body must be stringified consistently (same format for signature and request)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
             <p>
-                The exact format must match precisely. Code examples with detailed implementations will be provided in the Collection and Disbursement documentation pages. It&apos;s crucial that the string construction matches exactly, including the order of components and how query parameters are sorted.
+                The exact format must match precisely. Code examples with detailed implementations are provided in the <Link href="/docs/authentication" className="text-primary hover:underline">Authentication documentation</Link>. It&apos;s crucial that the string construction matches exactly, including the order of components and how query parameters are sorted. Even small formatting differences will cause authentication failures in both sandbox and production environments.
             </p>
 
             <h2>Request Flow</h2>

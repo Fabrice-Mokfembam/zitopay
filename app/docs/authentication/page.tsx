@@ -68,65 +68,103 @@ Content-Type: application/json`}
 
             <h2>Generating the Signature</h2>
             <p>
-                The signature is a HMAC-SHA256 hash of a string built from your request details:
+                The signature is a HMAC-SHA256 hash of a string built from your request details. The format must match exactly - even small differences will cause authentication failures.
             </p>
 
+            <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-4 my-6">
+                <div className="flex items-start gap-3">
+                    <span className="text-red-700 dark:text-red-400 text-lg mt-0.5">⚠️</span>
+                    <div className="flex-1 text-sm text-red-900 dark:text-red-100">
+                        <p className="font-semibold mb-2">Critical: Common Mistakes That Cause Authentication Failures</p>
+                        <ul className="list-disc list-inside space-y-1">
+                            <li><strong>NO separators:</strong> The signature string must be concatenated WITHOUT any separators (no newlines, spaces, or special characters)</li>
+                            <li><strong>NO prefix:</strong> The signature header should contain ONLY the hexadecimal hash, not <code>sha256=</code> or any other prefix</li>
+                            <li><strong>Query sorting:</strong> Query parameters must be sorted alphabetically and included in the signature</li>
+                            <li><strong>Consistent body:</strong> Body must be stringified consistently (canonical JSON) for both signature and request</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
             <h3>Step 1: Build the String to Sign</h3>
+            <p>
+                Construct the string by concatenating all components <strong>directly without any separators</strong>:
+            </p>
             <CodeBlock
                 code={`stringToSign = METHOD + PATH + SORTED_QUERY_PARAMS + REQUEST_BODY + TIMESTAMP + NONCE + ORIGIN`}
                 language="text"
             />
+            <p className="text-xs text-muted-foreground mt-2">
+                <strong>Important:</strong> All components are concatenated directly - no newlines, no spaces, no separators. The order must be exactly as shown above.
+            </p>
 
             <h3>Step 2: Generate HMAC-SHA256 Signature</h3>
+            <p>
+                Generate the signature using HMAC-SHA256 and return <strong>only the hexadecimal hash</strong> (no prefix):
+            </p>
             <CodeBlock
-                code={`signature = HMAC-SHA256(secretKey, stringToSign)`}
+                code={`signature = HMAC-SHA256(secretKey, stringToSign)
+// Returns: abc123def456... (just hex, no prefix)`}
                 language="text"
             />
+            <p className="text-xs text-muted-foreground mt-2">
+                <strong>Important:</strong> The signature header should contain only the hex string. Do NOT add <code>sha256=</code> or any other prefix.
+            </p>
 
             <h2>JavaScript Example</h2>
             <CodeBlock
                 code={`const crypto = require('crypto');
 
-function generateSignature(method, path, body, secretKey) {
-  const timestamp = Math.floor(Date.now() / 1000).toString();
-  const nonce = crypto.randomBytes(16).toString('hex');
-  const origin = 'https://yourdomain.com';
+function generateSignature(method, path, query, body, timestamp, nonce, origin, secretKey) {
+  // Sort query parameters alphabetically
+  const sortedQuery = Object.keys(query || {})
+    .sort()
+    .map(k => \`\${k}=\${query[k]}\`)
+    .join('&');
   
-  // Build string to sign
-  const stringToSign = \`\${method}\${path}\${body}\${timestamp}\${nonce}\${origin}\`;
+  // Stringify body (canonical JSON - no extra spaces)
+  const bodyStr = body ? JSON.stringify(body) : '';
   
-  // Generate signature
+  // Construct string to sign: METHOD + PATH + QUERY + BODY + TIMESTAMP + NONCE + ORIGIN
+  // NO separators, NO newlines - just concatenated
+  const stringToSign = \`\${method}\${path}\${sortedQuery}\${bodyStr}\${timestamp}\${nonce}\${origin}\`;
+  
+  // Generate HMAC-SHA256 signature
   const signature = crypto
     .createHmac('sha256', secretKey)
     .update(stringToSign)
     .digest('hex');
   
+  // Return just the hex string, no prefix
+  return signature;
+}
+
+function generateHeaders(method, path, body, query, apiKey, secretKey, origin) {
+  const timestamp = Math.floor(Date.now() / 1000).toString();
+  const nonce = crypto.randomUUID();
+  const signature = generateSignature(method, path, query, body, timestamp, nonce, origin, secretKey);
+
   return {
-    timestamp,
-    nonce,
-    origin,
-    signature
+    'x-zito-key': apiKey,
+    'x-zito-timestamp': timestamp,
+    'x-zito-nonce': nonce,
+    'x-zito-origin': origin,
+    'x-zito-signature': signature,  // Just hex, no prefix
+    'x-zito-version': '1.0',
+    'Content-Type': 'application/json'
   };
 }
 
 // Usage
-const { timestamp, nonce, origin, signature } = generateSignature(
+const headers = generateHeaders(
   'POST',
   '/api/v1/wallets/quote',
-  JSON.stringify({ amount: '1000', currency: 'XAF' }),
-  process.env.ZITOPAY_SECRET_KEY
-);
-
-// Include in request headers
-const headers = {
-  'x-zito-key': process.env.ZITOPAY_API_KEY,
-  'x-zito-timestamp': timestamp,
-  'x-zito-nonce': nonce,
-  'x-zito-origin': origin,
-  'x-zito-signature': signature,
-  'x-zito-version': '1.0',
-  'Content-Type': 'application/json'
-};`}
+  { amount: '1000', currency: 'XAF' },  // Body as object
+  {},  // Query parameters (empty object if none)
+  process.env.ZITOPAY_API_KEY,
+  process.env.ZITOPAY_SECRET_KEY,
+  'https://yourdomain.com'
+);`}
                 language="javascript"
             />
 
@@ -137,48 +175,83 @@ import hashlib
 import time
 import secrets
 import json
+from urllib.parse import urlencode
 
-def generate_signature(method, path, body, secret_key):
-    timestamp = str(int(time.time()))
-    nonce = secrets.token_hex(16)
-    origin = 'https://yourdomain.com'
+def generate_signature(method, path, query, body, timestamp, nonce, origin, secret_key):
+    # Sort query parameters alphabetically
+    sorted_query = ''
+    if query:
+        sorted_items = sorted(query.items())
+        sorted_query = urlencode(sorted_items)
     
-    # Build string to sign
-    string_to_sign = f"{method}{path}{body}{timestamp}{nonce}{origin}"
+    # Stringify body (canonical JSON - no extra spaces)
+    body_str = json.dumps(body) if body else ''
     
-    # Generate signature
+    # Construct string to sign: METHOD + PATH + QUERY + BODY + TIMESTAMP + NONCE + ORIGIN
+    # NO separators, NO newlines - just concatenated
+    string_to_sign = f"{method}{path}{sorted_query}{body_str}{timestamp}{nonce}{origin}"
+    
+    # Generate HMAC-SHA256 signature
     signature = hmac.new(
         secret_key.encode('utf-8'),
         string_to_sign.encode('utf-8'),
         hashlib.sha256
     ).hexdigest()
     
+    # Return just the hex string, no prefix
+    return signature
+
+def generate_headers(method, path, body, query, api_key, secret_key, origin):
+    timestamp = str(int(time.time()))
+    nonce = secrets.token_hex(16)
+    signature = generate_signature(method, path, query, body, timestamp, nonce, origin, secret_key)
+    
     return {
-        'timestamp': timestamp,
-        'nonce': nonce,
-        'origin': origin,
-        'signature': signature
+        'x-zito-key': api_key,
+        'x-zito-timestamp': timestamp,
+        'x-zito-nonce': nonce,
+        'x-zito-origin': origin,
+        'x-zito-signature': signature,  # Just hex, no prefix
+        'x-zito-version': '1.0',
+        'Content-Type': 'application/json'
     }
 
 # Usage
-auth_data = generate_signature(
+headers = generate_headers(
     'POST',
     '/api/v1/wallets/quote',
-    json.dumps({'amount': '1000', 'currency': 'XAF'}),
-    os.environ['ZITOPAY_SECRET_KEY']
-)
-
-headers = {
-    'x-zito-key': os.environ['ZITOPAY_API_KEY'],
-    'x-zito-timestamp': auth_data['timestamp'],
-    'x-zito-nonce': auth_data['nonce'],
-    'x-zito-origin': auth_data['origin'],
-    'x-zito-signature': auth_data['signature'],
-    'x-zito-version': '1.0',
-    'Content-Type': 'application/json'
-}`}
+    {'amount': '1000', 'currency': 'XAF'},  # Body as dict
+    {},  # Query parameters (empty dict if none)
+    os.environ['ZITOPAY_API_KEY'],
+    os.environ['ZITOPAY_SECRET_KEY'],
+    'https://yourdomain.com'
+)`}
                 language="python"
             />
+
+            <h2>Common Issues and Solutions</h2>
+            
+            <h3>Issue: "Invalid signature" or "Merchant not found" errors</h3>
+            <p>
+                If you're getting authentication errors even with correct API keys, check these:
+            </p>
+            <ul>
+                <li><strong>Signature string format:</strong> Ensure NO separators (no newlines, spaces, or special characters) between components</li>
+                <li><strong>Signature header format:</strong> Must be just the hex string, no <code>sha256=</code> prefix</li>
+                <li><strong>Query parameters:</strong> Must be sorted alphabetically and included in signature</li>
+                <li><strong>Body formatting:</strong> Use canonical JSON (same string for signature and request body)</li>
+                <li><strong>Component order:</strong> Must be exactly: METHOD + PATH + QUERY + BODY + TIMESTAMP + NONCE + ORIGIN</li>
+            </ul>
+
+            <h3>Debugging Tips</h3>
+            <ul>
+                <li>Log the exact <code>stringToSign</code> value and compare character-by-character</li>
+                <li>Verify the signature is just hex (no prefix) in the header</li>
+                <li>Ensure query parameters are sorted alphabetically</li>
+                <li>Check that body JSON is stringified consistently</li>
+                <li>Verify timestamp is in seconds (not milliseconds)</li>
+                <li>Ensure nonce is unique for each request</li>
+            </ul>
 
             <h2>Security Best Practices</h2>
             <ul>
@@ -188,6 +261,7 @@ headers = {
                 <li><strong>Use unique nonces:</strong> Never reuse nonces to prevent replay attacks</li>
                 <li><strong>Rotate keys regularly:</strong> Change your API keys periodically</li>
                 <li><strong>IP Whitelisting:</strong> Configure IP allowlists in production</li>
+                <li><strong>Test in sandbox first:</strong> Always test signature generation in sandbox before production</li>
             </ul>
 
             <h2>Public Endpoints</h2>
