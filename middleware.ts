@@ -16,6 +16,9 @@ export function middleware(request: NextRequest) {
     "/register",
     "/forgot-password",
     "/verify-email",
+    "/verify-email-code",
+    "/email-verified",
+    "/onboarding",
     "/docs",
   ];
 
