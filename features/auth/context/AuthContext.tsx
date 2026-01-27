@@ -63,6 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     // Check error type
                     const is401 = error?.response?.status === 401 || error?.status === 401;
                     const is403 = error?.response?.status === 403 || error?.status === 403;
+                    const is404 = error?.response?.status === 404 || error?.status === 404; // Account not found (deleted)
                     const isNetworkError = error?.code === 'ERR_NETWORK' || 
                                          error?.message === 'Network Error' ||
                                          !error?.response; // No response means network/server issue
@@ -112,9 +113,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                                 const isRetryNetworkError = retryError?.code === 'ERR_NETWORK' || 
                                                            retryError?.message === 'Network Error' ||
                                                            !retryError?.response;
+                                const isRetry404 = retryError?.response?.status === 404 || retryError?.status === 404;
+                                
                                 if (isRetryNetworkError) {
                                     // Network error on retry - keep refresh response user
                                     console.warn('Network error on retry, using refresh response user');
+                                } else if (isRetry404) {
+                                    // Account not found after refresh - account was deleted, clear auth
+                                    console.error('Account not found after token refresh (account deleted), clearing auth');
+                                    clearAuthData();
+                                    setUser(null);
                                 } else {
                                     // Even after refresh, getCurrentUser failed - but we have valid tokens
                                     // Keep the user from refresh response
@@ -126,6 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                             const isRefreshNetworkError = refreshError?.code === 'ERR_NETWORK' || 
                                                          refreshError?.message === 'Network Error' ||
                                                          !refreshError?.response;
+                            const isRefresh404 = refreshError?.response?.status === 404 || refreshError?.status === 404;
                             
                             if (isRefreshNetworkError) {
                                 // Network error during refresh - keep user logged in with cached data
@@ -133,6 +142,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                                 if (authData?.user) {
                                     setUser(authData.user);
                                 }
+                            } else if (isRefresh404) {
+                                // Account not found during refresh - account was deleted, clear auth
+                                console.error('Account not found during token refresh (account deleted), clearing auth');
+                                clearAuthData();
+                                setUser(null);
                             } else {
                                 // Refresh failed (invalid refresh token, expired, etc.), clear auth and logout
                                 console.error('Token refresh failed:', refreshError);
@@ -140,9 +154,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                                 setUser(null);
                             }
                         }
-                    } else if (is401 || is403) {
-                        // 401/403 but no refresh token or refresh not attempted - clear auth
-                        console.error('Unauthorized access, clearing auth:', error);
+                    } else if (is401 || is403 || is404) {
+                        // 401/403/404 - account doesn't exist, token invalid, or account deleted - clear auth
+                        if (is404) {
+                            console.error('Account not found (may be deleted), clearing auth:', error);
+                        } else {
+                            console.error('Unauthorized access, clearing auth:', error);
+                        }
                         clearAuthData();
                         setUser(null);
                     } else {

@@ -522,11 +522,32 @@ export default function DomainsPage() {
                             <div className="bg-blue-50 dark:bg-blue-900/10 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
                                 <p className="text-xs font-medium text-foreground mb-2">Steps:</p>
                                 <ol className="text-xs text-foreground space-y-1.5 list-decimal list-inside">
-                                    <li>Go to your DNS provider</li>
+                                    <li>Go to your DNS provider (see instructions below for Vercel)</li>
                                     <li>Add the TXT record above</li>
-                                    <li>Wait for DNS propagation (usually 15-30 minutes)</li>
-                                    <li>Click &quot;Verify Domain&quot; below</li>
+                                    <li><strong>Wait 15-30 minutes for DNS propagation</strong> (important!)</li>
+                                    <li>After waiting, click &quot;Verify Domain&quot; below</li>
                                 </ol>
+                            </div>
+
+                            {/* Vercel Instructions */}
+                            <div className="bg-purple-50 dark:bg-purple-900/10 rounded-lg p-4 border border-purple-200 dark:border-purple-800">
+                                <p className="text-xs font-semibold text-foreground mb-2 flex items-center gap-2">
+                                    <span>🚀</span>
+                                    Using Vercel? Important Notes:
+                                </p>
+                                <div className="text-xs text-foreground space-y-2">
+                                    <p>
+                                        <strong>You cannot add DNS records to Vercel domains</strong> (like <code>*.vercel.app</code>). You need to:
+                                    </p>
+                                    <ol className="list-decimal list-inside space-y-1 ml-2">
+                                        <li>Use a <strong>custom domain</strong> (e.g., <code>yourdomain.com</code>)</li>
+                                        <li>Add the TXT record at your <strong>domain registrar</strong> (where you bought the domain), not in Vercel</li>
+                                        <li>Common registrars: GoDaddy, Namecheap, Cloudflare, Google Domains, etc.</li>
+                                    </ol>
+                                    <p className="mt-2">
+                                        <strong>Where to add the record:</strong> Log into your domain registrar&apos;s DNS management panel (not Vercel), then add the TXT record shown above.
+                                    </p>
+                                </div>
                             </div>
 
                             {/* DNS Propagation Warning */}
@@ -534,7 +555,9 @@ export default function DomainsPage() {
                                 <p className="text-xs text-foreground flex items-start gap-2">
                                     <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
                                     <span>
-                                        DNS changes can take 15-30 minutes to propagate. If verification fails, please wait a few minutes and try again.
+                                        <strong>Important:</strong> DNS changes can take 15-30 minutes (sometimes up to 48 hours) to propagate globally. 
+                                        <strong className="block mt-1">You must wait before clicking &quot;Verify Domain&quot;</strong> - if you click too soon, verification will fail. 
+                                        After adding the TXT record, wait at least 15-30 minutes, then click the verify button.
                                     </span>
                                 </p>
                             </div>

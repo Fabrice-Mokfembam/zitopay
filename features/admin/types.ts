@@ -363,3 +363,13 @@ export interface UpdatePlatformWalletFeeSettingsRequest {
   chargePlatformFeeOnTopup?: boolean;
   chargePlatformFeeOnWithdrawal?: boolean;
 }
+
+// Delete Merchant Types
+export interface DeleteMerchantResponse {
+  success: boolean;
+  message: string;
+  deletedMerchant: {
+    id: string;
+    businessName: string;
+  };
+}

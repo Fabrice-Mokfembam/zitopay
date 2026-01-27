@@ -323,24 +323,39 @@ export default function WebhookEventsPage() {
                         <tr className="border-b border-border">
                             <th className="text-left py-1.5 pr-4 font-medium">Header</th>
                             <th className="text-left py-1.5 font-medium">Description</th>
+                            <th className="text-left py-1.5 font-medium">Example</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td className="py-1.5 pr-4"><code>X-Zito-Signature</code></td>
-                            <td className="py-1.5">HMAC-SHA256 signature for verification</td>
+                            <td className="py-1.5 pr-4"><code>X-Zito-Event</code></td>
+                            <td className="py-1.5">The event type</td>
+                            <td className="py-1.5"><code>payment.succeeded</code></td>
+                        </tr>
+                        <tr>
+                            <td className="py-1.5 pr-4"><code>X-Zito-Delivery-Id</code></td>
+                            <td className="py-1.5">Unique delivery ID (for idempotency)</td>
+                            <td className="py-1.5"><code>delivery-uuid-123</code></td>
                         </tr>
                         <tr>
                             <td className="py-1.5 pr-4"><code>X-Zito-Timestamp</code></td>
-                            <td className="py-1.5">Unix timestamp of the request</td>
+                            <td className="py-1.5">Timestamp in milliseconds</td>
+                            <td className="py-1.5"><code>1769164241000</code></td>
                         </tr>
                         <tr>
-                            <td className="py-1.5 pr-4"><code>X-Zito-Event</code></td>
-                            <td className="py-1.5">Event type (e.g., &quot;payment.succeeded&quot;)</td>
+                            <td className="py-1.5 pr-4"><code>X-Zito-Signature</code></td>
+                            <td className="py-1.5">HMAC-SHA256 signature (hex only, no prefix)</td>
+                            <td className="py-1.5"><code>a1b2c3d4e5f6...</code></td>
+                        </tr>
+                        <tr>
+                            <td className="py-1.5 pr-4"><code>X-Zito-Replay</code></td>
+                            <td className="py-1.5">"true" if replayed (optional)</td>
+                            <td className="py-1.5"><code>true</code></td>
                         </tr>
                         <tr>
                             <td className="py-1.5 pr-4"><code>Content-Type</code></td>
-                            <td className="py-1.5">Always &quot;application/json&quot;</td>
+                            <td className="py-1.5">Always application/json</td>
+                            <td className="py-1.5"><code>application/json</code></td>
                         </tr>
                     </tbody>
                 </table>
@@ -348,17 +363,30 @@ export default function WebhookEventsPage() {
 
             <h2>Handling Events</h2>
             <p>
-                Your webhook handler should:
+                Your webhook handler should follow these steps:
             </p>
 
             <ol>
-                <li>Verify the webhook signature (see <Link href="/docs/webhooks/security" className="text-primary hover:underline">Security</Link>)</li>
-                <li>Check the timestamp to prevent replay attacks</li>
-                <li>Parse the event type from <code>event</code> field</li>
-                <li>Process the event data based on type</li>
-                <li>Return HTTP 200 within 5 seconds</li>
-                <li>Handle duplicate deliveries (use transaction IDs for idempotency)</li>
+                <li><strong>Verify the webhook signature</strong> using your webhook secret (see <Link href="/docs/webhooks/security" className="text-primary hover:underline">Security</Link>)</li>
+                <li><strong>Check the timestamp</strong> to prevent replay attacks (reject if older than 5 minutes)</li>
+                <li><strong>Check delivery ID</strong> for idempotency (prevent duplicate processing)</li>
+                <li><strong>Parse the event type</strong> from <code>X-Zito-Event</code> header or <code>event</code> field</li>
+                <li><strong>Process the event data</strong> based on type</li>
+                <li><strong>Return HTTP 200</strong> within 30 seconds (process asynchronously if needed)</li>
+                <li><strong>Handle errors gracefully</strong> - don&apos;t let processing errors crash your server</li>
             </ol>
+
+            <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-4 my-6">
+                <div className="flex items-start gap-3">
+                    <span className="text-red-700 dark:text-red-400 text-lg mt-0.5">⚠️</span>
+                    <div className="flex-1 text-sm text-red-900 dark:text-red-100">
+                        <p className="font-semibold mb-2">Critical: Always Verify Signature First</p>
+                        <p className="leading-relaxed">
+                            Never process a webhook without verifying the signature first. This ensures the request is from ZitoPay and hasn&apos;t been tampered with.
+                        </p>
+                    </div>
+                </div>
+            </div>
 
             <h2>Event Processing Example</h2>
             <p>

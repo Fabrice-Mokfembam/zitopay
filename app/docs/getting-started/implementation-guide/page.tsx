@@ -83,7 +83,8 @@ export default function ImplementationGuidePage() {
                     </li>
                     <li className="font-medium">Add DNS TXT Record
                         <ul className="list-disc list-inside ml-5 mt-1.5 font-normal text-sm">
-                            <li>Log into your domain&apos;s DNS provider (GoDaddy, Cloudflare, etc.)</li>
+                            <li>Log into your domain&apos;s DNS provider (GoDaddy, Cloudflare, Namecheap, etc.)</li>
+                            <li><strong>Important for Vercel users:</strong> You cannot add DNS records to Vercel domains (*.vercel.app). You must use a custom domain and add the TXT record at your domain registrar (where you bought the domain), not in Vercel&apos;s DNS settings.</li>
                             <li>Add a new TXT record:
                                 <ul className="list-none ml-3 mt-1 space-y-0.5 text-sm">
                                     <li>• <strong>Name:</strong> <code>_zitopay</code></li>
@@ -108,17 +109,21 @@ export default function ImplementationGuidePage() {
                     
                     <li className="font-medium">Wait for DNS Propagation
                         <ul className="list-disc list-inside ml-5 mt-1.5 font-normal text-sm">
-                            <li>DNS changes can take 15-30 minutes to propagate</li>
-                            <li>You can verify with: <code>nslookup -type=TXT _zitopay.example.com</code></li>
+                            <li><strong>Important:</strong> DNS changes can take 15-30 minutes (sometimes up to 48 hours) to propagate globally</li>
+                            <li><strong>You must wait before clicking &quot;Verify Domain&quot;</strong> - if you click too soon, verification will fail</li>
+                            <li><strong>Test the DNS record first</strong> using online tools (see <Link href="/docs/getting-started/domain-verification" className="text-primary hover:underline">Domain Verification Guide</Link>)</li>
+                            <li>You can check if the record has propagated with: <code>nslookup -type=TXT _zitopay.example.com</code></li>
+                            <li>Wait at least 15-30 minutes after adding the TXT record before attempting verification</li>
                         </ul>
                     </li>
                     <li className="font-medium">Verify Domain
                         <ul className="list-disc list-inside ml-5 mt-1.5 font-normal text-sm">
-                            <li>Return to your merchant dashboard</li>
+                            <li><strong>After waiting 15-30 minutes</strong>, return to your merchant dashboard</li>
+                            <li><strong>Test the DNS record first</strong> using online tools (recommended - see <Link href="/docs/getting-started/domain-verification" className="text-primary hover:underline">Domain Verification Guide</Link>)</li>
                             <li>Click &quot;Verify Domain&quot; next to your domain</li>
                             <li>System will automatically check DNS records</li>
                             <li>If token matches → Domain verified ✅</li>
-                            <li>If not found → Check DNS settings and try again</li>
+                            <li>If not found → Wait a bit longer (DNS may still be propagating) and try again</li>
                         </ul>
                     </li>
                     <li className="font-medium">Domain Ready
@@ -200,6 +205,11 @@ export default function ImplementationGuidePage() {
                 Now that you understand the setup process, learn how to use the API:
             </p>
             <ul>
+                <li>
+                    <Link href="/docs/getting-started/domain-verification" className="text-primary hover:underline">
+                        Domain Verification Guide
+                    </Link> - Complete guide to verifying your domain for production
+                </li>
                 <li>
                     <Link href="/docs/getting-started/using-the-api" className="text-primary hover:underline">
                         Using the API

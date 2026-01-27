@@ -1,22 +1,72 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, Mail, Lock, Shield, Loader2 } from "lucide-react";
 import { AuthLayout } from "@/components/AuthLayout";
 import { useLogin } from "@/features/auth/hooks";
+import { useAuthContext } from "@/features/auth/context/AuthContext";
+import { getCurrentUser } from "@/features/auth/api/index";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const { isAuthenticated, user } = useAuthContext();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   const { mutate: login, isPending, error } = useLogin();
+
+  // Check if user is already authenticated and verify account still exists
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        // If user has token, verify account still exists
+        if (isAuthenticated && user) {
+          try {
+            // Try to fetch current user - this will fail if account is deleted
+            await getCurrentUser();
+            // Account exists, redirect to dashboard
+            router.push('/dashboard');
+          } catch (error: any) {
+            // If 401/403/404, account might be deleted or token invalid
+            // The apiClient and AuthContext will handle clearing auth automatically
+            // Just stay on login page
+            const status = error?.response?.status || error?.status;
+            if (status === 401 || status === 403 || status === 404) {
+              console.warn('Account verification failed (status:', status, '), staying on login page');
+            }
+          }
+        } else {
+          // No authentication, stay on login page
+          setIsCheckingAuth(false);
+        }
+      } catch (error) {
+        console.error('Error checking auth:', error);
+        setIsCheckingAuth(false);
+      }
+    };
+
+    checkAuth();
+  }, [isAuthenticated, user, router]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     login({ email, password });
   };
+
+  // Show loading while checking authentication
+  if (isCheckingAuth) {
+    return (
+      <AuthLayout>
+        <div className="w-full max-w-md flex items-center justify-center">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </div>
+      </AuthLayout>
+    );
+  }
 
   return (
     <AuthLayout>

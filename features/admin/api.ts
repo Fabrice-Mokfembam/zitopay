@@ -32,7 +32,8 @@ import {
   UpdateMerchantFeeOverrideRequest,
   DeactivateMerchantFeeOverrideResponse,
   PlatformWalletFeeSettingsResponse,
-  UpdatePlatformWalletFeeSettingsRequest
+  UpdatePlatformWalletFeeSettingsRequest,
+  DeleteMerchantResponse
 } from "./types";
 
 const ADMIN_BASE_URL = '/admin/v1';
@@ -213,6 +214,15 @@ export const getPlatformWalletFeeSettings = async (): Promise<PlatformWalletFeeS
 
 export const updatePlatformWalletFeeSettings = async (data: UpdatePlatformWalletFeeSettingsRequest): Promise<PlatformWalletFeeSettingsResponse> => {
   const response = await apiClient.patch<PlatformWalletFeeSettingsResponse>(`${ADMIN_BASE_URL}/platform/wallet-fee-settings`, data);
+  return response.data;
+};
+
+/**
+ * Delete a merchant and all related data
+ * Permanently deletes the merchant account and all associated data
+ */
+export const deleteMerchant = async (merchantId: string): Promise<DeleteMerchantResponse> => {
+  const response = await apiClient.delete<DeleteMerchantResponse>(`${ADMIN_BASE_URL}/merchants/${merchantId}`);
   return response.data;
 };
 

@@ -12,12 +12,25 @@ export default function WebhooksOverviewPage() {
 
             <h2>How Webhooks Work</h2>
             <ol>
-                <li>Register a webhook endpoint in your dashboard with your server URL</li>
+                <li>Register a webhook endpoint in your dashboard (or via API) with your server URL</li>
+                <li>ZitoPay generates a unique webhook secret (shown only once - save it securely!)</li>
                 <li>ZitoPay sends HTTP POST requests to your endpoint when events occur</li>
                 <li>Your server verifies the webhook signature using the provided secret</li>
+                <li>Your server checks the delivery ID for idempotency (prevent duplicates)</li>
                 <li>Your server processes the event and updates your system</li>
-                <li>Your server returns a 200 OK response within 5 seconds</li>
+                <li>Your server returns a 200 OK response within 30 seconds</li>
             </ol>
+
+            <div className="bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800 rounded-lg p-4 my-6">
+                <div className="flex items-start gap-3">
+                    <span className="text-orange-700 dark:text-orange-400 text-lg mt-0.5">⚠️</span>
+                    <div className="flex-1 text-sm text-orange-900 dark:text-orange-100">
+                        <p className="leading-relaxed">
+                            <strong>Important:</strong> Your webhook secret is shown only once when you register the endpoint. Make sure to save it securely in your environment variables or secret management system. You&apos;ll need it to verify webhook signatures.
+                        </p>
+                    </div>
+                </div>
+            </div>
 
             <h2>Supported Events</h2>
             <p>
@@ -94,20 +107,29 @@ export default function WebhooksOverviewPage() {
                 All webhooks include an HMAC-SHA256 signature in the <code>X-Zito-Signature</code> header. Always verify this signature before processing webhook payloads to ensure requests are from ZitoPay.
             </p>
             
-            <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg p-4 my-6">
+            <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-4 my-6">
                 <div className="flex items-start gap-3">
-                    <span className="text-blue-700 dark:text-blue-400 text-lg mt-0.5">💡</span>
-                    <div className="flex-1 text-sm text-blue-900 dark:text-blue-100">
-                        <p className="leading-relaxed">
-                            <strong>Security Best Practice:</strong> Always verify the webhook signature before processing any webhook payload. Never trust webhook data without signature verification, as it could be a malicious request attempting to manipulate your system. The signature is sent in the <code>X-Zito-Signature</code> header in the format <code>sha256=&lt;hex_encoded_signature&gt;</code>.
-                        </p>
+                    <span className="text-red-700 dark:text-red-400 text-lg mt-0.5">🔒</span>
+                    <div className="flex-1 text-sm text-red-900 dark:text-red-100">
+                        <p className="font-semibold mb-2">Critical Security Requirements</p>
+                        <ul className="list-disc list-inside space-y-1">
+                            <li><strong>Always verify signatures:</strong> Never process webhooks without signature verification</li>
+                            <li><strong>Use raw body:</strong> Capture the raw request body (before JSON parsing) for signature verification</li>
+                            <li><strong>Check timestamp:</strong> Reject requests older than 5 minutes (replay attack prevention)</li>
+                            <li><strong>Signature format:</strong> The signature header contains only the hex string (no <code>sha256=</code> prefix)</li>
+                            <li><strong>Timestamp format:</strong> Timestamp is in milliseconds, not seconds</li>
+                        </ul>
                     </div>
                 </div>
             </div>
 
+            <p>
+                For detailed signature verification instructions, see the <Link href="/docs/webhooks/security" className="text-primary hover:underline">Webhook Security</Link> page.
+            </p>
+
             <h2>Retry Logic</h2>
             <p>
-                If your server doesn&apos;t respond with HTTP 200-299, ZitoPay will automatically retry the webhook delivery:
+                If your server doesn&apos;t respond with HTTP 200-299, ZitoPay will automatically retry the webhook delivery (up to 6 attempts):
             </p>
 
             <div className="bg-muted/50 border border-border rounded-lg p-3 my-4">
@@ -126,24 +148,112 @@ export default function WebhooksOverviewPage() {
                         <tr><td className="py-1.5 pr-4">4</td><td className="py-1.5">15 minutes</td><td className="py-1.5">21m</td></tr>
                         <tr><td className="py-1.5 pr-4">5</td><td className="py-1.5">1 hour</td><td className="py-1.5">1h 21m</td></tr>
                         <tr><td className="py-1.5 pr-4">6</td><td className="py-1.5">6 hours</td><td className="py-1.5">7h 21m</td></tr>
-                        <tr><td className="py-1.5 pr-4">7</td><td className="py-1.5">24 hours</td><td className="py-1.5">31h 21m</td></tr>
                     </tbody>
                 </table>
             </div>
 
             <p>
-                After 7 failed attempts, the webhook is moved to the <strong>Dead Letter Queue (DLQ)</strong> where you can manually replay it after fixing the issue.
+                After 6 failed attempts, the webhook is moved to the <strong>Dead Letter Queue (DLQ)</strong> where you can manually replay it after fixing the issue.
             </p>
+
+            <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg p-4 my-6">
+                <div className="flex items-start gap-3">
+                    <span className="text-blue-700 dark:text-blue-400 text-lg mt-0.5">💡</span>
+                    <div className="flex-1 text-sm text-blue-900 dark:text-blue-100">
+                        <p className="leading-relaxed">
+                            <strong>Response Codes:</strong> Return 200 OK even if processing fails (if you don&apos;t want retries), or return 500/502/503 if you want ZitoPay to retry the webhook.
+                        </p>
+                    </div>
+                </div>
+            </div>
 
             <h2>Best Practices</h2>
             <ul>
-                <li><strong>Respond quickly:</strong> Return HTTP 200 within 5 seconds. Process webhooks asynchronously using a queue.</li>
-                <li><strong>Handle duplicates:</strong> Webhooks may be delivered more than once. Use transaction IDs to detect duplicates and make your handler idempotent.</li>
-                <li><strong>Verify signatures:</strong> Always verify the HMAC signature and check the timestamp to prevent replay attacks.</li>
-                <li><strong>Use HTTPS:</strong> Webhook URLs must use HTTPS in production (HTTP is only allowed for local testing).</li>
-                <li><strong>Monitor deliveries:</strong> Regularly check the deliveries endpoint and set up alerts for failed webhooks.</li>
-                <li><strong>Subscribe to all events:</strong> All 6 events are required when registering a webhook endpoint.</li>
+                <li><strong>Always verify signatures:</strong> Never process webhooks without signature verification - this is critical for security</li>
+                <li><strong>Use raw body for signature:</strong> Capture the raw request body before JSON parsing for signature verification</li>
+                <li><strong>Respond quickly:</strong> Return HTTP 200 within 30 seconds. Process webhooks asynchronously using a queue if needed.</li>
+                <li><strong>Implement idempotency:</strong> Use <code>X-Zito-Delivery-Id</code> header to prevent duplicate processing</li>
+                <li><strong>Handle duplicates:</strong> Webhooks may be delivered more than once. Always check delivery ID before processing.</li>
+                <li><strong>Check timestamps:</strong> Verify timestamp is within 5 minutes to prevent replay attacks</li>
+                <li><strong>Use HTTPS:</strong> Webhook URLs must use HTTPS in production (HTTP is only allowed for local testing)</li>
+                <li><strong>Store secrets securely:</strong> Never commit webhook secrets to code - use environment variables or secret management</li>
+                <li><strong>Log everything:</strong> Log all webhook deliveries for debugging and auditing</li>
+                <li><strong>Monitor deliveries:</strong> Regularly check webhook delivery status in the dashboard and set up alerts for failed webhooks</li>
+                <li><strong>Handle errors gracefully:</strong> Don&apos;t let processing errors crash your server</li>
+                <li><strong>Subscribe to all events:</strong> All 6 events are required when registering a webhook endpoint</li>
             </ul>
+
+            <h2>Monitoring and Logging</h2>
+            <p>
+                It&apos;s important to monitor your webhook activity to ensure everything is working correctly:
+            </p>
+
+            <h3>What to Monitor</h3>
+            <ul>
+                <li><strong>Webhook Receipts:</strong> Track all incoming webhooks</li>
+                <li><strong>Success Rate:</strong> Monitor successful vs failed webhook processing</li>
+                <li><strong>Signature Verification:</strong> Track invalid signature attempts (security concern)</li>
+                <li><strong>Duplicate Deliveries:</strong> Monitor how often duplicate webhooks are received</li>
+                <li><strong>Response Times:</strong> Ensure responses are within 30 seconds</li>
+                <li><strong>Error Rates:</strong> Alert on high error rates</li>
+            </ul>
+
+            <h3>Webhook Status Indicators</h3>
+            <p>
+                Your webhook handler should track these statuses:
+            </p>
+
+            <div className="bg-muted/50 border border-border rounded-lg p-3 my-4">
+                <ul className="space-y-2 text-sm">
+                    <li>
+                        <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded text-xs font-medium mr-2">SUCCESS</span>
+                        Webhook processed successfully
+                    </li>
+                    <li>
+                        <span className="px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded text-xs font-medium mr-2">ERROR</span>
+                        Error during processing - check logs
+                    </li>
+                    <li>
+                        <span className="px-2 py-0.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded text-xs font-medium mr-2">INVALID_SIGNATURE</span>
+                        Signature verification failed - security issue
+                    </li>
+                    <li>
+                        <span className="px-2 py-0.5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 rounded text-xs font-medium mr-2">DUPLICATE</span>
+                        Already processed (idempotency working correctly)
+                    </li>
+                </ul>
+            </div>
+
+            <h3>Logging Best Practices</h3>
+            <ul>
+                <li><strong>Log all receipts:</strong> Include delivery ID, event type, timestamp, status</li>
+                <li><strong>Store payloads:</strong> Keep payload data for troubleshooting (sanitize sensitive data)</li>
+                <li><strong>Track errors:</strong> Log full error context for debugging</li>
+                <li><strong>Set up alerts:</strong> Alert on security issues or high error rates</li>
+                <li><strong>Use persistent storage:</strong> Store logs in database or logging service (not just in-memory)</li>
+            </ul>
+
+            <h2>Production Checklist</h2>
+            <p>
+                Before going to production, ensure:
+            </p>
+
+            <div className="bg-muted/50 border border-border rounded-lg p-3 my-4">
+                <ul className="space-y-2 text-sm">
+                    <li>✅ Webhook endpoint uses HTTPS only</li>
+                    <li>✅ Signature verification is implemented and tested</li>
+                    <li>✅ Timestamp validation is in place (prevent replay attacks)</li>
+                    <li>✅ Idempotency is implemented (prevent duplicate processing)</li>
+                    <li>✅ Webhook secret is stored securely (not in code)</li>
+                    <li>✅ Error handling is implemented</li>
+                    <li>✅ Logging is in place for debugging</li>
+                    <li>✅ Endpoint responds within 30 seconds</li>
+                    <li>✅ Endpoint is publicly accessible</li>
+                    <li>✅ All 6 event types are handled</li>
+                    <li>✅ Monitoring and alerts are set up</li>
+                    <li>✅ Database integration for persistent storage (if needed)</li>
+                </ul>
+            </div>
 
             <h2>Next Steps</h2>
             <ul>

@@ -23,14 +23,18 @@ const MerchantContext = createContext<MerchantContextType | undefined>(undefined
  * Fetches fresh merchant data on mount if user is authenticated
  */
 export function MerchantProvider({ children }: { children: ReactNode }) {
-    const { isAuthenticated } = useAuthContext();
-    
+    const { isAuthenticated, isLoading: isAuthLoading } = useAuthContext();
+
     // Only fetch merchant data if user is authenticated
-    const { data, isLoading, error, refetch: refetchMerchant } = useGetFirstMerchant(isAuthenticated);
+    const { data, isLoading: isMerchantLoading, error, refetch: refetchMerchant } = useGetFirstMerchant(isAuthenticated);
 
     // Extract merchant from response
     const merchant = data?.merchant || null;
     const merchantId = merchant?.id || null;
+
+    // Combined loading state - true if auth is loading or (user is authenticated AND merchant is loading)
+    // We don't want to show merchant loading if we aren't even checking for a merchant yet (not authenticated)
+    const isLoading = isAuthLoading || (isAuthenticated && isMerchantLoading);
 
     const value: MerchantContextType = {
         merchant,

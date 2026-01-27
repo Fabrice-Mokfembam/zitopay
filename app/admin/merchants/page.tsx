@@ -21,9 +21,12 @@ import {
   Globe,
   User,
   Calendar,
+  Trash2,
+  Loader2,
 } from "lucide-react";
-import { useMerchantUsers } from "@/features/admin/queries";
+import { useMerchantUsers, useDeleteMerchant } from "@/features/admin/queries";
 import { MerchantUser } from "@/features/admin/types";
+import { toast } from "sonner";
 
 // Helper function to format date
 const formatDate = (dateString: string): string => {
@@ -83,9 +86,15 @@ export default function AdminMerchantsPage() {
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [kybStatusFilter, setKybStatusFilter] = useState<string>("all");
   const [environmentFilter, setEnvironmentFilter] = useState<string>("all");
+  const [merchantToDelete, setMerchantToDelete] = useState<MerchantUser | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
   // Fetch merchant users from API
   const { data: merchantUsersData, isLoading, error } = useMerchantUsers();
+  
+  // Delete merchant mutation
+  const deleteMerchantMutation = useDeleteMerchant();
 
   // Calculate stats from data
   const stats = useMemo(() => {
@@ -451,10 +460,37 @@ export default function AdminMerchantsPage() {
                     <td className="p-3 text-xs text-gray-600">
                       {formatDate(merchantUser.merchantCreatedAt)}
                     </td>
-                    <td className="p-3" onClick={(e) => e.stopPropagation()}>
-                      <button className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg">
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
+                    <td className="p-3 relative" onClick={(e) => e.stopPropagation()}>
+                      <div className="relative">
+                        <button 
+                          onClick={() => setOpenDropdownId(openDropdownId === merchantUser.merchantId ? null : merchantUser.merchantId)}
+                          className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </button>
+                        
+                        {openDropdownId === merchantUser.merchantId && (
+                          <>
+                            <div 
+                              className="fixed inset-0 z-10" 
+                              onClick={() => setOpenDropdownId(null)}
+                            />
+                            <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
+                              <button
+                                onClick={() => {
+                                  setMerchantToDelete(merchantUser);
+                                  setShowDeleteModal(true);
+                                  setOpenDropdownId(null);
+                                }}
+                                className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                Delete Merchant
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -679,6 +715,95 @@ export default function AdminMerchantsPage() {
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && merchantToDelete && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-2xl max-w-md w-full">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">
+                  Delete Merchant
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  This action cannot be undone
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setMerchantToDelete(null);
+                }}
+                className="p-1 hover:bg-gray-100 rounded transition-colors text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                <p className="text-sm text-red-900">
+                  <strong>Warning:</strong> This will permanently delete the merchant &quot;{merchantToDelete.businessName}&quot; and all related data including:
+                </p>
+                <ul className="list-disc list-inside text-sm text-red-800 mt-2 space-y-1">
+                  <li>All transactions</li>
+                  <li>All settlements</li>
+                  <li>All refunds</li>
+                  <li>All user accounts linked to this merchant</li>
+                  <li>All API keys and credentials</li>
+                </ul>
+              </div>
+
+              <p className="text-sm text-gray-600">
+                Are you sure you want to delete this merchant? This action cannot be undone.
+              </p>
+            </div>
+
+            <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setMerchantToDelete(null);
+                }}
+                disabled={deleteMerchantMutation.isPending}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    await deleteMerchantMutation.mutateAsync(merchantToDelete.merchantId);
+                    toast.success("Merchant deleted successfully", {
+                      description: `Merchant "${merchantToDelete.businessName}" and all related data have been permanently deleted.`,
+                    });
+                    setShowDeleteModal(false);
+                    setMerchantToDelete(null);
+                  } catch (error: any) {
+                    toast.error("Failed to delete merchant", {
+                      description: error?.message || "An error occurred while deleting the merchant.",
+                    });
+                  }
+                }}
+                disabled={deleteMerchantMutation.isPending}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {deleteMerchantMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    Delete Merchant
+                  </>
+                )}
               </button>
             </div>
           </div>

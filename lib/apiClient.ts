@@ -62,9 +62,9 @@ apiClient.interceptors.response.use(
         const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
         // Check if this is a network error (no response from server)
-        const isNetworkError = error.code === 'ERR_NETWORK' || 
-                              error.message === 'Network Error' ||
-                              !error.response;
+        const isNetworkError = error.code === 'ERR_NETWORK' ||
+            error.message === 'Network Error' ||
+            !error.response;
 
         // If it's a network error, don't try to refresh - just pass it through
         if (isNetworkError) {
@@ -99,6 +99,20 @@ apiClient.interceptors.response.use(
         ];
 
         const isPublicEndpoint = publicEndpoints.some(endpoint => originalRequest.url?.includes(endpoint));
+
+        // If 404 error (account not found/deleted), clear auth and redirect
+        // If 404 error (account not found/deleted), clear auth and redirect
+        // EXCEPTION: /merchant/v1/merchants/first returning 404 is valid for new users (no merchant yet)
+        const isFirstMerchantEndpoint = originalRequest.url?.includes('/merchant/v1/merchants/first');
+
+        if (error.response?.status === 404 && !isPublicEndpoint && !isFirstMerchantEndpoint) {
+            // Account not found - likely deleted, clear auth
+            clearAuthData();
+            if (typeof window !== 'undefined') {
+                window.location.href = '/login';
+            }
+            return Promise.reject(error);
+        }
 
         // If 401 error and haven't retried yet, and it's NOT a public endpoint
         if (error.response?.status === 401 && !originalRequest._retry && !isPublicEndpoint) {

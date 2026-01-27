@@ -25,7 +25,8 @@ import {
   updateMerchantFeeOverride,
   deactivateMerchantFeeOverride,
   getPlatformWalletFeeSettings,
-  updatePlatformWalletFeeSettings
+  updatePlatformWalletFeeSettings,
+  deleteMerchant
 } from "./api";
 import { 
   PlatformMetricsResponse, 
@@ -58,7 +59,8 @@ import {
   UpdateMerchantFeeOverrideRequest,
   DeactivateMerchantFeeOverrideResponse,
   PlatformWalletFeeSettingsResponse,
-  UpdatePlatformWalletFeeSettingsRequest
+  UpdatePlatformWalletFeeSettingsRequest,
+  DeleteMerchantResponse
 } from "./types";
 
 /**
@@ -313,6 +315,21 @@ export function useUpdatePlatformWalletFeeSettings() {
     mutationFn: (data: UpdatePlatformWalletFeeSettingsRequest) => updatePlatformWalletFeeSettings(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "platform-wallet-fee-settings"] });
+    },
+  });
+}
+
+/**
+ * Hook for deleting a merchant
+ * Permanently deletes the merchant and all related data
+ */
+export function useDeleteMerchant() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (merchantId: string) => deleteMerchant(merchantId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "merchant-users"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "dashboard", "platform-metrics"] });
     },
   });
 }

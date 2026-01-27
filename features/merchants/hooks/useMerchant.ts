@@ -66,8 +66,15 @@ export const useCreateMerchant = (): UseMutationResult<
     Error,
     CreateMerchantRequest
 > => {
+    const queryClient = useQueryClient();
+
     return useMutation({
         mutationFn: (data: CreateMerchantRequest) => createMerchant(data),
+        onSuccess: () => {
+            // Invalidate merchant queries to ensure fresh data is fetched
+            queryClient.invalidateQueries({ queryKey: ['merchant'] });
+            queryClient.invalidateQueries({ queryKey: ['merchants'] });
+        },
     });
 };
 
@@ -356,7 +363,7 @@ export const useWalletOperations = (
  */
 export const useUpdateMerchantProfile = (): UseMutationResult<UpdateMerchantProfileResponse, Error, UpdateMerchantProfileRequest> => {
     const queryClient = useQueryClient();
-    
+
     return useMutation({
         mutationFn: (updates: UpdateMerchantProfileRequest) => updateMerchantProfile(updates),
         onSuccess: () => {

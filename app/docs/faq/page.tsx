@@ -28,7 +28,7 @@ const faqItems: FAQItem[] = [
     },
     {
         question: "How do I verify my domain?",
-        answer: "To verify your domain, add it in the Domain Settings section of your merchant dashboard. You'll receive a verification token. Add a DNS TXT record with the name '_zitopay' and the token as the value. After DNS propagation (usually 15-30 minutes), click 'Verify Domain' in your dashboard. Domain verification is required for production API access."
+        answer: "To verify your domain, add it in the Domain Settings section of your merchant dashboard. You'll receive a verification token. Add a DNS TXT record with the name '_zitopay' and the token as the value at your domain registrar (where you bought the domain). Important: You must wait 15-30 minutes for DNS propagation before clicking 'Verify Domain'. If you're using Vercel, you cannot add DNS records to Vercel domains (*.vercel.app) - you need to use a custom domain and add the TXT record at your domain registrar, not in Vercel. Domain verification is required for production API access."
     },
     {
         question: "What is an idempotency key and why do I need it?",
