@@ -25,7 +25,7 @@ export function CTA() {
                     </p>
                     <div className="flex flex-wrap gap-4 justify-center">
                         <Link
-                            href="/register"
+                            href="/get-started"
                             className="px-8 py-4 text-white rounded-lg hover:opacity-90 transition-all font-semibold text-base shadow-xl hover:shadow-2xl transform hover:scale-105"
                             style={{ backgroundColor: '#ef2d10' }}
                         >

@@ -16,6 +16,11 @@ export interface ResendVerificationRequest {
     email: string;
 }
 
+export interface MerchantRegistrationConfig {
+    allowSelfRegistration: boolean;
+    applicationFormUrl: string;
+}
+
 export interface LoginRequest {
     email: string;
     password: string;
@@ -33,6 +38,11 @@ export interface VerifyResetCodeRequest {
 export interface ResetPasswordRequest {
     email: string;
     code: string;
+    newPassword: string;
+}
+
+export interface ChangePasswordRequest {
+    currentPassword: string;
     newPassword: string;
 }
 
@@ -126,6 +136,11 @@ export interface VerifyResetCodeResponse {
 }
 
 export interface ResetPasswordResponse {
+    success: true;
+    message: string;
+}
+
+export interface ChangePasswordResponse {
     success: true;
     message: string;
 }

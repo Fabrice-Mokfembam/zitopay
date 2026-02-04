@@ -156,7 +156,7 @@ export default function PricingPage() {
                   </div>
 
                   <Link
-                    href={tier.price === "Custom" ? "/contact" : "/register"}
+                    href={tier.price === "Custom" ? "/contact" : "/get-started"}
                     className={`block w-full py-4 rounded-xl text-center font-bold transition-all ${tier.buttonStyle}`}
                   >
                     {tier.cta}
@@ -265,7 +265,7 @@ export default function PricingPage() {
                     <p className="text-sm text-muted-foreground">*Estimated based on average market rates</p>
                   </div>
                   <Link
-                    href="/register"
+                    href="/get-started"
                     className="inline-block w-full md:w-auto px-8 py-4 bg-[#2466eb] text-white rounded-xl font-bold hover:bg-[#1d55c7] transition-all shadow-lg hover:shadow-xl"
                   >
                     Start Saving Today

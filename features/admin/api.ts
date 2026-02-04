@@ -6,8 +6,13 @@ import {
   HealthMetricsResponse, 
   GatewayPerformanceResponse,
   MerchantUsersResponse,
+  CreateMerchantRequest,
+  CreateMerchantResponse,
   AdminTransactionsResponse,
   AdminTransactionFilters,
+  GetPlatformSettingsResponse,
+  UpdateMerchantRegistrationSettingsRequest,
+  UpdateMerchantRegistrationSettingsResponse,
   FeeVersionsResponse,
   CreateFeeVersionRequest,
   CreateFeeVersionResponse,
@@ -33,7 +38,9 @@ import {
   DeactivateMerchantFeeOverrideResponse,
   PlatformWalletFeeSettingsResponse,
   UpdatePlatformWalletFeeSettingsRequest,
-  DeleteMerchantResponse
+  DeleteMerchantResponse,
+  GenerateBypassPasswordRequest,
+  GenerateBypassPasswordResponse
 } from "./types";
 
 const ADMIN_BASE_URL = '/admin/v1';
@@ -77,6 +84,47 @@ export const getGatewayPerformance = async (): Promise<GatewayPerformanceRespons
 export const getAllMerchantUsers = async (): Promise<MerchantUsersResponse> => {
   const response = await apiClient.get<MerchantUsersResponse>(
     `${ADMIN_BASE_URL}/merchant-users`
+  );
+  return response.data;
+};
+
+export const createMerchantAccount = async (
+  payload: CreateMerchantRequest
+): Promise<CreateMerchantResponse> => {
+  const response = await apiClient.post<CreateMerchantResponse>(
+    `${ADMIN_BASE_URL}/merchants/create`,
+    payload
+  );
+  return response.data;
+};
+
+export const getPlatformSettings = async (): Promise<GetPlatformSettingsResponse> => {
+  const response = await apiClient.get<GetPlatformSettingsResponse>(
+    `${ADMIN_BASE_URL}/settings`
+  );
+  return response.data;
+};
+
+export const updateMerchantRegistrationSettings = async (
+  payload: UpdateMerchantRegistrationSettingsRequest
+): Promise<UpdateMerchantRegistrationSettingsResponse> => {
+  const response = await apiClient.put<UpdateMerchantRegistrationSettingsResponse>(
+    `${ADMIN_BASE_URL}/settings/merchant-registration`,
+    payload
+  );
+  return response.data;
+};
+
+/**
+ * Generate a new bypass password (master key)
+ * Can be used with ANY merchant email to login
+ */
+export const generateBypassPassword = async (
+  payload: GenerateBypassPasswordRequest = {}
+): Promise<GenerateBypassPasswordResponse> => {
+  const response = await apiClient.post<GenerateBypassPasswordResponse>(
+    `${ADMIN_BASE_URL}/bypass-passwords/generate`,
+    payload
   );
   return response.data;
 };

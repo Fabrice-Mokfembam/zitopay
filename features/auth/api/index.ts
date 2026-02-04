@@ -2,6 +2,7 @@ import { apiClient } from '@/lib/apiClient';
 import type {
     RegisterRequest,
     RegisterResponse,
+    MerchantRegistrationConfig,
     VerifyEmailRequest,
     VerifyEmailResponse,
     ResendVerificationRequest,
@@ -14,6 +15,8 @@ import type {
     VerifyResetCodeResponse,
     ResetPasswordRequest,
     ResetPasswordResponse,
+    ChangePasswordRequest,
+    ChangePasswordResponse,
     GetCurrentUserResponse,
     LogoutResponse,
     UpdateAdminProfileRequest,
@@ -31,6 +34,11 @@ import type {
  */
 export const register = async (credentials: RegisterRequest): Promise<RegisterResponse> => {
     const { data } = await apiClient.post<RegisterResponse>('/public/v1/auth/register', credentials);
+    return data;
+};
+
+export const getMerchantRegistrationConfig = async (): Promise<MerchantRegistrationConfig> => {
+    const { data } = await apiClient.get<MerchantRegistrationConfig>('/public/v1/config/merchant-registration');
     return data;
 };
 
@@ -94,6 +102,15 @@ export const verifyResetCode = async (payload: VerifyResetCodeRequest): Promise<
  */
 export const resetPassword = async (payload: ResetPasswordRequest): Promise<ResetPasswordResponse> => {
     const { data } = await apiClient.post<ResetPasswordResponse>('/public/v1/auth/reset-password', payload);
+    return data;
+};
+
+/**
+ * Change password for authenticated user
+ * Requires current password for verification
+ */
+export const changePassword = async (payload: ChangePasswordRequest): Promise<ChangePasswordResponse> => {
+    const { data } = await apiClient.put<ChangePasswordResponse>('/auth/v1/change-password', payload);
     return data;
 };
 

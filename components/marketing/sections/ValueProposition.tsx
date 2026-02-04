@@ -121,7 +121,7 @@ export function ValueProposition() {
                     className="text-center"
                 >
                     <Link
-                        href="/register"
+                        href="/get-started"
                         className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-[#ef2d10] to-[#d0260e] text-white rounded-xl font-bold shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300"
                     >
                         Start Your Payment Revolution

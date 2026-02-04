@@ -154,11 +154,11 @@ export default function VerifyEmailCodePage() {
                     {/* Back Link */}
                     <div className="mt-5 text-center">
                         <Link
-                            href="/register"
+                            href="/get-started"
                             className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
                         >
                             <ArrowLeft className="w-3.5 h-3.5" />
-                            Back to Registration
+                            Back to register
                         </Link>
                     </div>
                 </div>

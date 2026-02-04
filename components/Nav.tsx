@@ -129,7 +129,7 @@ export function Nav() {
                                     {t("login")}
                                 </Link>
                                 <Link
-                                    href="/register"
+                                    href="/get-started"
                                     className="px-5 py-2.5 rounded-lg text-white font-semibold text-sm shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
                                     style={{ backgroundColor: '#ef2d10' }}
                                 >
@@ -242,7 +242,7 @@ export function Nav() {
                                                     {t("login")}
                                                 </Link>
                                                 <Link
-                                                    href="/register"
+                                                    href="/get-started"
                                                     onClick={closeMenu}
                                                     className="block w-full text-center px-5 py-2.5 rounded-lg text-white font-semibold text-sm shadow-lg transition-all"
                                                     style={{ backgroundColor: '#ef2d10' }}

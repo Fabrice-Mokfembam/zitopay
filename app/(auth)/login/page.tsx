@@ -162,7 +162,7 @@ export default function LoginPage() {
           {/* Footer */}
           <p className="mt-5 text-center text-xs text-muted-foreground">
             Don&apos;t have an account?{" "}
-            <Link href="/register" className="font-semibold text-[#2466eb] hover:underline">
+            <Link href="/get-started" className="font-semibold text-[#2466eb] hover:underline">
               Register now
             </Link>
           </p>

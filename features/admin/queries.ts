@@ -7,7 +7,11 @@ import {
   getHealthMetrics, 
   getGatewayPerformance, 
   getAllMerchantUsers, 
+  createMerchantAccount,
+  generateBypassPassword,
   getAllTransactions,
+  getPlatformSettings,
+  updateMerchantRegistrationSettings,
   getFeeVersions,
   createFeeVersion,
   activateFeeVersion,
@@ -33,8 +37,11 @@ import {
   HealthMetricsResponse, 
   GatewayPerformanceResponse,
   MerchantUsersResponse,
+  CreateMerchantRequest,
   AdminTransactionsResponse,
   AdminTransactionFilters,
+  GetPlatformSettingsResponse,
+  UpdateMerchantRegistrationSettingsRequest,
   FeeVersionsResponse,
   CreateFeeVersionRequest,
   CreateFeeVersionResponse,
@@ -60,7 +67,9 @@ import {
   DeactivateMerchantFeeOverrideResponse,
   PlatformWalletFeeSettingsResponse,
   UpdatePlatformWalletFeeSettingsRequest,
-  DeleteMerchantResponse
+  DeleteMerchantResponse,
+  GenerateBypassPasswordRequest,
+  GenerateBypassPasswordResponse
 } from "./types";
 
 /**
@@ -122,6 +131,44 @@ export function useMerchantUsers(): UseQueryResult<MerchantUsersResponse, Error>
     queryFn: () => getAllMerchantUsers(),
     refetchInterval: 60000, // Refetch every 60 seconds
     staleTime: 30000, // Consider data stale after 30 seconds
+  });
+}
+
+export function useCreateMerchantAccount() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CreateMerchantRequest) => createMerchantAccount(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "merchant-users"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "dashboard", "platform-metrics"] });
+    },
+  });
+}
+
+/**
+ * Hook for generating a bypass password (master key)
+ */
+export function useGenerateBypassPassword() {
+  return useMutation<GenerateBypassPasswordResponse, Error, GenerateBypassPasswordRequest | undefined>({
+    mutationFn: (payload) => generateBypassPassword(payload || {}),
+  });
+}
+
+export function usePlatformSettings(): UseQueryResult<GetPlatformSettingsResponse, Error> {
+  return useQuery({
+    queryKey: ["admin", "settings"],
+    queryFn: () => getPlatformSettings(),
+    staleTime: 30000,
+  });
+}
+
+export function useUpdateMerchantRegistrationSettings() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: UpdateMerchantRegistrationSettingsRequest) => updateMerchantRegistrationSettings(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "settings"] });
+    },
   });
 }
 

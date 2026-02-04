@@ -1,11 +1,12 @@
 import { useMutation, useQuery, UseMutationResult, UseQueryResult, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useAuthContext } from '../context/AuthContext';
-import { register, verifyEmail, resendVerificationCode, login, adminLogin, logout, updateAdminProfile, getCurrentAdmin, getAllAdmins, createAdmin, deleteAdmin } from '../api/index';
+import { register, getMerchantRegistrationConfig, verifyEmail, resendVerificationCode, login, adminLogin, logout, changePassword, updateAdminProfile, getCurrentAdmin, getAllAdmins, createAdmin, deleteAdmin } from '../api/index';
 // storeAuthData/clearAuthData removed as we use context now
 import type {
     RegisterRequest,
     RegisterResponse,
+    MerchantRegistrationConfig,
     VerifyEmailRequest,
     VerifyEmailResponse,
     ResendVerificationRequest,
@@ -13,6 +14,8 @@ import type {
     LoginRequest,
     LoginResponse,
     LogoutResponse,
+    ChangePasswordRequest,
+    ChangePasswordResponse,
     UpdateAdminProfileRequest,
     UpdateAdminProfileResponse,
     GetCurrentAdminResponse,
@@ -35,6 +38,24 @@ export const useRegister = (): UseMutationResult<RegisterResponse, Error, Regist
             // Navigate to verification page with email
             router.push(`/verify-email-code?email=${encodeURIComponent(variables.email)}`);
         },
+    });
+};
+
+/**
+ * Hook for authenticated password change
+ */
+export const useChangePassword = (): UseMutationResult<ChangePasswordResponse, Error, ChangePasswordRequest> => {
+    return useMutation({
+        mutationFn: (payload: ChangePasswordRequest) => changePassword(payload),
+    });
+};
+
+export const useMerchantRegistrationConfig = (): UseQueryResult<MerchantRegistrationConfig, Error> => {
+    return useQuery({
+        queryKey: ['public', 'config', 'merchant-registration'],
+        queryFn: () => getMerchantRegistrationConfig(),
+        staleTime: 5 * 60 * 1000,
+        retry: 1,
     });
 };
 

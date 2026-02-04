@@ -1,8 +1,7 @@
 import { API_BASE_URL } from "@/constants/api";
 import { redirect } from "next/navigation";
-import { RegisterClient } from "./RegisterClient";
 
-async function getMerchantRegistrationConfig(): Promise<{ allowSelfRegistration: boolean } | null> {
+async function getMerchantRegistrationConfig(): Promise<{ allowSelfRegistration: boolean; applicationFormUrl: string } | null> {
   try {
     const res = await fetch(`${API_BASE_URL}/public/v1/config/merchant-registration`, {
       cache: "no-store",
@@ -15,18 +14,18 @@ async function getMerchantRegistrationConfig(): Promise<{ allowSelfRegistration:
       return null;
     }
 
-    return (await res.json()) as { allowSelfRegistration: boolean };
+    return (await res.json()) as { allowSelfRegistration: boolean; applicationFormUrl: string };
   } catch {
     return null;
   }
 }
 
-export default async function RegisterPage() {
+export default async function GetStartedPage() {
   const config = await getMerchantRegistrationConfig();
 
   if (config && config.allowSelfRegistration === false) {
     redirect("/apply");
   }
 
-  return <RegisterClient />;
+  redirect("/register");
 }

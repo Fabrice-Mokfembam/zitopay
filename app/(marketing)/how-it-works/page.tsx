@@ -280,7 +280,7 @@ export default function HowItWorksPage() {
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center">
                                 <Link
-                                    href="/register"
+                                    href="/get-started"
                                     className="px-8 py-4 bg-white text-[#ef2d10] rounded-xl font-bold hover:shadow-xl hover:scale-105 transition-all"
                                 >
                                     Get Sandbox Access

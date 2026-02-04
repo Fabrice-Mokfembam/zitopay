@@ -5,6 +5,7 @@ import {
   Search,
   Filter,
   Download,
+  Plus,
   Building2,
   MoreVertical,
   CheckCircle2,
@@ -23,8 +24,10 @@ import {
   Calendar,
   Trash2,
   Loader2,
+  LogIn,
 } from "lucide-react";
-import { useMerchantUsers, useDeleteMerchant } from "@/features/admin/queries";
+import { useMerchantUsers, useCreateMerchantAccount, useDeleteMerchant, useGenerateBypassPassword } from "@/features/admin/queries";
+import { useLogin } from "@/features/auth/hooks/useAuth";
 import { MerchantUser } from "@/features/admin/types";
 import { toast } from "sonner";
 
@@ -83,18 +86,32 @@ export default function AdminMerchantsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedMerchant, setSelectedMerchant] = useState<MerchantUser | null>(null);
   const [showMerchantModal, setShowMerchantModal] = useState(false);
+  const [showCreateMerchantModal, setShowCreateMerchantModal] = useState(false);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [kybStatusFilter, setKybStatusFilter] = useState<string>("all");
   const [environmentFilter, setEnvironmentFilter] = useState<string>("all");
   const [merchantToDelete, setMerchantToDelete] = useState<MerchantUser | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [isLoggingInAsMerchant, setIsLoggingInAsMerchant] = useState(false);
+  const [loggingInMerchantName, setLoggingInMerchantName] = useState<string | null>(null);
+
+  const [createEmail, setCreateEmail] = useState("");
+  const [createBusinessName, setCreateBusinessName] = useState("");
+  const [createPhone, setCreatePhone] = useState("");
+  const [createBusinessType, setCreateBusinessType] = useState("");
+  const [createCountry, setCreateCountry] = useState("CM");
 
   // Fetch merchant users from API
   const { data: merchantUsersData, isLoading, error } = useMerchantUsers();
+
+  const createMerchantMutation = useCreateMerchantAccount();
   
   // Delete merchant mutation
   const deleteMerchantMutation = useDeleteMerchant();
+
+  const generateBypassPasswordMutation = useGenerateBypassPassword();
+  const loginMutation = useLogin();
 
   // Calculate stats from data
   const stats = useMemo(() => {
@@ -228,6 +245,22 @@ export default function AdminMerchantsPage() {
   return (
     <div className="space-y-4">
 
+      {isLoggingInAsMerchant && (
+        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center gap-3">
+              <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+              <div>
+                <p className="text-sm font-semibold text-gray-900">
+                  Logging in as {loggingInMerchantName || 'merchant'}...
+                </p>
+                <p className="text-xs text-gray-500 mt-0.5">Please wait, this may take a moment.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* --- Header Section --- */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -238,6 +271,12 @@ export default function AdminMerchantsPage() {
           <p className="text-xs text-gray-500 mt-1">Manage and monitor all merchant accounts</p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowCreateMerchantModal(true)}
+            className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700"
+          >
+            <Plus className="w-3.5 h-3.5" /> Create Merchant
+          </button>
           <button className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs font-medium hover:bg-gray-50 text-gray-700">
             <Download className="w-3.5 h-3.5" /> Export
           </button>
@@ -249,6 +288,152 @@ export default function AdminMerchantsPage() {
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <p className="text-sm text-red-800 font-semibold mb-1">Error loading merchants</p>
           <p className="text-xs text-red-600">{error.message}</p>
+        </div>
+      )}
+
+      {showCreateMerchantModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-2xl max-w-lg w-full">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Create Merchant</h3>
+                <p className="text-xs text-gray-500 mt-0.5">Credentials will be sent to the merchant by email</p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowCreateMerchantModal(false);
+                }}
+                className="p-1 hover:bg-gray-100 rounded transition-colors text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form
+              className="p-6 space-y-4"
+              onSubmit={async (e) => {
+                e.preventDefault();
+
+                if (!createEmail.trim() || !createBusinessName.trim()) {
+                  toast.error("Email and Business Name are required");
+                  return;
+                }
+
+                try {
+                  const result = await createMerchantMutation.mutateAsync({
+                    email: createEmail.trim(),
+                    businessName: createBusinessName.trim(),
+                    phone: createPhone.trim() || undefined,
+                    businessType: createBusinessType.trim() || undefined,
+                    country: createCountry || undefined,
+                  });
+
+                  toast.success("Merchant created", {
+                    description: result.message,
+                  });
+
+                  setShowCreateMerchantModal(false);
+                  setCreateEmail("");
+                  setCreateBusinessName("");
+                  setCreatePhone("");
+                  setCreateBusinessType("");
+                  setCreateCountry("CM");
+                } catch (err: any) {
+                  toast.error("Failed to create merchant", {
+                    description: err?.message || "An error occurred while creating the merchant.",
+                  });
+                }
+              }}
+            >
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-gray-700">Email *</label>
+                <input
+                  type="email"
+                  value={createEmail}
+                  onChange={(e) => setCreateEmail(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                  placeholder="merchant@example.com"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-gray-700">Business Name *</label>
+                <input
+                  type="text"
+                  value={createBusinessName}
+                  onChange={(e) => setCreateBusinessName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                  placeholder="Example Business Ltd"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-gray-700">Phone</label>
+                  <input
+                    type="tel"
+                    value={createPhone}
+                    onChange={(e) => setCreatePhone(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                    placeholder="+237612345678"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-gray-700">Country</label>
+                  <input
+                    type="text"
+                    value={createCountry}
+                    onChange={(e) => setCreateCountry(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                    placeholder="CM"
+                    maxLength={2}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-gray-700">Business Type</label>
+                <input
+                  type="text"
+                  value={createBusinessType}
+                  onChange={(e) => setCreateBusinessType(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                  placeholder="E-commerce"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateMerchantModal(false)}
+                  disabled={createMerchantMutation.isPending}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={createMerchantMutation.isPending}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {createMerchantMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4" />
+                      Create Merchant
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
@@ -475,7 +660,43 @@ export default function AdminMerchantsPage() {
                               className="fixed inset-0 z-10" 
                               onClick={() => setOpenDropdownId(null)}
                             />
-                            <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
+                            <div className="absolute right-0 bottom-full mb-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
+                              <button
+                                onClick={async () => {
+                                  setOpenDropdownId(null);
+                                  setIsLoggingInAsMerchant(true);
+                                  setLoggingInMerchantName(merchantUser.businessName);
+
+                                  if (!merchantUser?.userEmail?.trim()) {
+                                    toast.error("Missing merchant email", {
+                                      description: "Cannot login as merchant because the merchant user has no email.",
+                                    });
+                                    setIsLoggingInAsMerchant(false);
+                                    setLoggingInMerchantName(null);
+                                    return;
+                                  }
+
+                                  try {
+                                    const result = await generateBypassPasswordMutation.mutateAsync(undefined);
+                                    await loginMutation.mutateAsync({
+                                      email: merchantUser.userEmail.trim(),
+                                      password: result.bypassPassword,
+                                    });
+                                  } catch (err: any) {
+                                    toast.error("Failed to login as merchant", {
+                                      description: err?.message || "An error occurred while logging in as merchant.",
+                                    });
+                                  } finally {
+                                    setIsLoggingInAsMerchant(false);
+                                    setLoggingInMerchantName(null);
+                                  }
+                                }}
+                                disabled={generateBypassPasswordMutation.isPending || loginMutation.isPending}
+                                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <LogIn className="w-4 h-4" />
+                                Login as Merchant
+                              </button>
                               <button
                                 onClick={() => {
                                   setMerchantToDelete(merchantUser);

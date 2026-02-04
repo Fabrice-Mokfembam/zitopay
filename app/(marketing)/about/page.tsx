@@ -335,7 +335,7 @@ export default function AboutPage() {
                 Be part of the payment revolution transforming Africa
               </p>
               <Link
-                href="/register"
+                href="/get-started"
                 className="inline-block px-8 py-4 bg-white text-[#ef2d10] rounded-xl font-bold hover:shadow-xl hover:scale-105 transition-all"
               >
                 Get Started Today

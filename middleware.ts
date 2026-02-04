@@ -14,6 +14,8 @@ export function middleware(request: NextRequest) {
     "/about",
     "/login",
     "/register",
+    "/apply",
+    "/get-started",
     "/forgot-password",
     "/verify-email",
     "/verify-email-code",
@@ -66,6 +68,8 @@ export function middleware(request: NextRequest) {
   // If accessing marketing pages while authenticated (cookie exists), redirect to dashboard
   if (token && (
     pathname === "/" ||
+    pathname === "/apply" ||
+    pathname === "/get-started" ||
     pathname.startsWith("/solutions") ||
     pathname.startsWith("/pricing") ||
     pathname.startsWith("/about") ||

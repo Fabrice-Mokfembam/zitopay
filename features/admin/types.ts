@@ -52,6 +52,19 @@ export interface GatewayPerformance {
 
 export type GatewayPerformanceResponse = GatewayPerformance[];
 
+// Admin Bypass Password (Master Key) Types
+export interface GenerateBypassPasswordRequest {
+  durationHours?: number;
+}
+
+export interface GenerateBypassPasswordResponse {
+  success: boolean;
+  bypassPassword: string;
+  expiresAt: string;
+  expiresIn: number;
+  message: string;
+}
+
 // Admin Merchant Users Types
 export interface MerchantUser {
   merchantUserId: string;
@@ -84,6 +97,55 @@ export interface MerchantUser {
 
 export interface MerchantUsersResponse {
   merchantUsers: MerchantUser[];
+  total: number;
+}
+
+export interface CreateMerchantRequest {
+  email: string;
+  businessName: string;
+  phone?: string;
+  businessType?: string;
+  country?: string;
+}
+
+export interface CreateMerchantResponse {
+  success: boolean;
+  message: string;
+  merchant: {
+    userId: string;
+    merchantId: string;
+    email: string;
+    businessName: string;
+    sandboxApiKey: string;
+  };
+}
+
+export interface UpdateMerchantRegistrationSettingsRequest {
+  allowSelfRegistration: boolean;
+  applicationFormUrl: string;
+}
+
+export interface UpdateMerchantRegistrationSettingsResponse {
+  success: boolean;
+  message: string;
+  config: {
+    allowSelfRegistration: boolean;
+    applicationFormUrl: string;
+  };
+}
+
+export interface PlatformSetting {
+  id: string;
+  key: string;
+  value: string;
+  description: string | null;
+  updatedBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GetPlatformSettingsResponse {
+  settings: PlatformSetting[];
   total: number;
 }
 

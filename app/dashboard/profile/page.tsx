@@ -1,15 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Edit, X, Loader2, User } from "lucide-react";
+import { Edit, X, Loader2, User, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { useUpdateMerchantProfile } from "@/features/merchants/hooks/useMerchant";
 import { useUserMerchantData } from "@/features/merchants/context/MerchantContext";
+import { useChangePassword, useLogout } from "@/features/auth/hooks/useAuth";
 import type { UpdateMerchantProfileRequest } from "@/features/merchants/types/index";
 
 export default function ProfilePage() {
     const { merchant, isLoading, refetch } = useUserMerchantData();
     const [showEditModal, setShowEditModal] = useState(false);
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmNewPassword, setConfirmNewPassword] = useState("");
     const [formData, setFormData] = useState<UpdateMerchantProfileRequest>({
         businessName: merchant?.businessName || "",
         email: merchant?.email || "",
@@ -19,6 +23,8 @@ export default function ProfilePage() {
     });
 
     const updateMerchantMutation = useUpdateMerchantProfile();
+    const changePasswordMutation = useChangePassword();
+    const logoutMutation = useLogout();
 
     // Update form data when merchant data loads
     useEffect(() => {
@@ -60,6 +66,59 @@ export default function ProfilePage() {
                 description: errorMessage,
             });
             console.error("Failed to update profile:", error);
+        }
+    };
+
+    const handleChangePassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        const current = currentPassword.trim();
+        const next = newPassword.trim();
+        const confirm = confirmNewPassword.trim();
+
+        if (!current || !next || !confirm) {
+            toast.error('Please fill in all fields');
+            return;
+        }
+
+        if (next.length < 6) {
+            toast.error('New password must be at least 6 characters');
+            return;
+        }
+
+        if (next !== confirm) {
+            toast.error('New passwords do not match');
+            return;
+        }
+
+        if (current === next) {
+            toast.error('New password must be different from current password');
+            return;
+        }
+
+        try {
+            const res = await changePasswordMutation.mutateAsync({
+                currentPassword: current,
+                newPassword: next,
+            });
+
+            setCurrentPassword('');
+            setNewPassword('');
+            setConfirmNewPassword('');
+
+            toast.success('Password changed successfully', {
+                description: res.message || 'Please log in again with your new password.',
+            });
+
+            setTimeout(() => {
+                logoutMutation.mutate();
+            }, 800);
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Failed to change password';
+            toast.error('Change Password Failed', {
+                description: errorMessage,
+            });
+            console.error('Failed to change password:', error);
         }
     };
 
@@ -136,6 +195,80 @@ export default function ProfilePage() {
                         <p className="text-xs font-semibold text-foreground">{merchant.rateLimitPerMinute} requests/minute</p>
                     </div>
                 </div>
+            </div>
+
+            {/* Change Password */}
+            <div className="bg-background rounded-xl p-5 border border-border">
+                <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center">
+                        <Lock className="w-4 h-4 text-orange-500" />
+                    </div>
+                    <div>
+                        <h3 className="text-sm font-bold text-foreground">Change Password</h3>
+                        <p className="text-xs text-muted-foreground">You will be logged out after a successful password change.</p>
+                    </div>
+                </div>
+
+                <form onSubmit={handleChangePassword} className="space-y-3">
+                    <div>
+                        <label className="text-[10px] font-medium text-foreground mb-1.5 block">Current Password</label>
+                        <input
+                            type="password"
+                            value={currentPassword}
+                            onChange={(e) => setCurrentPassword(e.target.value)}
+                            className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            placeholder="Enter current password"
+                            disabled={changePasswordMutation.isPending || logoutMutation.isPending}
+                            required
+                        />
+                    </div>
+
+                    <div>
+                        <label className="text-[10px] font-medium text-foreground mb-1.5 block">New Password</label>
+                        <input
+                            type="password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            placeholder="Enter new password"
+                            minLength={6}
+                            disabled={changePasswordMutation.isPending || logoutMutation.isPending}
+                            required
+                        />
+                        <p className="mt-1 text-[10px] text-muted-foreground">Minimum 6 characters.</p>
+                    </div>
+
+                    <div>
+                        <label className="text-[10px] font-medium text-foreground mb-1.5 block">Confirm New Password</label>
+                        <input
+                            type="password"
+                            value={confirmNewPassword}
+                            onChange={(e) => setConfirmNewPassword(e.target.value)}
+                            className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            placeholder="Re-enter new password"
+                            minLength={6}
+                            disabled={changePasswordMutation.isPending || logoutMutation.isPending}
+                            required
+                        />
+                    </div>
+
+                    <div className="pt-2">
+                        <button
+                            type="submit"
+                            disabled={changePasswordMutation.isPending || logoutMutation.isPending}
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {(changePasswordMutation.isPending || logoutMutation.isPending) ? (
+                                <>
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    Updating...
+                                </>
+                            ) : (
+                                'Update Password'
+                            )}
+                        </button>
+                    </div>
+                </form>
             </div>
 
             {/* Account Status Card */}

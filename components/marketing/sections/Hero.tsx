@@ -79,7 +79,7 @@ export function Hero() {
                         {!mounted || !isAuthenticated ? (
                             <>
                                 <Link
-                                    href="/register"
+                                    href="/get-started"
                                     className="group relative px-8 py-4 bg-gradient-to-r from-[#ef2d10] to-[#dc2626] text-white rounded-xl font-semibold text-base shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden"
                                 >
                                     <span className="relative z-10 flex items-center gap-2">

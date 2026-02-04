@@ -208,7 +208,7 @@ const payment = await response.json();`}
                             </p>
                             <div className="flex justify-center gap-4 pt-4">
                                 <Link
-                                    href="/register"
+                                    href="/get-started"
                                     className="px-8 py-3 bg-white text-[#2466eb] rounded-xl font-bold hover:shadow-xl hover:scale-105 transition-all"
                                 >
                                     Create Account
