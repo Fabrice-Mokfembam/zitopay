@@ -1,12 +1,12 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient, UseQueryResult } from "@tanstack/react-query";
-import { 
-  adminApi, 
-  getPlatformMetrics, 
-  getHealthMetrics, 
-  getGatewayPerformance, 
-  getAllMerchantUsers, 
+import {
+  adminApi,
+  getPlatformMetrics,
+  getHealthMetrics,
+  getGatewayPerformance,
+  getAllMerchantUsers,
   createMerchantAccount,
   generateBypassPassword,
   getAllTransactions,
@@ -30,11 +30,16 @@ import {
   deactivateMerchantFeeOverride,
   getPlatformWalletFeeSettings,
   updatePlatformWalletFeeSettings,
-  deleteMerchant
+  deleteMerchant,
+  getGlobalGateways,
+  updateGlobalGateway,
+  updateMerchantStatus,
+  updateMerchantCapabilities,
+  updateMerchantGatewayConfig
 } from "./api";
-import { 
-  PlatformMetricsResponse, 
-  HealthMetricsResponse, 
+import {
+  PlatformMetricsResponse,
+  HealthMetricsResponse,
   GatewayPerformanceResponse,
   MerchantUsersResponse,
   CreateMerchantRequest,
@@ -69,7 +74,12 @@ import {
   UpdatePlatformWalletFeeSettingsRequest,
   DeleteMerchantResponse,
   GenerateBypassPasswordRequest,
-  GenerateBypassPasswordResponse
+  GenerateBypassPasswordResponse,
+  GetGlobalGatewaysResponse,
+  UpdateGlobalGatewayRequest,
+  MerchantStatusUpdate,
+  MerchantCapabilitiesUpdate,
+  MerchantGatewayConfigUpdate
 } from "./types";
 
 /**
@@ -377,6 +387,59 @@ export function useDeleteMerchant() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "merchant-users"] });
       queryClient.invalidateQueries({ queryKey: ["admin", "dashboard", "platform-metrics"] });
+    },
+  });
+}
+
+// ----------------------------------------------------------------------
+// GATEWAY ACCESS & MERCHANT STATUS HOOKS
+// ----------------------------------------------------------------------
+
+export function useGlobalGateways(): UseQueryResult<GetGlobalGatewaysResponse, Error> {
+  return useQuery({
+    queryKey: ["admin", "gateways", "global"],
+    queryFn: () => getGlobalGateways(),
+    staleTime: 30000,
+  });
+}
+
+export function useUpdateGlobalGateway() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ code, data }: { code: string; data: UpdateGlobalGatewayRequest }) => updateGlobalGateway(code, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "gateways", "global"] });
+    },
+  });
+}
+
+export function useUpdateMerchantStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ merchantId, data }: { merchantId: string; data: MerchantStatusUpdate }) => updateMerchantStatus(merchantId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "merchant-users"] });
+      // Invalidate specific merchant details if we had a detailed merchant hook
+    },
+  });
+}
+
+export function useUpdateMerchantCapabilities() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ merchantId, data }: { merchantId: string; data: MerchantCapabilitiesUpdate }) => updateMerchantCapabilities(merchantId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "merchant-users"] });
+    },
+  });
+}
+
+export function useUpdateMerchantGatewayConfig() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ merchantId, data }: { merchantId: string; data: MerchantGatewayConfigUpdate }) => updateMerchantGatewayConfig(merchantId, data),
+    onSuccess: () => {
+      // Invalidate relevant queries, e.g., merchant details or gateway configs
     },
   });
 }

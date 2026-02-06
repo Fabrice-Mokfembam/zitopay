@@ -25,7 +25,9 @@ import {
   Trash2,
   Loader2,
   LogIn,
+  Settings,
 } from "lucide-react";
+import ManageMerchantModal from "./ManageMerchantModal";
 import { useMerchantUsers, useCreateMerchantAccount, useDeleteMerchant, useGenerateBypassPassword } from "@/features/admin/queries";
 import { useLogin } from "@/features/auth/hooks/useAuth";
 import { MerchantUser } from "@/features/admin/types";
@@ -95,6 +97,8 @@ export default function AdminMerchantsPage() {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [isLoggingInAsMerchant, setIsLoggingInAsMerchant] = useState(false);
   const [loggingInMerchantName, setLoggingInMerchantName] = useState<string | null>(null);
+  const [showManageModal, setShowManageModal] = useState(false);
+  const [merchantToManage, setMerchantToManage] = useState<MerchantUser | null>(null);
 
   const [createEmail, setCreateEmail] = useState("");
   const [createBusinessName, setCreateBusinessName] = useState("");
@@ -106,7 +110,7 @@ export default function AdminMerchantsPage() {
   const { data: merchantUsersData, isLoading, error } = useMerchantUsers();
 
   const createMerchantMutation = useCreateMerchantAccount();
-  
+
   // Delete merchant mutation
   const deleteMerchantMutation = useDeleteMerchant();
 
@@ -127,7 +131,7 @@ export default function AdminMerchantsPage() {
     const merchants = merchantUsersData.merchantUsers;
     const uniqueMerchants = new Set(merchants.map((m) => m.merchantId));
     const totalMerchants = uniqueMerchants.size;
-    
+
     const sandboxOnly = merchants.filter((m) => m.productionState === "NOT_REQUESTED" || m.productionState === "PENDING_APPROVAL").length;
     const production = merchants.filter((m) => m.productionState === "ACTIVE").length;
     const suspended = merchants.filter((m) => !m.enabled || m.productionState === "SUSPENDED").length;
@@ -149,7 +153,7 @@ export default function AdminMerchantsPage() {
     // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter((mu) => 
+      filtered = filtered.filter((mu) =>
         mu.businessName.toLowerCase().includes(query) ||
         mu.userEmail.toLowerCase().includes(query) ||
         mu.merchantId.toLowerCase().includes(query) ||
@@ -460,24 +464,24 @@ export default function AdminMerchantsPage() {
           />
         </div>
         <div className="flex items-center gap-2 w-full md:w-auto relative filter-dropdown-container">
-          <button 
+          <button
             onClick={(e) => {
               e.stopPropagation();
               setShowFilterDropdown(!showFilterDropdown);
             }}
             className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-medium hover:bg-gray-50 text-gray-700 relative"
           >
-            <Filter className="w-3.5 h-3.5" /> 
-            Filter 
+            <Filter className="w-3.5 h-3.5" />
+            Filter
             {(kybStatusFilter !== "all" || environmentFilter !== "all") && (
               <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-600 rounded-full" />
             )}
             <ChevronDown className={`w-3 h-3 transition-transform ${showFilterDropdown ? 'rotate-180' : ''}`} />
           </button>
-          
+
           {/* Filter Dropdown */}
           {showFilterDropdown && (
-            <div 
+            <div
               className="absolute right-0 top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[200px] max-h-[300px] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
@@ -572,7 +576,7 @@ export default function AdminMerchantsPage() {
       </div>
 
       {/* --- Merchants Table --- */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -609,8 +613,8 @@ export default function AdminMerchantsPage() {
                 </tr>
               ) : (
                 paginatedMerchants.map((merchantUser) => (
-                  <tr 
-                    key={merchantUser.merchantUserId} 
+                  <tr
+                    key={merchantUser.merchantUserId}
                     className="hover:bg-gray-50 transition-colors group cursor-pointer"
                     onClick={() => handleMerchantClick(merchantUser)}
                   >
@@ -647,20 +651,31 @@ export default function AdminMerchantsPage() {
                     </td>
                     <td className="p-3 relative" onClick={(e) => e.stopPropagation()}>
                       <div className="relative">
-                        <button 
+                        <button
                           onClick={() => setOpenDropdownId(openDropdownId === merchantUser.merchantId ? null : merchantUser.merchantId)}
                           className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
                         >
                           <MoreVertical className="w-4 h-4" />
                         </button>
-                        
+
                         {openDropdownId === merchantUser.merchantId && (
                           <>
-                            <div 
-                              className="fixed inset-0 z-10" 
+                            <div
+                              className="fixed inset-0 z-10"
                               onClick={() => setOpenDropdownId(null)}
                             />
-                            <div className="absolute right-0 bottom-full mb-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
+                            <div className="absolute right-full top-0 mr-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                              <button
+                                onClick={() => {
+                                  setMerchantToManage(merchantUser);
+                                  setShowManageModal(true);
+                                  setOpenDropdownId(null);
+                                }}
+                                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                              >
+                                <Settings className="w-4 h-4" />
+                                Manage Settings
+                              </button>
                               <button
                                 onClick={async () => {
                                   setOpenDropdownId(null);
@@ -1031,6 +1046,15 @@ export default function AdminMerchantsPage() {
         </div>
       )}
 
+      {showManageModal && merchantToManage && (
+        <ManageMerchantModal
+          merchant={merchantToManage}
+          onClose={() => {
+            setShowManageModal(false);
+            setMerchantToManage(null);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1,9 +1,9 @@
 import { apiClient } from '@/lib/apiClient';
-import { 
-  AdminUser, 
-  SystemStats, 
-  PlatformMetricsResponse, 
-  HealthMetricsResponse, 
+import {
+  AdminUser,
+  SystemStats,
+  PlatformMetricsResponse,
+  HealthMetricsResponse,
   GatewayPerformanceResponse,
   MerchantUsersResponse,
   CreateMerchantRequest,
@@ -40,7 +40,17 @@ import {
   UpdatePlatformWalletFeeSettingsRequest,
   DeleteMerchantResponse,
   GenerateBypassPasswordRequest,
-  GenerateBypassPasswordResponse
+  GenerateBypassPasswordResponse,
+  GetGlobalGatewaysResponse,
+  UpdateGlobalGatewayRequest,
+  UpdateGlobalGatewayResponse,
+  MerchantStatusUpdate,
+  UpdateMerchantStatusResponse,
+  MerchantCapabilitiesUpdate,
+  UpdateMerchantCapabilitiesResponse,
+  MerchantGatewayConfigUpdate,
+  UpdateMerchantGatewayConfigResponse,
+  GatewayCode
 } from "./types";
 
 const ADMIN_BASE_URL = '/admin/v1';
@@ -137,7 +147,7 @@ export const getAllTransactions = async (
   filters?: AdminTransactionFilters
 ): Promise<AdminTransactionsResponse> => {
   const params: Record<string, string> = {};
-  
+
   if (filters?.limit) params.limit = filters.limit.toString();
   if (filters?.offset) params.offset = filters.offset.toString();
   if (filters?.status) params.status = filters.status;
@@ -271,6 +281,71 @@ export const updatePlatformWalletFeeSettings = async (data: UpdatePlatformWallet
  */
 export const deleteMerchant = async (merchantId: string): Promise<DeleteMerchantResponse> => {
   const response = await apiClient.delete<DeleteMerchantResponse>(`${ADMIN_BASE_URL}/merchants/${merchantId}`);
+  return response.data;
+};
+
+// ----------------------------------------------------------------------
+// GATEWAY ACCESS & MERCHANT STATUS API
+// ----------------------------------------------------------------------
+
+/**
+ * Get detailed list of all global gateways
+ */
+export const getGlobalGateways = async (): Promise<GetGlobalGatewaysResponse> => {
+  const response = await apiClient.get<GetGlobalGatewaysResponse>(`${ADMIN_BASE_URL}/gateways`);
+  return response.data;
+};
+
+/**
+ * Update global settings for a specific gateway
+ */
+export const updateGlobalGateway = async (
+  code: string,
+  data: UpdateGlobalGatewayRequest
+): Promise<UpdateGlobalGatewayResponse> => {
+  const response = await apiClient.put<UpdateGlobalGatewayResponse>(`${ADMIN_BASE_URL}/gateways/${code}`, data);
+  return response.data;
+};
+
+/**
+ * Change a merchant's account status (e.g., Ban or Suspend)
+ */
+export const updateMerchantStatus = async (
+  merchantId: string,
+  data: MerchantStatusUpdate
+): Promise<UpdateMerchantStatusResponse> => {
+  const response = await apiClient.put<UpdateMerchantStatusResponse>(
+    `${ADMIN_BASE_URL}/merchants/${merchantId}/status`,
+    data
+  );
+  return response.data;
+};
+
+/**
+ * Toggle specific high-level capabilities for a merchant
+ */
+export const updateMerchantCapabilities = async (
+  merchantId: string,
+  data: MerchantCapabilitiesUpdate
+): Promise<UpdateMerchantCapabilitiesResponse> => {
+  const response = await apiClient.put<UpdateMerchantCapabilitiesResponse>(
+    `${ADMIN_BASE_URL}/merchants/${merchantId}/capabilities`,
+    data
+  );
+  return response.data;
+};
+
+/**
+ * Configure a specific gateway for a specific merchant
+ */
+export const updateMerchantGatewayConfig = async (
+  merchantId: string,
+  data: MerchantGatewayConfigUpdate
+): Promise<UpdateMerchantGatewayConfigResponse> => {
+  const response = await apiClient.put<UpdateMerchantGatewayConfigResponse>(
+    `${ADMIN_BASE_URL}/merchants/${merchantId}/gateways`,
+    data
+  );
   return response.data;
 };
 
