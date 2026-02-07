@@ -6,8 +6,6 @@ import Image from "next/image";
 import {
     LayoutDashboard,
     ArrowLeftRight,
-    ArrowDownToLine,
-    ArrowUpFromLine,
     RotateCcw,
     Wallet,
     Receipt,
@@ -193,7 +191,7 @@ export function DashboardSidebar() {
         <>
             {/* Logout Confirmation Dialog */}
             {showLogoutConfirm && (
-                <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-black/50 z-100 flex items-center justify-center p-4">
                     <div className="bg-background rounded-2xl p-6 shadow-2xl border border-border max-w-md w-full">
                         <h3 className="text-xl font-bold text-foreground mb-2">Confirm Logout</h3>
                         <p className="text-sm text-muted-foreground mb-6">
@@ -219,7 +217,7 @@ export function DashboardSidebar() {
 
             {/* Logout Loading Popup */}
             {isLoggingOut && (
-                <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center">
+                <div className="fixed inset-0 bg-black/50 z-100 flex items-center justify-center">
                     <div className="bg-background rounded-2xl p-8 shadow-2xl border border-border flex flex-col items-center gap-4">
                         <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
                         <p className="text-lg font-semibold text-foreground">Logging out...</p>
