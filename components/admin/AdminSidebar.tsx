@@ -23,6 +23,7 @@ import {
     RotateCcw,
     FileCheck,
     Rocket,
+    LifeBuoy
 } from "lucide-react";
 
 interface MenuItem {
@@ -124,6 +125,18 @@ export function AdminSidebar() {
                     icon: FileText,
                     label: "Reports",
                     href: "/admin/reports",
+                },
+            ],
+        },
+        // SUPPORT
+        {
+            title: "SUPPORT",
+            collapsible: true,
+            items: [
+                {
+                    icon: LifeBuoy,
+                    label: "Tickets Inquiry",
+                    href: "/admin/support",
                 },
             ],
         },

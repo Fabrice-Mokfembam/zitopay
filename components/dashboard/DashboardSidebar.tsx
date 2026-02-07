@@ -22,7 +22,8 @@ import {
     Menu,
     X,
     ChevronDown,
-    ChevronRight
+    ChevronRight,
+    LifeBuoy
 } from "lucide-react";
 import { useState } from "react";
 import { useLogout } from "@/features/auth/hooks/useAuth";
@@ -137,6 +138,18 @@ const menuSections: MenuSection[] = [
                 icon: User,
                 label: "Profile",
                 href: "/dashboard/profile",
+            },
+        ],
+    },
+    // SUPPORT
+    {
+        title: "SUPPORT",
+        collapsible: true,
+        items: [
+            {
+                icon: LifeBuoy,
+                label: "Help & Support",
+                href: "/dashboard/support",
             },
         ],
     },

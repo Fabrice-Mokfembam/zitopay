@@ -50,12 +50,66 @@ import {
   UpdateMerchantCapabilitiesResponse,
   MerchantGatewayConfigUpdate,
   UpdateMerchantGatewayConfigResponse,
-  GatewayCode
+  GatewayCode,
+  SupportTicketFilters
 } from "./types";
+import {
+  GetAdminTicketsResponse,
+  TicketDetailResponse,
+  AdminReplyTicketRequest,
+  ReplyTicketResponse,
+  UpdateTicketAttributesRequest
+} from "@/features/support/types";
 
 const ADMIN_BASE_URL = '/admin/v1';
 const ADMIN_DASHBOARD_URL = `${ADMIN_BASE_URL}/dashboard`;
 const FEE_BASE_URL = '/v1/admin';
+
+// ... existing code ...
+
+// ----------------------------------------------------------------------
+// ADMIN SUPPORT TICKET API
+// ----------------------------------------------------------------------
+
+export const getAdminTickets = async (filters: SupportTicketFilters = {}): Promise<GetAdminTicketsResponse> => {
+  const params: Record<string, string> = {};
+  if (filters.status) params.status = filters.status;
+  if (filters.priority) params.priority = filters.priority;
+  if (filters.assignedTo) params.assignedTo = filters.assignedTo;
+  if (filters.search) params.search = filters.search;
+  if (filters.page) params.page = filters.page.toString();
+  if (filters.limit) params.limit = filters.limit.toString();
+
+  const response = await apiClient.get<GetAdminTicketsResponse>(`${ADMIN_BASE_URL}/support/tickets`, { params });
+  return response.data;
+};
+
+export const getAdminTicketDetails = async (ticketId: string): Promise<TicketDetailResponse> => {
+  const response = await apiClient.get<TicketDetailResponse>(`${ADMIN_BASE_URL}/support/tickets/${ticketId}`);
+  return response.data;
+};
+
+export const replyAsAdmin = async (
+  ticketId: string,
+  data: AdminReplyTicketRequest
+): Promise<ReplyTicketResponse> => {
+  const response = await apiClient.post<ReplyTicketResponse>(
+    `${ADMIN_BASE_URL}/support/tickets/${ticketId}/reply`,
+    data
+  );
+  return response.data;
+};
+
+export const updateTicketAttributes = async (
+  ticketId: string,
+  data: UpdateTicketAttributesRequest
+): Promise<TicketDetailResponse> => {
+  const response = await apiClient.patch<TicketDetailResponse>(
+    `${ADMIN_BASE_URL}/support/tickets/${ticketId}`,
+    data
+  );
+  return response.data;
+};
 
 /**
  * Get platform metrics (total merchants, active merchants, platform revenue, total volume)

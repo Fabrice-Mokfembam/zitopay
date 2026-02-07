@@ -1,25 +1,38 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
     LifeBuoy,
     Book,
     Search,
-    MessageSquare,
-    Phone,
     AlertTriangle,
     ExternalLink,
     CheckCircle2,
     FileText,
     ChevronRight,
     Server,
-    Activity
+    Activity,
+    Phone,
+    Loader2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAdminTickets } from "@/features/admin/queries";
+import { formatDistanceToNow } from "date-fns";
+import { cn } from "@/lib/utils";
+import { TicketStatus } from "@/features/support/types";
 
 export default function SupportPage() {
-    const [activeTab, setActiveTab] = useState("documentation");
+    const router = useRouter();
+    const [activeTab, setActiveTab] = useState("support"); // Default to support tickets
     const [searchQuery, setSearchQuery] = useState("");
+    const [statusFilter, setStatusFilter] = useState<TicketStatus | "ALL">("ALL");
+
+    // Fetch Tickets
+    const { data: ticketsData, isLoading: ticketsLoading } = useAdminTickets({
+        status: statusFilter === "ALL" ? undefined : statusFilter,
+        search: searchQuery || undefined
+    });
 
     const docsCategories = [
         {
@@ -48,12 +61,6 @@ export default function SupportPage() {
         }
     ];
 
-    const supportTickets = [
-        { id: "#4521", subject: "Withdrawal Failure - ABC Corp", status: "open", priority: "high", time: "2 hours ago" },
-        { id: "#4520", subject: "API Key Reset Request", status: "closed", priority: "low", time: "1 day ago" },
-        { id: "#4519", subject: "Transaction Dispute #TX992", status: "pending", priority: "medium", time: "2 days ago" }
-    ];
-
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -63,19 +70,19 @@ export default function SupportPage() {
                         <LifeBuoy className="w-8 h-8 text-blue-600" />
                         Help & Support Center
                     </h1>
-                    <p className="text-sm text-gray-500 mt-1">SOPs, Documentation, and Support Ticket Management</p>
+                    <p className="text-sm text-gray-500 mt-1">Manage support tickets and view documentation</p>
                 </div>
             </div>
 
             {/* Tabs */}
             <div className="bg-white rounded-lg border border-gray-200 p-1 flex gap-1 w-fit">
-                {['documentation', 'support'].map((tab) => (
+                {['support', 'documentation'].map((tab) => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
                         className={`px-4 py-2 rounded-md text-sm font-medium capitalize transition-all ${activeTab === tab
-                                ? "bg-blue-600 text-white"
-                                : "text-gray-600 hover:bg-gray-100"
+                            ? "bg-blue-600 text-white"
+                            : "text-gray-600 hover:bg-gray-100"
                             }`}
                     >
                         {tab}
@@ -96,7 +103,7 @@ export default function SupportPage() {
                             {/* Search Hero */}
                             <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-lg p-6 text-white relative overflow-hidden shadow-sm">
                                 <div className="relative z-10 max-w-2xl">
-                                    <h2 className="text-lg font-semibold mb-3">How can we help you today?</h2>
+                                    <h2 className="text-lg font-semibold mb-3">Internal Knowledge Base</h2>
                                     <div className="relative">
                                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                         <input
@@ -155,31 +162,80 @@ export default function SupportPage() {
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             {/* Left: Ticket Queue */}
                             <div className="lg:col-span-2 space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <h3 className="font-semibold text-gray-900 text-sm">Active Support Tickets (Zendesk)</h3>
-                                    <button className="text-xs font-medium text-blue-600 hover:underline flex items-center gap-1">
-                                        View All <ExternalLink className="w-3 h-3" />
-                                    </button>
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                    <h3 className="font-semibold text-gray-900 text-sm">Merchant Support Tickets</h3>
+                                    <div className="flex gap-2">
+                                        <select
+                                            value={statusFilter}
+                                            onChange={(e) => setStatusFilter(e.target.value as any)}
+                                            className="text-xs border-gray-200 rounded-lg focus:ring-blue-500"
+                                        >
+                                            <option value="ALL">All Status</option>
+                                            <option value="OPEN">Open</option>
+                                            <option value="IN_PROGRESS">In Progress</option>
+                                            <option value="WAITING_FOR_CUSTOMER">Waiting</option>
+                                            <option value="RESOLVED">Resolved</option>
+                                            <option value="CLOSED">Closed</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                <div className="space-y-3">
-                                    {supportTickets.map((ticket) => (
-                                        <div key={ticket.id} className="bg-white border border-gray-200 p-4 rounded-lg flex items-center justify-between hover:border-blue-300 transition-all cursor-pointer group">
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-2 h-2 rounded-full ${ticket.priority === 'high' ? 'bg-red-500' : ticket.priority === 'medium' ? 'bg-orange-500' : 'bg-blue-500'}`} />
-                                                <div>
-                                                    <div className="flex items-center gap-2 mb-0.5">
-                                                        <span className="font-mono text-xs text-gray-400 font-medium">{ticket.id}</span>
-                                                        <h4 className="font-medium text-gray-900 text-sm group-hover:text-blue-600 transition-colors">{ticket.subject}</h4>
+
+                                {ticketsLoading ? (
+                                    <div className="py-12 flex justify-center">
+                                        <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                                    </div>
+                                ) : ticketsData?.tickets && ticketsData.tickets.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {ticketsData.tickets.map((item) => {
+                                            const ticket = item.ticket;
+                                            // Handling potentially different response structure (AdminTicketListItem vs SupportTicket)
+                                            // Type suggests 'tickets: AdminTicketListItem[]' where item has 'ticket' and 'merchantName'
+                                            return (
+                                                <div
+                                                    key={ticket.id}
+                                                    onClick={() => router.push(`/admin/support/${ticket.id}`)}
+                                                    className="bg-white border border-gray-200 p-4 rounded-lg flex items-center justify-between hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer group"
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={cn(
+                                                            "w-2 h-2 rounded-full",
+                                                            ticket.priority === 'URGENT' || ticket.priority === 'HIGH' ? 'bg-red-500 shadow-red-200 shadow-[0_0_8px]' :
+                                                                ticket.priority === 'MEDIUM' ? 'bg-orange-500' : 'bg-blue-500'
+                                                        )} />
+                                                        <div>
+                                                            <div className="flex items-center gap-2 mb-0.5">
+                                                                <span className="font-mono text-xs text-gray-400 font-medium tracking-tight">#{ticket.ticketNumber}</span>
+                                                                <h4 className="font-medium text-gray-900 text-sm group-hover:text-blue-600 transition-colors">
+                                                                    {ticket.subject}
+                                                                </h4>
+                                                            </div>
+                                                            <div className="text-xs text-gray-500 flex gap-1">
+                                                                <span className="font-medium text-gray-700">{item.merchantName || "Unknown Merchant"}</span>
+                                                                <span>•</span>
+                                                                <span>{formatDistanceToNow(new Date(ticket.updatedAt), { addSuffix: true })}</span>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <div className="text-xs text-gray-500">{ticket.time} • via Email</div>
+                                                    <div className={cn(
+                                                        "px-2.5 py-0.5 rounded-full text-xs font-medium uppercase min-w-[80px] text-center",
+                                                        ticket.status === 'OPEN' ? "bg-blue-50 text-blue-700" :
+                                                            ticket.status === 'IN_PROGRESS' ? "bg-yellow-50 text-yellow-700" :
+                                                                ticket.status === 'WAITING_FOR_CUSTOMER' ? "bg-orange-50 text-orange-700" :
+                                                                    ticket.status === 'RESOLVED' ? "bg-green-50 text-green-700" :
+                                                                        "bg-gray-100 text-gray-600"
+                                                    )}>
+                                                        {ticket.status.replace(/_/g, " ")}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div className="px-2.5 py-0.5 bg-gray-100 rounded-full text-xs font-medium uppercase text-gray-600">
-                                                {ticket.status}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-10 text-center">
+                                        <LifeBuoy className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                                        <p className="text-gray-500 text-sm">No tickets found matching your filters.</p>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Right: Operations & Contact */}

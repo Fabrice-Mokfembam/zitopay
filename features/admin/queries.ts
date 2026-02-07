@@ -35,7 +35,12 @@ import {
   updateGlobalGateway,
   updateMerchantStatus,
   updateMerchantCapabilities,
-  updateMerchantGatewayConfig
+  updateMerchantGatewayConfig,
+  // Support API
+  getAdminTickets,
+  getAdminTicketDetails,
+  replyAsAdmin,
+  updateTicketAttributes
 } from "./api";
 import {
   PlatformMetricsResponse,
@@ -79,8 +84,58 @@ import {
   UpdateGlobalGatewayRequest,
   MerchantStatusUpdate,
   MerchantCapabilitiesUpdate,
-  MerchantGatewayConfigUpdate
+  MerchantGatewayConfigUpdate,
+  SupportTicketFilters
 } from "./types";
+import {
+  GetAdminTicketsResponse,
+  AdminReplyTicketRequest,
+  UpdateTicketAttributesRequest
+} from "@/features/support/types";
+
+// ----------------------------------------------------------------------
+// ADMIN SUPPORT TICKET HOOKS
+// ----------------------------------------------------------------------
+
+export function useAdminTickets(filters?: SupportTicketFilters): UseQueryResult<GetAdminTicketsResponse, Error> {
+  return useQuery({
+    queryKey: ["admin", "support", "tickets", filters],
+    queryFn: () => getAdminTickets(filters),
+    staleTime: 30000,
+  });
+}
+
+export function useAdminTicketDetails(ticketId: string) {
+  return useQuery({
+    queryKey: ["admin", "support", "ticket", ticketId],
+    queryFn: () => getAdminTicketDetails(ticketId),
+    enabled: !!ticketId,
+  });
+}
+
+export function useReplyAsAdmin() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ ticketId, data }: { ticketId: string; data: AdminReplyTicketRequest }) =>
+      replyAsAdmin(ticketId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "support", "ticket", variables.ticketId] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "support", "tickets"] });
+    },
+  });
+}
+
+export function useUpdateTicketAttributes() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ ticketId, data }: { ticketId: string; data: UpdateTicketAttributesRequest }) =>
+      updateTicketAttributes(ticketId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "support", "ticket", variables.ticketId] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "support", "tickets"] });
+    },
+  });
+}
 
 /**
  * Legacy hook for admin stats (keeping for backward compatibility)

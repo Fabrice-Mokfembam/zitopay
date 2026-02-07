@@ -521,3 +521,15 @@ export interface UpdateMerchantGatewayConfigResponse {
     updatedAt: string;
   };
 }
+
+// Support Ticket Types
+import { TicketStatus, TicketPriority } from "@/features/support/types";
+
+export interface SupportTicketFilters {
+  status?: TicketStatus;
+  priority?: TicketPriority;
+  assignedTo?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
