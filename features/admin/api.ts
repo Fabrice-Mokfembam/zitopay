@@ -8,6 +8,8 @@ import {
   MerchantUsersResponse,
   CreateMerchantRequest,
   CreateMerchantResponse,
+  UpdateMerchantRequest,
+  UpdateMerchantResponse,
   AdminTransactionsResponse,
   AdminTransactionFilters,
   GetPlatformSettingsResponse,
@@ -334,6 +336,26 @@ export const updatePlatformWalletFeeSettings = async (data: UpdatePlatformWallet
  * Permanently deletes the merchant account and all associated data
  */
 export const deleteMerchant = async (merchantId: string): Promise<DeleteMerchantResponse> => {
+  const response = await apiClient.delete<DeleteMerchantResponse>(`${ADMIN_BASE_URL}/merchants/${merchantId}`);
+  return response.data;
+};
+
+/**
+ * Update a merchant
+ * Updates a merchant account
+ */
+export const updateMerchant = async (
+  merchantId: string,
+  data: UpdateMerchantRequest
+): Promise<UpdateMerchantResponse> => {
+  const response = await apiClient.put<UpdateMerchantResponse>(
+    `${ADMIN_BASE_URL}/merchants/${merchantId}`,
+    data
+  );
+  return response.data;
+};
+
+export const createMerchant = async (merchantId: string): Promise<DeleteMerchantResponse> => {
   const response = await apiClient.delete<DeleteMerchantResponse>(`${ADMIN_BASE_URL}/merchants/${merchantId}`);
   return response.data;
 };

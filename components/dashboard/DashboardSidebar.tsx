@@ -21,7 +21,8 @@ import {
     X,
     ChevronDown,
     ChevronRight,
-    LifeBuoy
+    LifeBuoy,
+    Settings
 } from "lucide-react";
 import { useState } from "react";
 import { useLogout } from "@/features/auth/hooks/useAuth";
@@ -122,6 +123,11 @@ const menuSections: MenuSection[] = [
         title: "SETTINGS",
         collapsible: true,
         items: [
+            {
+                icon: Settings,
+                label: "Fee Settings",
+                href: "/dashboard/fee-settings",
+            },
             {
                 icon: Building2,
                 label: "Environment Settings",

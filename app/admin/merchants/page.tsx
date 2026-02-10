@@ -73,6 +73,9 @@ function TableRowSkeleton() {
         <div className="w-24 h-5 bg-gray-200 rounded-full" />
       </td>
       <td className="p-3">
+        <div className="w-16 h-4 bg-gray-200 rounded" />
+      </td>
+      <td className="p-3">
         <div className="w-20 h-3 bg-gray-200 rounded" />
       </td>
       <td className="p-3">
@@ -593,6 +596,7 @@ export default function AdminMerchantsPage() {
                 <th className="p-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">ID</th>
                 <th className="p-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">KYB Status</th>
                 <th className="p-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Environment</th>
+                <th className="p-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Fee Payer</th>
                 <th className="p-3 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Created</th>
                 <th className="p-3 w-8"></th>
               </tr>
@@ -605,7 +609,7 @@ export default function AdminMerchantsPage() {
                 ))
               ) : paginatedMerchants.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center">
+                  <td colSpan={8} className="p-8 text-center">
                     <p className="text-sm text-gray-500">
                       {searchQuery ? "No merchants found matching your search." : "No merchants found."}
                     </p>
@@ -645,6 +649,15 @@ export default function AdminMerchantsPage() {
                     </td>
                     <td className="p-3">
                       {renderEnvBadge(merchantUser.sandboxState, merchantUser.productionState)}
+                    </td>
+                    <td className="p-3">
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        merchantUser.feePayer === 'PAYER' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {merchantUser.feePayer === 'PAYER' ? 'Customer' : 'Merchant'}
+                      </span>
                     </td>
                     <td className="p-3 text-xs text-gray-600">
                       {formatDate(merchantUser.merchantCreatedAt)}

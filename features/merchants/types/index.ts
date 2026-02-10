@@ -20,6 +20,7 @@ export interface Merchant {
     sandboxApiKey: string;
     productionApiKey?: string;
     rateLimitPerMinute: number;
+    feePayer: 'PAYER' | 'MERCHANT';
     userRole?: 'owner' | 'admin' | 'viewer';  // Role in merchant (for getUserMerchants)
     createdAt: string;
     updatedAt: string;
@@ -74,6 +75,7 @@ export interface UpdateMerchantRequest {
     phone?: string;
     businessType?: string;
     country?: string;
+    feePayer?: 'PAYER' | 'MERCHANT';
 }
 
 export interface UpdateMerchantProfileRequest {
@@ -82,6 +84,7 @@ export interface UpdateMerchantProfileRequest {
     phone?: string;
     businessType?: string;
     country?: string;
+    feePayer?: 'PAYER' | 'MERCHANT';
 }
 
 export interface UpdateMerchantProfileResponse {
@@ -97,6 +100,7 @@ export interface UpdateMerchantProfileResponse {
         sandboxState: SandboxState;
         productionState: ProductionState;
         rateLimitPerMinute: number;
+        feePayer: 'PAYER' | 'MERCHANT';
         allowedIps: string[];
         createdAt: string;
         updatedAt: string;

@@ -8,6 +8,7 @@ import {
   getGatewayPerformance,
   getAllMerchantUsers,
   createMerchantAccount,
+  updateMerchant,
   generateBypassPassword,
   getAllTransactions,
   getPlatformSettings,
@@ -48,6 +49,7 @@ import {
   GatewayPerformanceResponse,
   MerchantUsersResponse,
   CreateMerchantRequest,
+  UpdateMerchantRequest,
   AdminTransactionsResponse,
   AdminTransactionFilters,
   GetPlatformSettingsResponse,
@@ -464,6 +466,16 @@ export function useUpdateGlobalGateway() {
     mutationFn: ({ code, data }: { code: string; data: UpdateGlobalGatewayRequest }) => updateGlobalGateway(code, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "gateways", "global"] });
+    },
+  });
+}
+
+export function useUpdateMerchant() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ merchantId, data }: { merchantId: string; data: UpdateMerchantRequest }) => updateMerchant(merchantId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "merchant-users"] });
     },
   });
 }

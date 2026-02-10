@@ -91,6 +91,7 @@ export interface MerchantUser {
   sandboxApiKey: string;
   productionApiKey: string | null;
   rateLimitPerMinute: number;
+  feePayer: 'PAYER' | 'MERCHANT';
   merchantCreatedAt: string;
   merchantUpdatedAt: string;
 
@@ -103,6 +104,21 @@ export interface MerchantUser {
 export interface MerchantUsersResponse {
   merchantUsers: MerchantUser[];
   total: number;
+}
+
+export interface UpdateMerchantRequest {
+  businessName?: string;
+  email?: string;
+  phone?: string;
+  businessType?: string;
+  country?: string;
+  feePayer?: 'PAYER' | 'MERCHANT';
+}
+
+export interface UpdateMerchantResponse {
+  success: boolean;
+  message: string;
+  merchant: MerchantUser;
 }
 
 export interface CreateMerchantRequest {

@@ -11,12 +11,14 @@ import {
     Ban,
     Lock,
     Save,
-    Loader2
+    Loader2,
+    User
 } from "lucide-react";
 import { toast } from "sonner";
 import { MerchantUser, AccountStatus, GatewayCode } from "@/features/admin/types";
 import {
     useUpdateMerchantStatus,
+    useUpdateMerchant,
     useUpdateMerchantCapabilities,
     useUpdateMerchantGatewayConfig
 } from "@/features/admin/queries";
@@ -26,7 +28,7 @@ interface ManageMerchantModalProps {
     onClose: () => void;
 }
 
-type TabType = 'status' | 'capabilities' | 'gateways';
+type TabType = 'status' | 'capabilities' | 'gateways' | 'profile';
 
 export default function ManageMerchantModal({ merchant, onClose }: ManageMerchantModalProps) {
     const [activeTab, setActiveTab] = useState<TabType>('status');
@@ -46,10 +48,35 @@ export default function ManageMerchantModal({ merchant, onClose }: ManageMerchan
         'ORANGE_MONEY': { enabled: true, canCollect: true, canDisburse: true }
     });
 
+    // Profile State
+    const [businessName, setBusinessName] = useState(merchant.businessName);
+    const [email, setEmail] = useState(merchant.userEmail);
+    const [phone, setPhone] = useState(merchant.merchantPhone || '');
+    const [feePayer, setFeePayer] = useState<'PAYER' | 'MERCHANT'>(merchant.feePayer || 'PAYER');
+
     // Mutations
     const updateStatusMutation = useUpdateMerchantStatus();
+    const updateMerchantMutation = useUpdateMerchant();
     const updateCapabilitiesMutation = useUpdateMerchantCapabilities();
     const updateGatewayConfigMutation = useUpdateMerchantGatewayConfig();
+
+    const handleSaveProfile = async () => {
+        try {
+            await updateMerchantMutation.mutateAsync({
+                merchantId: merchant.merchantId,
+                data: {
+                    businessName,
+                    email,
+                    phone,
+                    feePayer
+                }
+            });
+            toast.success("Merchant profile updated successfully");
+        } catch (error: unknown) {
+            const err = error as Error & { response?: { data?: { message?: string } } };
+            toast.error(err.response?.data?.message || err.message || "Failed to update profile");
+        }
+    };
 
     const handleSaveStatus = async () => {
         try {
@@ -105,6 +132,7 @@ export default function ManageMerchantModal({ merchant, onClose }: ManageMerchan
 
     const tabs = [
         { id: 'status', label: 'Account Status', icon: Activity },
+        { id: 'profile', label: 'Profile', icon: User },
         { id: 'capabilities', label: 'Capabilities', icon: Shield },
         { id: 'gateways', label: 'Gateways', icon: Server },
     ];
@@ -208,6 +236,95 @@ export default function ManageMerchantModal({ merchant, onClose }: ManageMerchan
                                     />
                                     <span className="text-sm text-gray-700 select-none">Notify user via email about this status change</span>
                                 </label>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'profile' && (
+                        <div className="space-y-6">
+                            <div className="space-y-4">
+                                <label className="block text-sm font-medium text-gray-700">Business Information</label>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1">Business Name</label>
+                                        <input
+                                            type="text"
+                                            value={businessName}
+                                            onChange={(e) => setBusinessName(e.target.value)}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
+                                        <input
+                                            type="email"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1">Phone</label>
+                                        <input
+                                            type="tel"
+                                            value={phone}
+                                            onChange={(e) => setPhone(e.target.value)}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1">Merchant ID</label>
+                                        <input
+                                            type="text"
+                                            value={merchant.merchantId}
+                                            disabled
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-sm text-gray-600"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <label className="block text-sm font-medium text-gray-700">Fee Settings</label>
+                                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                    <p className="text-sm text-gray-600 mb-4">
+                                        Choose whether transaction fees are charged to the customer or deducted from the merchant's received amount.
+                                    </p>
+                                    <div className="space-y-3">
+                                        <label className="flex items-center space-x-3 cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="feePayer"
+                                                value="PAYER"
+                                                checked={feePayer === 'PAYER'}
+                                                onChange={(e) => setFeePayer(e.target.value as 'PAYER' | 'MERCHANT')}
+                                                className="w-4 h-4 text-blue-600"
+                                            />
+                                            <div>
+                                                <div className="font-medium text-sm">Customer (Payer)</div>
+                                                <div className="text-xs text-gray-600">
+                                                    Customers pay base amount plus fees. Merchant receives full base amount.
+                                                </div>
+                                            </div>
+                                        </label>
+                                        <label className="flex items-center space-x-3 cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="feePayer"
+                                                value="MERCHANT"
+                                                checked={feePayer === 'MERCHANT'}
+                                                onChange={(e) => setFeePayer(e.target.value as 'PAYER' | 'MERCHANT')}
+                                                className="w-4 h-4 text-blue-600"
+                                            />
+                                            <div>
+                                                <div className="font-medium text-sm">Merchant</div>
+                                                <div className="text-xs text-gray-600">
+                                                    Customers pay only base amount. Fees are deducted from merchant's received amount.
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     )}
@@ -354,6 +471,25 @@ export default function ManageMerchantModal({ merchant, onClose }: ManageMerchan
                         >
                             {updateStatusMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                             Update Status
+                        </button>
+                    )}
+                    {activeTab === 'profile' && (
+                        <button
+                            onClick={handleSaveProfile}
+                            disabled={updateMerchantMutation.isPending}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        >
+                            {updateMerchantMutation.isPending ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    Updating...
+                                </>
+                            ) : (
+                                <>
+                                    <Save className="w-4 h-4" />
+                                    Update Profile
+                                </>
+                            )}
                         </button>
                     )}
                     {activeTab === 'capabilities' && (
