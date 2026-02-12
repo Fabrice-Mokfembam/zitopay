@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useGetFirstMerchant, useUpdateMerchantProfile } from "@/features/merchants/hooks";
 import { toast } from "sonner";
 import { Settings, Mail, MessageSquare, Calculator, Users, TrendingUp, ShieldCheck, HelpCircle } from "lucide-react";
@@ -12,9 +12,11 @@ export default function FeeSettingsPage() {
   const [feePayer, setFeePayer] = useState<'PAYER' | 'MERCHANT'>('PAYER');
 
   // Update form when merchant data loads
-  if (merchantData?.merchant && feePayer === 'PAYER') {
-    setFeePayer(merchantData.merchant.feePayer || 'PAYER');
-  }
+  useEffect(() => {
+    if (merchantData?.merchant) {
+      setFeePayer(merchantData.merchant.feePayer || 'PAYER');
+    }
+  }, [merchantData]);
 
   const handleFeePayerChange = async (newFeePayer: 'PAYER' | 'MERCHANT') => {
     try {
@@ -23,8 +25,10 @@ export default function FeeSettingsPage() {
       toast.success(`Fee payer setting updated to ${newFeePayer === 'PAYER' ? 'Customer (Payer)' : 'Merchant'}`);
     } catch (error) {
       toast.error('Failed to update fee payer setting');
-      // Revert on error
-      setFeePayer(feePayer);
+      // Revert to original value on error
+      if (merchantData?.merchant) {
+        setFeePayer(merchantData.merchant.feePayer || 'PAYER');
+      }
     }
   };
 

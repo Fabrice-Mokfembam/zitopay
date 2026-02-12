@@ -20,8 +20,12 @@ import type {
     ReactivateProductionResponse,
     AddDomainRequest,
     AddDomainResponse,
-    VerifyDomainResponse,
+    DeleteDomainResponse,
     GetDomainsResponse,
+    AddIpRequest,
+    AddIpResponse,
+    DeleteIpResponse,
+    GetIpsResponse,
     GetGatewaysResponse,
     ConfigureGatewayRequest,
     ConfigureGatewayResponse,
@@ -38,6 +42,16 @@ import type {
     WithdrawRequest,
     WithdrawResponse,
     WalletOperationsResponse,
+    GetPendingDomainRequestsResponse,
+    GetAllDomainRequestsResponse,
+    ApproveDomainResponse,
+    RejectDomainRequest,
+    RejectDomainResponse,
+    GetPendingIpRequestsResponse,
+    GetAllIpRequestsResponse,
+    ApproveIpResponse,
+    RejectIpRequest,
+    RejectIpResponse,
 } from '../types/index';
 
 const MERCHANT_BASE_URL = '/merchant/v1/merchants';
@@ -212,7 +226,7 @@ export const reactivateProduction = async (
 };
 
 /**
- * Add a domain for verification
+ * Add a domain for admin approval
  */
 export const addDomain = async (
     merchantId: string,
@@ -226,14 +240,14 @@ export const addDomain = async (
 };
 
 /**
- * Verify domain ownership via DNS TXT record
+ * Delete a domain (only PENDING or REJECTED domains can be deleted by merchant)
  */
-export const verifyDomain = async (
+export const deleteDomain = async (
     merchantId: string,
     domainId: string
-): Promise<VerifyDomainResponse> => {
-    const response = await apiClient.post<VerifyDomainResponse>(
-        `${MERCHANT_BASE_URL}/${merchantId}/domains/${domainId}/verify`
+): Promise<DeleteDomainResponse> => {
+    const response = await apiClient.delete<DeleteDomainResponse>(
+        `${MERCHANT_BASE_URL}/${merchantId}/domains/${domainId}`
     );
     return response.data;
 };
@@ -450,3 +464,179 @@ export const updateMerchantProfile = async (
     );
     return response.data;
 };
+
+// ============================================
+// IP ADDRESS MANAGEMENT (Merchant Side)
+// ============================================
+
+/**
+ * Add an IP address for admin approval
+ */
+export const addIp = async (
+    merchantId: string,
+    data: AddIpRequest
+): Promise<AddIpResponse> => {
+    const response = await apiClient.post<AddIpResponse>(
+        `${MERCHANT_BASE_URL}/${merchantId}/ips`,
+        data
+    );
+    return response.data;
+};
+
+/**
+ * Get all IP addresses for a merchant
+ */
+export const getIps = async (
+    merchantId: string
+): Promise<GetIpsResponse> => {
+    const response = await apiClient.get<GetIpsResponse>(
+        `${MERCHANT_BASE_URL}/${merchantId}/ips`
+    );
+    return response.data;
+};
+
+/**
+ * Delete an IP address (only PENDING or REJECTED IPs can be deleted by merchant)
+ */
+export const deleteIp = async (
+    merchantId: string,
+    ipId: string
+): Promise<DeleteIpResponse> => {
+    const response = await apiClient.delete<DeleteIpResponse>(
+        `${MERCHANT_BASE_URL}/${merchantId}/ips/${ipId}`
+    );
+    return response.data;
+};
+
+// ============================================
+// ADMIN - DOMAIN APPROVAL
+// ============================================
+
+/**
+ * Get all pending domain requests (Admin only)
+ */
+export const getPendingDomainRequests = async (): Promise<GetPendingDomainRequestsResponse> => {
+    const response = await apiClient.get<GetPendingDomainRequestsResponse>(
+        '/admin/v1/domain-requests/pending'
+    );
+    return response.data;
+};
+
+/**
+ * Get all domain requests with optional status filter (Admin only)
+ */
+export const getAllDomainRequests = async (
+    status?: 'PENDING' | 'APPROVED' | 'REJECTED'
+): Promise<GetAllDomainRequestsResponse> => {
+    const params = status ? { status } : {};
+    const response = await apiClient.get<GetAllDomainRequestsResponse>(
+        '/admin/v1/domain-requests',
+        { params }
+    );
+    return response.data;
+};
+
+/**
+ * Approve a domain request (Admin only)
+ */
+export const approveDomain = async (
+    domainId: string
+): Promise<ApproveDomainResponse> => {
+    const response = await apiClient.post<ApproveDomainResponse>(
+        `/admin/v1/domain-requests/${domainId}/approve`
+    );
+    return response.data;
+};
+
+/**
+ * Reject a domain request with a reason (Admin only)
+ */
+export const rejectDomain = async (
+    domainId: string,
+    data: RejectDomainRequest
+): Promise<RejectDomainResponse> => {
+    const response = await apiClient.post<RejectDomainResponse>(
+        `/admin/v1/domain-requests/${domainId}/reject`,
+        data
+    );
+    return response.data;
+};
+
+/**
+ * Delete a domain (Admin only - can delete any domain including approved ones)
+ */
+export const adminDeleteDomain = async (
+    domainId: string
+): Promise<DeleteDomainResponse> => {
+    const response = await apiClient.delete<DeleteDomainResponse>(
+        `/admin/v1/domain-requests/${domainId}`
+    );
+    return response.data;
+};
+
+// ============================================
+// ADMIN - IP APPROVAL
+// ============================================
+
+/**
+ * Get all pending IP requests (Admin only)
+ */
+export const getPendingIpRequests = async (): Promise<GetPendingIpRequestsResponse> => {
+    const response = await apiClient.get<GetPendingIpRequestsResponse>(
+        '/admin/v1/ip-requests/pending'
+    );
+    return response.data;
+};
+
+/**
+ * Get all IP requests with optional status filter (Admin only)
+ */
+export const getAllIpRequests = async (
+    status?: 'PENDING' | 'APPROVED' | 'REJECTED'
+): Promise<GetAllIpRequestsResponse> => {
+    const params = status ? { status } : {};
+    const response = await apiClient.get<GetAllIpRequestsResponse>(
+        '/admin/v1/ip-requests',
+        { params }
+    );
+    return response.data;
+};
+
+/**
+ * Approve an IP request (Admin only)
+ */
+export const approveIp = async (
+    ipId: string
+): Promise<ApproveIpResponse> => {
+    const response = await apiClient.post<ApproveIpResponse>(
+        `/admin/v1/ip-requests/${ipId}/approve`
+    );
+    return response.data;
+};
+
+/**
+ * Reject an IP request with a reason (Admin only)
+ */
+export const rejectIp = async (
+    ipId: string,
+    data: RejectIpRequest
+): Promise<RejectIpResponse> => {
+    const response = await apiClient.post<RejectIpResponse>(
+        `/admin/v1/ip-requests/${ipId}/reject`,
+        data
+    );
+    return response.data;
+};
+
+/**
+ * Delete an IP (Admin only - can delete any IP including approved ones)
+ */
+export const adminDeleteIp = async (
+    ipId: string
+): Promise<DeleteIpResponse> => {
+    const response = await apiClient.delete<DeleteIpResponse>(
+        `/admin/v1/ip-requests/${ipId}`
+    );
+    return response.data;
+};
+

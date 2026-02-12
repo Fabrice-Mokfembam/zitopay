@@ -1,32 +1,43 @@
-import { useMutation, useQuery, UseMutationResult, UseQueryResult } from '@tanstack/react-query';
-import { addDomain, verifyDomain, getDomains } from '../api/index';
+import { useMutation, useQuery, UseMutationResult, UseQueryResult, useQueryClient } from '@tanstack/react-query';
+import { addDomain, deleteDomain, getDomains } from '../api/index';
 import type {
     AddDomainRequest,
     AddDomainResponse,
-    VerifyDomainResponse,
+    DeleteDomainResponse,
     GetDomainsResponse,
 } from '../types/index';
 
 /**
- * Hook for adding a domain for verification
+ * Hook for adding a domain for admin approval
  */
 export const useAddDomain = (
     merchantId: string
 ): UseMutationResult<AddDomainResponse, Error, AddDomainRequest> => {
+    const queryClient = useQueryClient();
+
     return useMutation({
         mutationFn: (data: AddDomainRequest) => addDomain(merchantId, data),
+        onSuccess: () => {
+            // Invalidate domains query to refetch the list
+            queryClient.invalidateQueries({ queryKey: ['domains', merchantId] });
+        },
     });
 };
 
 /**
- * Hook for verifying domain ownership via DNS TXT record
+ * Hook for deleting a domain (only PENDING or REJECTED)
  */
-export const useVerifyDomain = (
-    merchantId: string,
-    domainId: string
-): UseMutationResult<VerifyDomainResponse, Error, void> => {
+export const useDeleteDomain = (
+    merchantId: string
+): UseMutationResult<DeleteDomainResponse, Error, string> => {
+    const queryClient = useQueryClient();
+
     return useMutation({
-        mutationFn: () => verifyDomain(merchantId, domainId),
+        mutationFn: (domainId: string) => deleteDomain(merchantId, domainId),
+        onSuccess: () => {
+            // Invalidate domains query to refetch the list
+            queryClient.invalidateQueries({ queryKey: ['domains', merchantId] });
+        },
     });
 };
 

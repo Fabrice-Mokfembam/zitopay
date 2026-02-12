@@ -27,9 +27,34 @@ export {
 // Domain Management Hooks
 export {
     useAddDomain,
-    useVerifyDomain,
+    useDeleteDomain,
     useGetDomains,
 } from './useDomains';
+
+// IP Address Management Hooks
+export {
+    useAddIp,
+    useDeleteIp,
+    useGetIps,
+} from './useIps';
+
+// Admin Domain Hooks
+export {
+    useGetPendingDomainRequests,
+    useGetAllDomainRequests,
+    useApproveDomain,
+    useRejectDomain,
+    useAdminDeleteDomain,
+} from './useAdminDomains';
+
+// Admin IP Hooks
+export {
+    useGetPendingIpRequests,
+    useGetAllIpRequests,
+    useApproveIp,
+    useRejectIp,
+    useAdminDeleteIp,
+} from './useAdminIps';
 
 // Gateway Configuration Hooks
 export {

@@ -22,7 +22,8 @@ import {
     ChevronDown,
     ChevronRight,
     LifeBuoy,
-    Settings
+    Settings,
+    Network,
 } from "lucide-react";
 import { useState } from "react";
 import { useLogout } from "@/features/auth/hooks/useAuth";
@@ -137,6 +138,11 @@ const menuSections: MenuSection[] = [
                 icon: Globe,
                 label: "Domains",
                 href: "/dashboard/settings/domains",
+            },
+            {
+                icon: Network,
+                label: "IP Whitelist",
+                href: "/dashboard/settings/ips",
             },
             {
                 icon: User,

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import {
-    Globe,
+    Network,
     Plus,
     CheckCircle2,
     Clock,
@@ -15,36 +15,37 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useUserMerchantData } from "@/features/merchants/context/MerchantContext";
-import { useGetDomains, useAddDomain, useDeleteDomain } from "@/features/merchants/hooks/useDomains";
-import type { Domain } from "@/features/merchants/types/index";
+import { useGetIps, useAddIp, useDeleteIp } from "@/features/merchants/hooks/useIps";
+import type { IpAddress } from "@/features/merchants/types/index";
 
-export default function DomainsPage() {
+export default function IpsPage() {
     const { merchantId } = useUserMerchantData();
     const [showAddModal, setShowAddModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
-    const [domainInput, setDomainInput] = useState("");
-    const [domainError, setDomainError] = useState<string | null>(null);
+    const [selectedIp, setSelectedIp] = useState<IpAddress | null>(null);
+    const [ipInput, setIpInput] = useState("");
+    const [descriptionInput, setDescriptionInput] = useState("");
+    const [ipError, setIpError] = useState<string | null>(null);
 
-    // Fetch domains
-    const { data: domainsData, isLoading: isLoadingDomains } = useGetDomains(
+    // Fetch IPs
+    const { data: ipsData, isLoading: isLoadingIps } = useGetIps(
         merchantId || "",
         !!merchantId
     );
 
-    const domains = domainsData?.domains || [];
+    const ips = ipsData?.ips || [];
 
-    // Add domain mutation
-    const addDomainMutation = useAddDomain(merchantId || "");
-    const deleteDomainMutation = useDeleteDomain(merchantId || "");
+    // Add IP mutation
+    const addIpMutation = useAddIp(merchantId || "");
+    const deleteIpMutation = useDeleteIp(merchantId || "");
 
-    const getStatusConfig = (status: Domain["status"]) => {
+    const getStatusConfig = (status: IpAddress["status"]) => {
         switch (status) {
             case "APPROVED":
                 return {
                     color: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20",
                     icon: <CheckCircle2 className="w-3.5 h-3.5" />,
-                    label: "Verified",
+                    label: "Approved",
                 };
             case "PENDING":
                 return {
@@ -67,72 +68,76 @@ export default function DomainsPage() {
         }
     };
 
-    const validateDomain = (domain: string): boolean => {
-        // Remove http://, https://, www. if present
-        const cleaned = domain.trim().replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
+    const validateIp = (ip: string): boolean => {
+        const trimmedIp = ip.trim();
 
-        // Basic domain validation regex
-        const domainRegex = /^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$/i;
+        // Basic IPv4 validation
+        const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}(\/\d{1,2})?$/;
+        // Basic IPv6 validation (simplified)
+        const ipv6Regex = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}(\/\d{1,3})?$/;
 
-        if (!cleaned) {
-            setDomainError("Domain cannot be empty");
+        if (!trimmedIp) {
+            setIpError("IP address cannot be empty");
             return false;
         }
 
-        if (!domainRegex.test(cleaned)) {
-            setDomainError("Invalid domain format. Please enter a valid domain (e.g., example.com)");
+        if (!ipv4Regex.test(trimmedIp) && !ipv6Regex.test(trimmedIp) && !trimmedIp.includes(":")) { // Simple check to allow complex IPv6
+            setIpError("Invalid IP address format. Use IPv4 (e.g. 192.168.1.1) or CIDR (e.g. 192.168.1.0/24)");
             return false;
         }
 
-        setDomainError(null);
+        setIpError(null);
         return true;
     };
 
-    const handleAddDomain = async () => {
+    const handleAddIp = async () => {
         if (!merchantId) {
             toast.error("Merchant ID not found");
             return;
         }
 
-        // Clean domain input
-        const cleanedDomain = domainInput.trim().replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
+        const trimmedIp = ipInput.trim();
 
-        if (!validateDomain(cleanedDomain)) {
+        if (!validateIp(trimmedIp)) {
             return;
         }
 
         try {
-            await addDomainMutation.mutateAsync({ domain: cleanedDomain });
+            await addIpMutation.mutateAsync({
+                ipAddress: trimmedIp,
+                description: descriptionInput.trim() || undefined
+            });
 
-            toast.success("Domain submitted successfully!", {
-                description: "Your domain is now pending admin approval.",
+            toast.success("IP address submitted successfully!", {
+                description: "Your IP is now pending admin approval.",
             });
 
             setShowAddModal(false);
-            setDomainInput("");
-            setDomainError(null);
+            setIpInput("");
+            setDescriptionInput("");
+            setIpError(null);
         } catch (error: unknown) {
-            const errorMessage = (error as { response?: { data?: { message?: string }; status?: number }; message?: string })?.response?.data?.message || (error as { message?: string })?.message || "Failed to add domain";
+            const errorMessage = (error as { response?: { data?: { message?: string }; status?: number }; message?: string })?.response?.data?.message || (error as { message?: string })?.message || "Failed to add IP address";
 
-            toast.error("Failed to add domain", {
+            toast.error("Failed to add IP address", {
                 description: errorMessage,
             });
         }
     };
 
-    const handleDeleteDomain = async () => {
-        if (!selectedDomain || !merchantId) return;
+    const handleDeleteIp = async () => {
+        if (!selectedIp || !merchantId) return;
 
         try {
-            await deleteDomainMutation.mutateAsync(selectedDomain.id);
+            await deleteIpMutation.mutateAsync(selectedIp.id);
 
-            toast.success("Domain removed successfully");
+            toast.success("IP address removed successfully");
             setShowDeleteModal(false);
-            setSelectedDomain(null);
+            setSelectedIp(null);
         } catch (error: unknown) {
-            const errorMessage = (error as { response?: { data?: { message?: string }; status?: number }; message?: string })?.response?.data?.message || (error as { message?: string })?.message || "Failed to delete domain";
+            const errorMessage = (error as { response?: { data?: { message?: string }; status?: number }; message?: string })?.response?.data?.message || (error as { message?: string })?.message || "Failed to delete IP address";
 
-            toast.error("Failed to delete domain", {
+            toast.error("Failed to delete IP address", {
                 description: errorMessage,
             });
         }
@@ -153,52 +158,53 @@ export default function DomainsPage() {
             {/* HEADER */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-xl font-bold text-foreground">Domain Management</h1>
+                    <h1 className="text-xl font-bold text-foreground">IP Whitelist</h1>
                     <p className="text-xs text-muted-foreground mt-1">
-                        Add and manage domains for production use
+                        Manage allowed IP addresses for API access
                     </p>
                 </div>
                 <button
                     onClick={() => {
                         setShowAddModal(true);
-                        setDomainInput("");
-                        setDomainError(null);
+                        setIpInput("");
+                        setDescriptionInput("");
+                        setIpError(null);
                     }}
                     className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600 transition-colors flex items-center gap-2"
                 >
                     <Plus className="w-4 h-4" />
-                    Add Domain
+                    Add IP Address
                 </button>
             </div>
 
-            {/* DOMAINS LIST */}
-            {isLoadingDomains ? (
+            {/* IPS LIST */}
+            {isLoadingIps ? (
                 <div className="bg-background rounded-xl border border-border p-12 flex items-center justify-center">
                     <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
                 </div>
-            ) : domains.length === 0 ? (
+            ) : ips.length === 0 ? (
                 <div className="bg-background rounded-xl border border-border p-12 text-center">
-                    <Globe className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-sm font-medium text-foreground mb-1">No domains added yet</p>
+                    <Network className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-sm font-medium text-foreground mb-1">No IP addresses whitelisted</p>
                     <p className="text-xs text-muted-foreground">
-                        Add your first domain to get started
+                        Add an IP address to secure your API access
                     </p>
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {domains.map((domain) => {
-                        const statusConfig = getStatusConfig(domain.status);
+                    {ips.map((ip) => {
+                        const statusConfig = getStatusConfig(ip.status);
 
                         return (
                             <div
-                                key={domain.id}
+                                key={ip.id}
                                 className="bg-background rounded-xl border border-border p-6 hover:shadow-md transition-all"
                             >
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1">
-                                        <div className="flex items-center gap-3 mb-3">
-                                            <Globe className="w-5 h-5 text-muted-foreground" />
-                                            <h3 className="text-base font-bold text-foreground">{domain.domain}</h3>
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <Network className="w-5 h-5 text-muted-foreground" />
+                                            <h3 className="text-base font-bold text-foreground font-mono">{ip.ipAddress}</h3>
                                             <span
                                                 className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${statusConfig.color}`}
                                             >
@@ -207,46 +213,46 @@ export default function DomainsPage() {
                                             </span>
                                         </div>
 
+                                        {ip.description && (
+                                            <p className="text-sm text-muted-foreground mb-3">{ip.description}</p>
+                                        )}
+
                                         <div className="flex items-center gap-6 text-xs text-muted-foreground">
-                                            <p>Added: {formatDate(domain.createdAt)}</p>
+                                            <p>Added: {formatDate(ip.createdAt)}</p>
 
-                                            {domain.status === "APPROVED" && domain.verifiedAt && (
-                                                <p>Verified: {formatDate(domain.verifiedAt)}</p>
-                                            )}
-
-                                            {domain.status === "REJECTED" && domain.reviewedAt && (
-                                                <p>Reviewed: {formatDate(domain.reviewedAt)}</p>
+                                            {ip.status === "APPROVED" && ip.verifiedAt && (
+                                                <p>Approved: {formatDate(ip.verifiedAt)}</p>
                                             )}
                                         </div>
 
-                                        {domain.status === "REJECTED" && domain.rejectionReason && (
+                                        {ip.status === "REJECTED" && ip.rejectionReason && (
                                             <div className="mt-3 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-3 text-xs">
                                                 <p className="font-semibold text-red-700 dark:text-red-400 mb-1 flex items-center gap-1.5">
                                                     <AlertCircle className="w-3.5 h-3.5" />
                                                     Rejection Reason:
                                                 </p>
                                                 <p className="text-red-600 dark:text-red-300">
-                                                    {domain.rejectionReason}
+                                                    {ip.rejectionReason}
                                                 </p>
                                             </div>
                                         )}
 
-                                        {domain.status === "PENDING" && (
+                                        {ip.status === "PENDING" && (
                                             <div className="mt-3 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-xs text-blue-700 dark:text-blue-300 flex items-start gap-2">
                                                 <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                                                <p>This domain is waiting for admin approval. Once approved, you can use it for production API requests.</p>
+                                                <p>This IP is waiting for admin approval.</p>
                                             </div>
                                         )}
                                     </div>
 
-                                    {(domain.status === "PENDING" || domain.status === "REJECTED") && (
+                                    {(ip.status === "PENDING" || ip.status === "REJECTED") && (
                                         <button
                                             onClick={() => {
-                                                setSelectedDomain(domain);
+                                                setSelectedIp(ip);
                                                 setShowDeleteModal(true);
                                             }}
                                             className="p-2 text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-colors"
-                                            title="Delete domain"
+                                            title="Delete IP"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
@@ -258,17 +264,18 @@ export default function DomainsPage() {
                 </div>
             )}
 
-            {/* ADD DOMAIN MODAL */}
+            {/* ADD IP MODAL */}
             {showAddModal && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-background rounded-xl border border-border shadow-2xl max-w-md w-full">
                         <div className="px-6 py-4 border-b border-border flex items-center justify-between">
-                            <h3 className="text-lg font-bold text-foreground">Add Domain</h3>
+                            <h3 className="text-lg font-bold text-foreground">Add IP Address</h3>
                             <button
                                 onClick={() => {
                                     setShowAddModal(false);
-                                    setDomainInput("");
-                                    setDomainError(null);
+                                    setIpInput("");
+                                    setDescriptionInput("");
+                                    setIpError(null);
                                 }}
                                 className="p-1 hover:bg-muted rounded transition-colors text-muted-foreground hover:text-foreground"
                             >
@@ -279,30 +286,40 @@ export default function DomainsPage() {
                         <div className="p-6 space-y-4">
                             <div>
                                 <label className="text-sm font-medium text-foreground mb-2 block">
-                                    Domain Name *
+                                    IP Address or CIDR *
                                 </label>
                                 <input
                                     type="text"
-                                    placeholder="example.com"
-                                    value={domainInput}
+                                    placeholder="e.g. 192.168.1.1 or 192.168.1.0/24"
+                                    value={ipInput}
                                     onChange={(e) => {
-                                        setDomainInput(e.target.value);
-                                        setDomainError(null);
+                                        setIpInput(e.target.value);
+                                        setIpError(null);
                                     }}
-                                    className={`w-full px-4 py-2.5 bg-muted/20 border rounded-lg text-sm transition-colors outline-none ${domainError
+                                    className={`w-full px-4 py-2.5 bg-muted/20 border rounded-lg text-sm transition-colors outline-none font-mono ${ipError
                                             ? "border-red-500 focus:border-red-500"
                                             : "border-border hover:border-primary/50 focus:border-primary"
                                         }`}
                                 />
-                                {domainError && (
+                                {ipError && (
                                     <p className="text-xs text-red-600 dark:text-red-400 mt-1.5 flex items-center gap-1">
                                         <AlertCircle className="w-3 h-3" />
-                                        {domainError}
+                                        {ipError}
                                     </p>
                                 )}
-                                <p className="text-xs text-muted-foreground mt-1.5">
-                                    Enter your domain without http:// or https://
-                                </p>
+                            </div>
+
+                            <div>
+                                <label className="text-sm font-medium text-foreground mb-2 block">
+                                    Description (Optional)
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Office Static IP"
+                                    value={descriptionInput}
+                                    onChange={(e) => setDescriptionInput(e.target.value)}
+                                    className="w-full px-4 py-2.5 bg-muted/20 border border-border rounded-lg text-sm transition-colors outline-none hover:border-primary/50 focus:border-primary"
+                                />
                             </div>
 
                             <div className="bg-blue-50 dark:bg-blue-900/10 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
@@ -311,7 +328,7 @@ export default function DomainsPage() {
                                     Admin Approval Required
                                 </p>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                    Newly added domains must be approved by an administrator before they can be used.
+                                    Newly added IP addresses must be approved by an administrator before they can be used.
                                 </p>
                             </div>
 
@@ -319,19 +336,20 @@ export default function DomainsPage() {
                                 <button
                                     onClick={() => {
                                         setShowAddModal(false);
-                                        setDomainInput("");
-                                        setDomainError(null);
+                                        setIpInput("");
+                                        setDescriptionInput("");
+                                        setIpError(null);
                                     }}
                                     className="flex-1 px-4 py-2.5 bg-background border border-border rounded-lg text-sm font-semibold hover:bg-muted transition-colors"
                                 >
                                     Cancel
                                 </button>
                                 <button
-                                    onClick={handleAddDomain}
-                                    disabled={addDomainMutation.isPending || !domainInput.trim()}
+                                    onClick={handleAddIp}
+                                    disabled={addIpMutation.isPending || !ipInput.trim()}
                                     className="flex-1 px-4 py-2.5 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    {addDomainMutation.isPending ? (
+                                    {addIpMutation.isPending ? (
                                         <>
                                             <Loader2 className="w-4 h-4 animate-spin" />
                                             Submitting...
@@ -346,17 +364,17 @@ export default function DomainsPage() {
                 </div>
             )}
 
-            {/* DELETE DOMAIN MODAL */}
-            {showDeleteModal && selectedDomain && (
+            {/* DELETE IP MODAL */}
+            {showDeleteModal && selectedIp && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-background rounded-xl border border-border shadow-2xl max-w-sm w-full">
                         <div className="p-6 text-center">
                             <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
                             </div>
-                            <h3 className="text-lg font-bold text-foreground mb-2">Delete Domain?</h3>
+                            <h3 className="text-lg font-bold text-foreground mb-2">Delete IP Address?</h3>
                             <p className="text-sm text-muted-foreground mb-6">
-                                Are you sure you want to delete <strong>{selectedDomain.domain}</strong>? This action cannot be undone.
+                                Are you sure you want to delete <strong>{selectedIp.ipAddress}</strong>? This action cannot be undone.
                             </p>
                             <div className="flex gap-3">
                                 <button
@@ -366,11 +384,11 @@ export default function DomainsPage() {
                                     Cancel
                                 </button>
                                 <button
-                                    onClick={handleDeleteDomain}
-                                    disabled={deleteDomainMutation.isPending}
+                                    onClick={handleDeleteIp}
+                                    disabled={deleteIpMutation.isPending}
                                     className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
                                 >
-                                    {deleteDomainMutation.isPending ? (
+                                    {deleteIpMutation.isPending ? (
                                         <Loader2 className="w-4 h-4 animate-spin" />
                                     ) : (
                                         "Delete"

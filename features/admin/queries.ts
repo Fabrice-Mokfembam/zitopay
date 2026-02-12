@@ -2,97 +2,97 @@
 
 import { useQuery, useMutation, useQueryClient, UseQueryResult } from "@tanstack/react-query";
 import {
-  adminApi,
-  getPlatformMetrics,
-  getHealthMetrics,
-  getGatewayPerformance,
-  getAllMerchantUsers,
-  createMerchantAccount,
-  updateMerchant,
-  generateBypassPassword,
-  getAllTransactions,
-  getPlatformSettings,
-  updateMerchantRegistrationSettings,
-  getFeeVersions,
-  createFeeVersion,
-  activateFeeVersion,
-  getFeeRules,
-  getFeeRule,
-  createFeeRule,
-  updateFeeRule,
-  activateFeeRule,
-  deactivateFeeRule,
-  getFeeTiers,
-  createFeeTier,
-  updateFeeTier,
-  getMerchantFeeOverrides,
-  createMerchantFeeOverride,
-  updateMerchantFeeOverride,
-  deactivateMerchantFeeOverride,
-  getPlatformWalletFeeSettings,
-  updatePlatformWalletFeeSettings,
-  deleteMerchant,
-  getGlobalGateways,
-  updateGlobalGateway,
-  updateMerchantStatus,
-  updateMerchantCapabilities,
-  updateMerchantGatewayConfig,
-  // Support API
-  getAdminTickets,
-  getAdminTicketDetails,
-  replyAsAdmin,
-  updateTicketAttributes
+    adminApi,
+    getPlatformMetrics,
+    getHealthMetrics,
+    getGatewayPerformance,
+    getAllMerchantUsers,
+    createMerchantAccount,
+    updateMerchant,
+    generateBypassPassword,
+    getAllTransactions,
+    getPlatformSettings,
+    updateMerchantRegistrationSettings,
+    getFeeVersions,
+    createFeeVersion,
+    activateFeeVersion,
+    getFeeRules,
+    getFeeRule,
+    createFeeRule,
+    updateFeeRule,
+    activateFeeRule,
+    deactivateFeeRule,
+    getFeeTiers,
+    createFeeTier,
+    updateFeeTier,
+    getMerchantFeeOverrides,
+    createMerchantFeeOverride,
+    updateMerchantFeeOverride,
+    deactivateMerchantFeeOverride,
+    getPlatformWalletFeeSettings,
+    updatePlatformWalletFeeSettings,
+    deleteMerchant,
+    getGlobalGateways,
+    updateGlobalGateway,
+    updateMerchantStatus,
+    updateMerchantCapabilities,
+    updateMerchantGatewayConfig,
+    // Support API
+    getAdminTickets,
+    getAdminTicketDetails,
+    replyAsAdmin,
+    updateTicketAttributes,
 } from "./api";
 import {
-  PlatformMetricsResponse,
-  HealthMetricsResponse,
-  GatewayPerformanceResponse,
-  MerchantUsersResponse,
-  CreateMerchantRequest,
-  UpdateMerchantRequest,
-  AdminTransactionsResponse,
-  AdminTransactionFilters,
-  GetPlatformSettingsResponse,
-  UpdateMerchantRegistrationSettingsRequest,
-  FeeVersionsResponse,
-  CreateFeeVersionRequest,
-  CreateFeeVersionResponse,
-  ActivateFeeVersionResponse,
-  FeeRulesResponse,
-  FeeRuleResponse,
-  FeeRuleFilters,
-  CreateFeeRuleRequest,
-  CreateFeeRuleResponse,
-  UpdateFeeRuleRequest,
-  ActivateFeeRuleResponse,
-  DeactivateFeeRuleResponse,
-  FeeTiersResponse,
-  CreateFeeTierRequest,
-  CreateFeeTierResponse,
-  UpdateFeeTierRequest,
-  UpdateFeeTierResponse,
-  MerchantFeeOverridesResponse,
-  MerchantFeeOverrideResponse,
-  MerchantFeeOverrideFilters,
-  CreateMerchantFeeOverrideRequest,
-  UpdateMerchantFeeOverrideRequest,
-  DeactivateMerchantFeeOverrideResponse,
-  PlatformWalletFeeSettingsResponse,
-  UpdatePlatformWalletFeeSettingsRequest,
-  DeleteMerchantResponse,
-  GenerateBypassPasswordRequest,
-  GenerateBypassPasswordResponse,
-  GetGlobalGatewaysResponse,
-  UpdateGlobalGatewayRequest,
-  MerchantStatusUpdate,
-  MerchantCapabilitiesUpdate,
-  MerchantGatewayConfigUpdate,
-  SupportTicketFilters
+    PlatformMetricsResponse,
+    HealthMetricsResponse,
+    GatewayPerformanceResponse,
+    MerchantUsersResponse,
+    CreateMerchantRequest,
+    UpdateMerchantRequest,
+    AdminTransactionsResponse,
+    AdminTransactionFilters,
+    GetPlatformSettingsResponse,
+    UpdateMerchantRegistrationSettingsRequest,
+    FeeVersionsResponse,
+    CreateFeeVersionRequest,
+    CreateFeeVersionResponse,
+    ActivateFeeVersionResponse,
+    FeeRulesResponse,
+    FeeRuleResponse,
+    FeeRuleFilters,
+    CreateFeeRuleRequest,
+    CreateFeeRuleResponse,
+    UpdateFeeRuleRequest,
+    ActivateFeeRuleResponse,
+    DeactivateFeeRuleResponse,
+    FeeTiersResponse,
+    CreateFeeTierRequest,
+    CreateFeeTierResponse,
+    UpdateFeeTierRequest,
+    UpdateFeeTierResponse,
+    MerchantFeeOverridesResponse,
+    MerchantFeeOverrideResponse,
+    MerchantFeeOverrideFilters,
+    CreateMerchantFeeOverrideRequest,
+    UpdateMerchantFeeOverrideRequest,
+    DeactivateMerchantFeeOverrideResponse,
+    PlatformWalletFeeSettingsResponse,
+    UpdatePlatformWalletFeeSettingsRequest,
+    DeleteMerchantResponse,
+    GenerateBypassPasswordRequest,
+    GenerateBypassPasswordResponse,
+    GetGlobalGatewaysResponse,
+    UpdateGlobalGatewayRequest,
+    MerchantStatusUpdate,
+    MerchantCapabilitiesUpdate,
+    MerchantGatewayConfigUpdate,
+    SupportTicketFilters
 } from "./types";
 import {
-  GetAdminTicketsResponse,
-  AdminReplyTicketRequest,
-  UpdateTicketAttributesRequest
+    GetAdminTicketsResponse,
+    AdminReplyTicketRequest,
+    UpdateTicketAttributesRequest
 } from "@/features/support/types";
 
 // ----------------------------------------------------------------------
@@ -100,53 +100,53 @@ import {
 // ----------------------------------------------------------------------
 
 export function useAdminTickets(filters?: SupportTicketFilters): UseQueryResult<GetAdminTicketsResponse, Error> {
-  return useQuery({
-    queryKey: ["admin", "support", "tickets", filters],
-    queryFn: () => getAdminTickets(filters),
-    staleTime: 30000,
-  });
+    return useQuery({
+        queryKey: ["admin", "support", "tickets", filters],
+        queryFn: () => getAdminTickets(filters),
+        staleTime: 30000,
+    });
 }
 
 export function useAdminTicketDetails(ticketId: string) {
-  return useQuery({
-    queryKey: ["admin", "support", "ticket", ticketId],
-    queryFn: () => getAdminTicketDetails(ticketId),
-    enabled: !!ticketId,
-  });
+    return useQuery({
+        queryKey: ["admin", "support", "ticket", ticketId],
+        queryFn: () => getAdminTicketDetails(ticketId),
+        enabled: !!ticketId,
+    });
 }
 
 export function useReplyAsAdmin() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ ticketId, data }: { ticketId: string; data: AdminReplyTicketRequest }) =>
-      replyAsAdmin(ticketId, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "support", "ticket", variables.ticketId] });
-      queryClient.invalidateQueries({ queryKey: ["admin", "support", "tickets"] });
-    },
-  });
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ ticketId, data }: { ticketId: string; data: AdminReplyTicketRequest }) =>
+            replyAsAdmin(ticketId, data),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "support", "ticket", variables.ticketId] });
+            queryClient.invalidateQueries({ queryKey: ["admin", "support", "tickets"] });
+        },
+    });
 }
 
 export function useUpdateTicketAttributes() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ ticketId, data }: { ticketId: string; data: UpdateTicketAttributesRequest }) =>
-      updateTicketAttributes(ticketId, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "support", "ticket", variables.ticketId] });
-      queryClient.invalidateQueries({ queryKey: ["admin", "support", "tickets"] });
-    },
-  });
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ ticketId, data }: { ticketId: string; data: UpdateTicketAttributesRequest }) =>
+            updateTicketAttributes(ticketId, data),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "support", "ticket", variables.ticketId] });
+            queryClient.invalidateQueries({ queryKey: ["admin", "support", "tickets"] });
+        },
+    });
 }
 
 /**
  * Legacy hook for admin stats (keeping for backward compatibility)
  */
 export function useAdminStats() {
-  return useQuery({
-    queryKey: ["admin", "stats"],
-    queryFn: () => adminApi.getStats(),
-  });
+    return useQuery({
+        queryKey: ["admin", "stats"],
+        queryFn: () => adminApi.getStats(),
+    });
 }
 
 /**
@@ -154,12 +154,12 @@ export function useAdminStats() {
  * Returns total merchants, active merchants, platform revenue, and total volume
  */
 export function usePlatformMetrics(): UseQueryResult<PlatformMetricsResponse, Error> {
-  return useQuery({
-    queryKey: ["admin", "dashboard", "platform-metrics"],
-    queryFn: () => getPlatformMetrics(),
-    refetchInterval: 30000, // Refetch every 30 seconds (matches backend cache TTL)
-    staleTime: 30000, // Consider data stale after 30 seconds
-  });
+    return useQuery({
+        queryKey: ["admin", "dashboard", "platform-metrics"],
+        queryFn: () => getPlatformMetrics(),
+        refetchInterval: 30000, // Refetch every 30 seconds (matches backend cache TTL)
+        staleTime: 30000, // Consider data stale after 30 seconds
+    });
 }
 
 /**
@@ -167,12 +167,12 @@ export function usePlatformMetrics(): UseQueryResult<PlatformMetricsResponse, Er
  * Returns success rate, failed transactions, pending KYB, and recon issues
  */
 export function useHealthMetrics(): UseQueryResult<HealthMetricsResponse, Error> {
-  return useQuery({
-    queryKey: ["admin", "dashboard", "health-metrics"],
-    queryFn: () => getHealthMetrics(),
-    refetchInterval: 30000, // Refetch every 30 seconds (matches backend cache TTL)
-    staleTime: 30000, // Consider data stale after 30 seconds
-  });
+    return useQuery({
+        queryKey: ["admin", "dashboard", "health-metrics"],
+        queryFn: () => getHealthMetrics(),
+        refetchInterval: 30000, // Refetch every 30 seconds (matches backend cache TTL)
+        staleTime: 30000, // Consider data stale after 30 seconds
+    });
 }
 
 /**
@@ -180,12 +180,12 @@ export function useHealthMetrics(): UseQueryResult<HealthMetricsResponse, Error>
  * Returns performance data for each gateway (MTN, Orange, etc.)
  */
 export function useGatewayPerformance(): UseQueryResult<GatewayPerformanceResponse, Error> {
-  return useQuery({
-    queryKey: ["admin", "dashboard", "gateway-performance"],
-    queryFn: () => getGatewayPerformance(),
-    refetchInterval: 30000, // Refetch every 30 seconds (matches backend cache TTL)
-    staleTime: 30000, // Consider data stale after 30 seconds
-  });
+    return useQuery({
+        queryKey: ["admin", "dashboard", "gateway-performance"],
+        queryFn: () => getGatewayPerformance(),
+        refetchInterval: 30000, // Refetch every 30 seconds (matches backend cache TTL)
+        staleTime: 30000, // Consider data stale after 30 seconds
+    });
 }
 
 /**
@@ -193,50 +193,50 @@ export function useGatewayPerformance(): UseQueryResult<GatewayPerformanceRespon
  * Returns comprehensive list of all merchant-user relationships
  */
 export function useMerchantUsers(): UseQueryResult<MerchantUsersResponse, Error> {
-  return useQuery({
-    queryKey: ["admin", "merchant-users"],
-    queryFn: () => getAllMerchantUsers(),
-    refetchInterval: 60000, // Refetch every 60 seconds
-    staleTime: 30000, // Consider data stale after 30 seconds
-  });
+    return useQuery({
+        queryKey: ["admin", "merchant-users"],
+        queryFn: () => getAllMerchantUsers(),
+        refetchInterval: 60000, // Refetch every 60 seconds
+        staleTime: 30000, // Consider data stale after 30 seconds
+    });
 }
 
 export function useCreateMerchantAccount() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (payload: CreateMerchantRequest) => createMerchantAccount(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "merchant-users"] });
-      queryClient.invalidateQueries({ queryKey: ["admin", "dashboard", "platform-metrics"] });
-    },
-  });
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (payload: CreateMerchantRequest) => createMerchantAccount(payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "merchant-users"] });
+            queryClient.invalidateQueries({ queryKey: ["admin", "dashboard", "platform-metrics"] });
+        },
+    });
 }
 
 /**
  * Hook for generating a bypass password (master key)
  */
 export function useGenerateBypassPassword() {
-  return useMutation<GenerateBypassPasswordResponse, Error, GenerateBypassPasswordRequest | undefined>({
-    mutationFn: (payload) => generateBypassPassword(payload || {}),
-  });
+    return useMutation<GenerateBypassPasswordResponse, Error, GenerateBypassPasswordRequest | undefined>({
+        mutationFn: (payload) => generateBypassPassword(payload || {}),
+    });
 }
 
 export function usePlatformSettings(): UseQueryResult<GetPlatformSettingsResponse, Error> {
-  return useQuery({
-    queryKey: ["admin", "settings"],
-    queryFn: () => getPlatformSettings(),
-    staleTime: 30000,
-  });
+    return useQuery({
+        queryKey: ["admin", "settings"],
+        queryFn: () => getPlatformSettings(),
+        staleTime: 30000,
+    });
 }
 
 export function useUpdateMerchantRegistrationSettings() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (payload: UpdateMerchantRegistrationSettingsRequest) => updateMerchantRegistrationSettings(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "settings"] });
-    },
-  });
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (payload: UpdateMerchantRegistrationSettingsRequest) => updateMerchantRegistrationSettings(payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "settings"] });
+        },
+    });
 }
 
 /**
@@ -244,193 +244,193 @@ export function useUpdateMerchantRegistrationSettings() {
  * Returns comprehensive list of all transactions with filters and pagination
  */
 export function useAdminTransactions(
-  filters?: AdminTransactionFilters,
-  enabled: boolean = true
+    filters?: AdminTransactionFilters,
+    enabled: boolean = true
 ): UseQueryResult<AdminTransactionsResponse, Error> {
-  return useQuery({
-    queryKey: ["admin", "transactions", filters],
-    queryFn: () => getAllTransactions(filters),
-    enabled,
-    refetchInterval: 30000, // Refetch every 30 seconds
-    staleTime: 30000, // Consider data stale after 30 seconds
-  });
+    return useQuery({
+        queryKey: ["admin", "transactions", filters],
+        queryFn: () => getAllTransactions(filters),
+        enabled,
+        refetchInterval: 30000, // Refetch every 30 seconds
+        staleTime: 30000, // Consider data stale after 30 seconds
+    });
 }
 
 // Fee Versions Hooks
 export function useFeeVersions(): UseQueryResult<FeeVersionsResponse, Error> {
-  return useQuery({
-    queryKey: ["admin", "fee-versions"],
-    queryFn: () => getFeeVersions(),
-    staleTime: 30000,
-  });
+    return useQuery({
+        queryKey: ["admin", "fee-versions"],
+        queryFn: () => getFeeVersions(),
+        staleTime: 30000,
+    });
 }
 
 export function useCreateFeeVersion() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (data: CreateFeeVersionRequest) => createFeeVersion(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "fee-versions"] });
-    },
-  });
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (data: CreateFeeVersionRequest) => createFeeVersion(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "fee-versions"] });
+        },
+    });
 }
 
 export function useActivateFeeVersion() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => activateFeeVersion(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "fee-versions"] });
-      queryClient.invalidateQueries({ queryKey: ["admin", "fee-rules"] });
-    },
-  });
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (id: string) => activateFeeVersion(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "fee-versions"] });
+            queryClient.invalidateQueries({ queryKey: ["admin", "fee-rules"] });
+        },
+    });
 }
 
 // Fee Rules Hooks
 export function useFeeRules(filters?: FeeRuleFilters): UseQueryResult<FeeRulesResponse, Error> {
-  return useQuery({
-    queryKey: ["admin", "fee-rules", filters],
-    queryFn: () => getFeeRules(filters),
-    staleTime: 30000,
-  });
+    return useQuery({
+        queryKey: ["admin", "fee-rules", filters],
+        queryFn: () => getFeeRules(filters),
+        staleTime: 30000,
+    });
 }
 
 export function useFeeRule(id: string, enabled: boolean = true): UseQueryResult<FeeRuleResponse, Error> {
-  return useQuery({
-    queryKey: ["admin", "fee-rules", id],
-    queryFn: () => getFeeRule(id),
-    enabled: enabled && !!id,
-    staleTime: 30000,
-  });
+    return useQuery({
+        queryKey: ["admin", "fee-rules", id],
+        queryFn: () => getFeeRule(id),
+        enabled: enabled && !!id,
+        staleTime: 30000,
+    });
 }
 
 export function useCreateFeeRule() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (data: CreateFeeRuleRequest) => createFeeRule(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "fee-rules"] });
-    },
-  });
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (data: CreateFeeRuleRequest) => createFeeRule(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "fee-rules"] });
+        },
+    });
 }
 
 export function useUpdateFeeRule() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateFeeRuleRequest }) => updateFeeRule(id, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "fee-rules"] });
-      queryClient.invalidateQueries({ queryKey: ["admin", "fee-rules", variables.id] });
-    },
-  });
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, data }: { id: string; data: UpdateFeeRuleRequest }) => updateFeeRule(id, data),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "fee-rules"] });
+            queryClient.invalidateQueries({ queryKey: ["admin", "fee-rules", variables.id] });
+        },
+    });
 }
 
 export function useActivateFeeRule() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => activateFeeRule(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "fee-rules"] });
-    },
-  });
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (id: string) => activateFeeRule(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "fee-rules"] });
+        },
+    });
 }
 
 export function useDeactivateFeeRule() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => deactivateFeeRule(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "fee-rules"] });
-    },
-  });
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (id: string) => deactivateFeeRule(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "fee-rules"] });
+        },
+    });
 }
 
 // Fee Tiers Hooks
 export function useFeeTiers(feeRuleId: string, enabled: boolean = true): UseQueryResult<FeeTiersResponse, Error> {
-  return useQuery({
-    queryKey: ["admin", "fee-tiers", feeRuleId],
-    queryFn: () => getFeeTiers(feeRuleId),
-    enabled: enabled && !!feeRuleId,
-    staleTime: 30000,
-  });
+    return useQuery({
+        queryKey: ["admin", "fee-tiers", feeRuleId],
+        queryFn: () => getFeeTiers(feeRuleId),
+        enabled: enabled && !!feeRuleId,
+        staleTime: 30000,
+    });
 }
 
 export function useCreateFeeTier() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ feeRuleId, data }: { feeRuleId: string; data: CreateFeeTierRequest }) => createFeeTier(feeRuleId, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "fee-tiers", variables.feeRuleId] });
-    },
-  });
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ feeRuleId, data }: { feeRuleId: string; data: CreateFeeTierRequest }) => createFeeTier(feeRuleId, data),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "fee-tiers", variables.feeRuleId] });
+        },
+    });
 }
 
 export function useUpdateFeeTier() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateFeeTierRequest }) => updateFeeTier(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "fee-tiers"] });
-    },
-  });
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, data }: { id: string; data: UpdateFeeTierRequest }) => updateFeeTier(id, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "fee-tiers"] });
+        },
+    });
 }
 
 // Merchant Fee Overrides Hooks
 export function useMerchantFeeOverrides(filters?: MerchantFeeOverrideFilters): UseQueryResult<MerchantFeeOverridesResponse, Error> {
-  return useQuery({
-    queryKey: ["admin", "merchant-fee-overrides", filters],
-    queryFn: () => getMerchantFeeOverrides(filters),
-    staleTime: 30000,
-  });
+    return useQuery({
+        queryKey: ["admin", "merchant-fee-overrides", filters],
+        queryFn: () => getMerchantFeeOverrides(filters),
+        staleTime: 30000,
+    });
 }
 
 export function useCreateMerchantFeeOverride() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (data: CreateMerchantFeeOverrideRequest) => createMerchantFeeOverride(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "merchant-fee-overrides"] });
-    },
-  });
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (data: CreateMerchantFeeOverrideRequest) => createMerchantFeeOverride(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "merchant-fee-overrides"] });
+        },
+    });
 }
 
 export function useUpdateMerchantFeeOverride() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateMerchantFeeOverrideRequest }) => updateMerchantFeeOverride(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "merchant-fee-overrides"] });
-    },
-  });
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, data }: { id: string; data: UpdateMerchantFeeOverrideRequest }) => updateMerchantFeeOverride(id, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "merchant-fee-overrides"] });
+        },
+    });
 }
 
 export function useDeactivateMerchantFeeOverride() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => deactivateMerchantFeeOverride(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "merchant-fee-overrides"] });
-    },
-  });
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (id: string) => deactivateMerchantFeeOverride(id),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "merchant-fee-overrides"] });
+        },
+    });
 }
 
 // Platform Wallet Fee Settings Hooks
 export function usePlatformWalletFeeSettings(): UseQueryResult<PlatformWalletFeeSettingsResponse, Error> {
-  return useQuery({
-    queryKey: ["admin", "platform-wallet-fee-settings"],
-    queryFn: () => getPlatformWalletFeeSettings(),
-    staleTime: 30000,
-  });
+    return useQuery({
+        queryKey: ["admin", "platform-wallet-fee-settings"],
+        queryFn: () => getPlatformWalletFeeSettings(),
+        staleTime: 30000,
+    });
 }
 
 export function useUpdatePlatformWalletFeeSettings() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (data: UpdatePlatformWalletFeeSettingsRequest) => updatePlatformWalletFeeSettings(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "platform-wallet-fee-settings"] });
-    },
-  });
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (data: UpdatePlatformWalletFeeSettingsRequest) => updatePlatformWalletFeeSettings(data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "platform-wallet-fee-settings"] });
+        },
+    });
 }
 
 /**
@@ -438,14 +438,14 @@ export function useUpdatePlatformWalletFeeSettings() {
  * Permanently deletes the merchant and all related data
  */
 export function useDeleteMerchant() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (merchantId: string) => deleteMerchant(merchantId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "merchant-users"] });
-      queryClient.invalidateQueries({ queryKey: ["admin", "dashboard", "platform-metrics"] });
-    },
-  });
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (merchantId: string) => deleteMerchant(merchantId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "merchant-users"] });
+            queryClient.invalidateQueries({ queryKey: ["admin", "dashboard", "platform-metrics"] });
+        },
+    });
 }
 
 // ----------------------------------------------------------------------
@@ -453,60 +453,60 @@ export function useDeleteMerchant() {
 // ----------------------------------------------------------------------
 
 export function useGlobalGateways(): UseQueryResult<GetGlobalGatewaysResponse, Error> {
-  return useQuery({
-    queryKey: ["admin", "gateways", "global"],
-    queryFn: () => getGlobalGateways(),
-    staleTime: 30000,
-  });
+    return useQuery({
+        queryKey: ["admin", "gateways", "global"],
+        queryFn: () => getGlobalGateways(),
+        staleTime: 30000,
+    });
 }
 
 export function useUpdateGlobalGateway() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ code, data }: { code: string; data: UpdateGlobalGatewayRequest }) => updateGlobalGateway(code, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "gateways", "global"] });
-    },
-  });
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ code, data }: { code: string; data: UpdateGlobalGatewayRequest }) => updateGlobalGateway(code, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "gateways", "global"] });
+        },
+    });
 }
 
 export function useUpdateMerchant() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ merchantId, data }: { merchantId: string; data: UpdateMerchantRequest }) => updateMerchant(merchantId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "merchant-users"] });
-    },
-  });
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ merchantId, data }: { merchantId: string; data: UpdateMerchantRequest }) => updateMerchant(merchantId, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "merchant-users"] });
+        },
+    });
 }
 
 export function useUpdateMerchantStatus() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ merchantId, data }: { merchantId: string; data: MerchantStatusUpdate }) => updateMerchantStatus(merchantId, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "merchant-users"] });
-      // Invalidate specific merchant details if we had a detailed merchant hook
-    },
-  });
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ merchantId, data }: { merchantId: string; data: MerchantStatusUpdate }) => updateMerchantStatus(merchantId, data),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "merchant-users"] });
+            queryClient.invalidateQueries({ queryKey: ["admin", "merchant-users", variables.merchantId] });
+        },
+    });
 }
 
 export function useUpdateMerchantCapabilities() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ merchantId, data }: { merchantId: string; data: MerchantCapabilitiesUpdate }) => updateMerchantCapabilities(merchantId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin", "merchant-users"] });
-    },
-  });
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ merchantId, data }: { merchantId: string; data: MerchantCapabilitiesUpdate }) => updateMerchantCapabilities(merchantId, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["admin", "merchant-users"] });
+        },
+    });
 }
 
 export function useUpdateMerchantGatewayConfig() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ merchantId, data }: { merchantId: string; data: MerchantGatewayConfigUpdate }) => updateMerchantGatewayConfig(merchantId, data),
-    onSuccess: () => {
-      // Invalidate relevant queries, e.g., merchant details or gateway configs
-    },
-  });
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ merchantId, data }: { merchantId: string; data: MerchantGatewayConfigUpdate }) => updateMerchantGatewayConfig(merchantId, data),
+        onSuccess: () => {
+            // Invalidate relevant queries, e.g., merchant details or gateway configs
+        },
+    });
 }

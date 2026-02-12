@@ -26,11 +26,33 @@ export interface Merchant {
     updatedAt: string;
 }
 
-// Domain Object
+// Domain Object (Updated for manual approval system)
 export interface Domain {
     id: string;
+    merchantId: string;
     domain: string;
-    verificationToken: string;
+    status: 'PENDING' | 'APPROVED' | 'REJECTED';
+    requestedBy: string | null;
+    reviewedBy: string | null;
+    reviewedAt: string | null;
+    rejectionReason: string | null;
+    verifiedAt: string | null;
+    verificationToken?: string; // Legacy field, may not be present in new system
+    createdAt: string;
+    updatedAt: string;
+}
+
+// IP Address Object
+export interface IpAddress {
+    id: string;
+    merchantId: string;
+    ipAddress: string;
+    description: string | null;
+    status: 'PENDING' | 'APPROVED' | 'REJECTED';
+    requestedBy: string | null;
+    reviewedBy: string | null;
+    reviewedAt: string | null;
+    rejectionReason: string | null;
     verifiedAt: string | null;
     createdAt: string;
     updatedAt: string;
@@ -193,9 +215,7 @@ export interface AddDomainResponse {
     domain: {
         id: string;
         domain: string;
-        verificationToken: string;
-        verifiedAt: string | null;
-        createdAt: string;
+        status: 'PENDING' | 'APPROVED' | 'REJECTED';
     };
 }
 
@@ -384,3 +404,120 @@ export interface WalletOperationsResponse {
     operations: WalletOperation[];
     total: number;
 }
+
+// ============================================
+// IP ADDRESS TYPES (Merchant Side)
+// ============================================
+
+export interface AddIpRequest {
+    ipAddress: string;
+    description?: string;
+}
+
+export interface AddIpResponse {
+    ip: {
+        id: string;
+        ipAddress: string;
+        status: 'PENDING' | 'APPROVED' | 'REJECTED';
+    };
+}
+
+export interface GetIpsResponse {
+    ips: IpAddress[];
+}
+
+export interface DeleteIpResponse {
+    message: string;
+}
+
+export interface DeleteDomainResponse {
+    message: string;
+}
+
+// ============================================
+// ADMIN DOMAIN APPROVAL TYPES
+// ============================================
+
+export interface DomainRequest {
+    id: string;
+    merchantId: string;
+    merchantName: string;
+    domain: string;
+    status: 'PENDING' | 'APPROVED' | 'REJECTED';
+    requestedBy: string | null;
+    requestedByEmail: string | null;
+    reviewedBy: string | null;
+    reviewedAt: string | null;
+    rejectionReason: string | null;
+    verifiedAt: string | null;
+    createdAt: string;
+}
+
+export interface GetPendingDomainRequestsResponse {
+    domains: DomainRequest[];
+}
+
+export interface GetAllDomainRequestsResponse {
+    domains: DomainRequest[];
+}
+
+export type ApproveDomainRequest = Record<string, never>;
+
+export interface ApproveDomainResponse {
+    message: string;
+    domain: Domain;
+}
+
+export interface RejectDomainRequest {
+    reason: string;
+}
+
+export interface RejectDomainResponse {
+    message: string;
+    domain: Domain;
+}
+
+// ============================================
+// ADMIN IP APPROVAL TYPES
+// ============================================
+
+export interface IpRequest {
+    id: string;
+    merchantId: string;
+    merchantName: string;
+    ipAddress: string;
+    description: string | null;
+    status: 'PENDING' | 'APPROVED' | 'REJECTED';
+    requestedBy: string | null;
+    requestedByEmail: string | null;
+    reviewedBy: string | null;
+    reviewedAt: string | null;
+    rejectionReason: string | null;
+    verifiedAt: string | null;
+    createdAt: string;
+}
+
+export interface GetPendingIpRequestsResponse {
+    ips: IpRequest[];
+}
+
+export interface GetAllIpRequestsResponse {
+    ips: IpRequest[];
+}
+
+export type ApproveIpRequest = Record<string, never>;
+
+export interface ApproveIpResponse {
+    message: string;
+    ip: IpAddress;
+}
+
+export interface RejectIpRequest {
+    reason: string;
+}
+
+export interface RejectIpResponse {
+    message: string;
+    ip: IpAddress;
+}
+

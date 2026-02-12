@@ -23,7 +23,9 @@ import {
     RotateCcw,
     FileCheck,
     Rocket,
-    LifeBuoy
+    LifeBuoy,
+    Globe,
+    Network
 } from "lucide-react";
 
 interface MenuItem {
@@ -108,6 +110,23 @@ export function AdminSidebar() {
                     icon: FileSearch,
                     label: "Reconciliation",
                     href: "/admin/reconciliation",
+                },
+            ],
+        },
+        // APPROVALS
+        {
+            title: "APPROVALS",
+            collapsible: true,
+            items: [
+                {
+                    icon: Globe,
+                    label: "Domain Requests",
+                    href: "/admin/domains",
+                },
+                {
+                    icon: Network,
+                    label: "IP Requests",
+                    href: "/admin/ips",
                 },
             ],
         },
