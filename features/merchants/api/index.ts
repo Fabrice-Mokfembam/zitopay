@@ -359,12 +359,22 @@ export const getPendingProductionSummary = async (): Promise<GetPendingProductio
  */
 export const getDashboardStats = async (
     merchantId: string,
-    period: '7d' | '30d' | '90d' | 'all' = '30d'
+    period: '7d' | '30d' | '90d' | 'all' = '30d',
+    environment: 'sandbox' | 'production'
 ): Promise<DashboardStatsResponse> => {
+    const params: Record<string, string> = {
+        period,
+        environment, // ALWAYS pass environment - REQUIRED
+    };
+
+    console.log('[merchants/getDashboardStats] Called with environment:', environment);
+    console.log('[merchants/getDashboardStats] merchantId:', merchantId, 'period:', period);
+    console.log('[merchants/getDashboardStats] Params being sent:', params);
+
     const response = await apiClient.get<DashboardStatsResponse>(
         `${MERCHANT_BASE_URL}/${merchantId}/dashboard/stats`,
         {
-            params: { period },
+            params,
         }
     );
     return response.data;
@@ -377,14 +387,20 @@ export const getDashboardStats = async (
 export const getRecentTransactions = async (
     merchantId: string,
     limit: number = 10,
-    type?: 'collection' | 'payout' | 'refund'
+    type: 'collection' | 'payout' | 'refund' | undefined,
+    environment: 'sandbox' | 'production'
 ): Promise<RecentTransactionsResponse> => {
     const params: Record<string, string> = {
         limit: limit.toString(),
+        environment, // ALWAYS pass environment - REQUIRED
     };
     if (type) {
         params.type = type;
     }
+
+    console.log('[merchants/getRecentTransactions] Called with environment:', environment);
+    console.log('[merchants/getRecentTransactions] merchantId:', merchantId, 'limit:', limit, 'type:', type);
+    console.log('[merchants/getRecentTransactions] Params being sent:', params);
 
     const response = await apiClient.get<RecentTransactionsResponse>(
         `${MERCHANT_BASE_URL}/${merchantId}/dashboard/transactions/recent`,

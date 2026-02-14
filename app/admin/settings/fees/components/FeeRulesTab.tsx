@@ -7,6 +7,7 @@ import { FeeRule, FeeRuleFilters } from "@/features/admin/types";
 import { toast } from "sonner";
 import FeeRuleModal from "./FeeRuleModal";
 import FeeTiersModal from "./FeeTiersModal";
+import FeeRuleConfirmationModal from "./FeeRuleConfirmationModal";
 
 // Helper function to format amount
 const formatAmount = (amount: string): string => {
@@ -46,6 +47,8 @@ export default function FeeRulesTab() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showTiersModal, setShowTiersModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<"activate" | "deactivate">("activate");
   const [selectedRule, setSelectedRule] = useState<FeeRule | null>(null);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [filters, setFilters] = useState<FeeRuleFilters>({});
@@ -67,31 +70,40 @@ export default function FeeRulesTab() {
     setShowTiersModal(true);
   };
 
-  const handleActivate = async (rule: FeeRule) => {
-    const confirmed = confirm(
-      `Activating this ${rule.gateway} ${rule.currency} rule will deactivate all other active ${rule.gateway} ${rule.currency} rules. Continue?`
-    );
-    if (!confirmed) {
-      return;
-    }
+  const handleActivate = (rule: FeeRule) => {
+    setSelectedRule(rule);
+    setConfirmAction("activate");
+    setShowConfirmModal(true);
+  };
+
+  const handleDeactivate = (rule: FeeRule) => {
+    setSelectedRule(rule);
+    setConfirmAction("deactivate");
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmActivate = async () => {
+    if (!selectedRule) return;
 
     try {
-      await activateMutation.mutateAsync(rule.id);
+      await activateMutation.mutateAsync(selectedRule.id);
       toast.success("Fee rule activated successfully");
+      setShowConfirmModal(false);
+      setSelectedRule(null);
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       toast.error(error.response?.data?.message || "Failed to activate fee rule");
     }
   };
 
-  const handleDeactivate = async (id: string) => {
-    if (!confirm("Are you sure you want to deactivate this fee rule?")) {
-      return;
-    }
+  const handleConfirmDeactivate = async () => {
+    if (!selectedRule) return;
 
     try {
-      await deactivateMutation.mutateAsync(id);
+      await deactivateMutation.mutateAsync(selectedRule.id);
       toast.success("Fee rule deactivated successfully");
+      setShowConfirmModal(false);
+      setSelectedRule(null);
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
       toast.error(error.response?.data?.message || "Failed to deactivate fee rule");
@@ -354,7 +366,7 @@ export default function FeeRulesTab() {
                         </button>
                         {rule.status === "ACTIVE" ? (
                           <button
-                            onClick={() => handleDeactivate(rule.id)}
+                            onClick={() => handleDeactivate(rule)}
                             disabled={deactivateMutation.isPending}
                             className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors text-gray-400 hover:text-red-600"
                             title="Deactivate"
@@ -416,6 +428,19 @@ export default function FeeRulesTab() {
           feeRuleId={selectedRule.id}
         />
       )}
+
+      {/* Confirmation Modal */}
+      <FeeRuleConfirmationModal
+        isOpen={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false);
+          setSelectedRule(null);
+        }}
+        onConfirm={confirmAction === "activate" ? handleConfirmActivate : handleConfirmDeactivate}
+        rule={selectedRule}
+        action={confirmAction}
+        isLoading={confirmAction === "activate" ? activateMutation.isPending : deactivateMutation.isPending}
+      />
     </div>
   );
 }

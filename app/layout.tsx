@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { AuthProvider } from "@/features/auth/context/AuthContext";
 import { MerchantProvider } from "@/features/merchants/context/MerchantContext";
+import { EnvironmentProvider } from "@/core/environment/EnvironmentContext";
 import { LanguageProvider } from "@/core/i18n/LanguageProvider";
 import { AuthCookieSync } from "@/components/AuthCookieSync";
 import { Toaster } from "sonner";
@@ -76,8 +77,10 @@ export default function RootLayout({
         <QueryProvider>
           <AuthProvider>
             <MerchantProvider>
-              <AuthCookieSync />
-              <LanguageProvider>{children}</LanguageProvider>
+              <EnvironmentProvider>
+                <AuthCookieSync />
+                <LanguageProvider>{children}</LanguageProvider>
+              </EnvironmentProvider>
             </MerchantProvider>
           </AuthProvider>
         </QueryProvider>

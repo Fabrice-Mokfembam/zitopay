@@ -22,14 +22,23 @@ import type {
   TopMerchantByRevenue,
   RecentlyOnboardedMerchant,
 } from '../types/index';
+import type { Environment } from '@/core/environment/EnvironmentContext';
 
 const REPORTS_BASE_URL = '/reports';
 const MERCHANT_BASE_URL = '/merchant/v1/merchants';
 
 // Dashboard Summary
-export const getDashboardSummary = async (): Promise<DashboardSummaryResponse> => {
+export const getDashboardSummary = async (environment: Environment): Promise<DashboardSummaryResponse> => {
+  const params: Record<string, string> = {
+    environment, // ALWAYS pass environment - REQUIRED
+  };
+
+  console.log('[getDashboardSummary] Called with environment:', environment);
+  console.log('[getDashboardSummary] Params being sent:', params);
+
   const response = await apiClient.get<DashboardSummaryResponse>(
-    `${REPORTS_BASE_URL}/dashboard/summary`
+    `${REPORTS_BASE_URL}/dashboard/summary`,
+    { params }
   );
   return response.data;
 };
@@ -37,11 +46,22 @@ export const getDashboardSummary = async (): Promise<DashboardSummaryResponse> =
 // Dashboard Stats (Spec-Compliant)
 export const getDashboardStats = async (
   merchantId: string,
-  period: '7d' | '30d' | '90d' | 'all' = '30d'
+  period: '7d' | '30d' | '90d' | 'all' = '30d',
+  environment: Environment
 ): Promise<DashboardStatsResponse> => {
+  const params: Record<string, string> = {
+    period,
+    environment, // ALWAYS pass environment
+  };
+
+  // Debug logging - ALWAYS log
+  console.log('[getDashboardStats] Called with environment:', environment);
+  console.log('[getDashboardStats] merchantId:', merchantId, 'period:', period);
+  console.log('[getDashboardStats] Params being sent:', params);
+
   const response = await apiClient.get<DashboardStatsResponse>(
     `${MERCHANT_BASE_URL}/${merchantId}/dashboard/stats`,
-    { params: { period } }
+    { params }
   );
   return response.data;
 };
@@ -50,10 +70,19 @@ export const getDashboardStats = async (
 export const getRecentTransactions = async (
   merchantId: string,
   limit: number = 10,
-  type?: 'collection' | 'payout' | 'refund'
+  type: 'collection' | 'payout' | 'refund' | undefined,
+  environment: Environment
 ): Promise<RecentTransactionsResponse> => {
-  const params: Record<string, string | number> = { limit };
+  const params: Record<string, string | number> = {
+    limit,
+    environment, // ALWAYS pass environment
+  };
   if (type) params.type = type;
+
+  // Debug logging - ALWAYS log
+  console.log('[getRecentTransactions] Called with environment:', environment);
+  console.log('[getRecentTransactions] merchantId:', merchantId, 'limit:', limit, 'type:', type);
+  console.log('[getRecentTransactions] Params being sent:', params);
 
   const response = await apiClient.get<RecentTransactionsResponse>(
     `${MERCHANT_BASE_URL}/${merchantId}/dashboard/transactions/recent`,
@@ -63,54 +92,85 @@ export const getRecentTransactions = async (
 };
 
 // Chart Data Endpoints
-export const getVolumeOverTime = async (days: number = 30): Promise<VolumeOverTimeResponse> => {
+export const getVolumeOverTime = async (days: number = 30, environment: Environment): Promise<VolumeOverTimeResponse> => {
+  const params: Record<string, string | number> = {
+    days,
+    environment, // ALWAYS pass environment
+  };
+
   const response = await apiClient.get<VolumeOverTimeResponse>(
     `${REPORTS_BASE_URL}/dashboard/volume-over-time`,
-    { params: { days } }
+    { params }
   );
   return response.data;
 };
 
-export const getSuccessVsFailed = async (): Promise<SuccessVsFailedResponse> => {
+export const getSuccessVsFailed = async (environment: Environment): Promise<SuccessVsFailedResponse> => {
+  const params: Record<string, string> = {
+    environment, // ALWAYS pass environment
+  };
+
   const response = await apiClient.get<SuccessVsFailedResponse>(
-    `${REPORTS_BASE_URL}/dashboard/success-vs-failed`
+    `${REPORTS_BASE_URL}/dashboard/success-vs-failed`,
+    { params }
   );
   return response.data;
 };
 
-export const getGatewayBreakdown = async (): Promise<GatewayBreakdownResponse> => {
+export const getGatewayBreakdown = async (environment: Environment): Promise<GatewayBreakdownResponse> => {
+  const params: Record<string, string> = {
+    environment, // ALWAYS pass environment
+  };
+
   const response = await apiClient.get<GatewayBreakdownResponse>(
-    `${REPORTS_BASE_URL}/dashboard/gateway-breakdown`
+    `${REPORTS_BASE_URL}/dashboard/gateway-breakdown`,
+    { params }
   );
   return response.data;
 };
 
-export const getCollectionsVsPayouts = async (): Promise<CollectionsVsPayoutsResponse> => {
+export const getCollectionsVsPayouts = async (environment: Environment): Promise<CollectionsVsPayoutsResponse> => {
+  const params: Record<string, string> = {
+    environment, // ALWAYS pass environment
+  };
+
   const response = await apiClient.get<CollectionsVsPayoutsResponse>(
-    `${REPORTS_BASE_URL}/dashboard/collections-vs-payouts`
+    `${REPORTS_BASE_URL}/dashboard/collections-vs-payouts`,
+    { params }
   );
   return response.data;
 };
 
 // Transaction Reports
 export const getTransactionReport = async (
-  filters: TransactionReportFilters = {}
+  filters: TransactionReportFilters,
+  environment: Environment
 ): Promise<TransactionReportResponse> => {
+  const params: Record<string, string | number | undefined> = {
+    ...filters,
+    environment, // ALWAYS pass environment
+  };
+
   const response = await apiClient.get<TransactionReportResponse>(
     `${REPORTS_BASE_URL}/transactions`,
-    { params: filters }
+    { params }
   );
   return response.data;
 };
 
 export const exportTransactions = async (
   format: 'CSV' | 'EXCEL' = 'CSV',
-  filters: Omit<TransactionReportFilters, 'page' | 'limit'> = {}
+  filters: Omit<TransactionReportFilters, 'page' | 'limit'>,
+  environment: Environment
 ): Promise<Blob> => {
   const response = await apiClient.get(
     `${REPORTS_BASE_URL}/transactions/export`,
     {
-      params: { format, ...filters },
+      params: {
+        format,
+        ...filters,
+        environment, // ALWAYS pass environment
+      },
       responseType: 'blob',
     }
   );
@@ -119,22 +179,34 @@ export const exportTransactions = async (
 
 // Settlement Reports
 export const getSettlementReport = async (
-  filters: SettlementReportFilters = {}
+  filters: SettlementReportFilters,
+  environment: Environment
 ): Promise<SettlementReportResponse> => {
+  const params: Record<string, string | undefined> = {
+    ...filters,
+    environment, // ALWAYS pass environment
+  };
+
   const response = await apiClient.get<SettlementReportResponse>(
     `${REPORTS_BASE_URL}/settlements`,
-    { params: filters }
+    { params }
   );
   return response.data;
 };
 
 // Revenue Reports
 export const getRevenueReport = async (
-  filters: RevenueReportFilters = {}
+  filters: RevenueReportFilters,
+  environment: Environment
 ): Promise<RevenueReportResponse> => {
+  const params: Record<string, string | undefined> = {
+    ...filters,
+    environment, // ALWAYS pass environment
+  };
+
   const response = await apiClient.get<RevenueReportResponse>(
     `${REPORTS_BASE_URL}/revenue`,
-    { params: filters }
+    { params }
   );
   return response.data;
 };

@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { walletApi } from "../api";
 import { WalletActivityParams } from "../types";
+import { useEnvironment } from "@/core/environment/EnvironmentContext";
 
 /**
  * Hook to fetch wallet balance summary
@@ -20,9 +21,17 @@ import { WalletActivityParams } from "../types";
  * ```
  */
 export function useWalletSummary() {
+    const { environment } = useEnvironment();
+    
+    console.log('[useWalletSummary] Hook called - environment:', environment);
+    
     return useQuery({
-        queryKey: ["wallet", "summary"],
-        queryFn: () => walletApi.getSummary(),
+        queryKey: ["wallet", "summary", environment],
+        queryFn: () => {
+            console.log('[useWalletSummary] queryFn executing - environment:', environment);
+            return walletApi.getSummary(environment);
+        },
+        enabled: !!environment, // Only run when environment is available
         // Refetch every 30 seconds to keep balance updated
         refetchInterval: 30000,
         // Keep previous data while refetching
@@ -53,9 +62,17 @@ export function useWalletSummary() {
  * ```
  */
 export function useWalletActivity(params?: WalletActivityParams) {
+    const { environment } = useEnvironment();
+    
+    console.log('[useWalletActivity] Hook called - environment:', environment, 'params:', params);
+    
     return useQuery({
-        queryKey: ["wallet", "activity", params],
-        queryFn: () => walletApi.getActivity(params),
+        queryKey: ["wallet", "activity", params, environment],
+        queryFn: () => {
+            console.log('[useWalletActivity] queryFn executing - environment:', environment, 'params:', params);
+            return walletApi.getActivity(params, environment);
+        },
+        enabled: !!environment, // Only run when environment is available
         // Refetch every minute to keep activity updated
         refetchInterval: 60000,
         // Keep previous data while refetching

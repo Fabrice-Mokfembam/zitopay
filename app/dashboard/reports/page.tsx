@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Download, Calendar, BarChart3, DollarSign, TrendingUp, Activity, X } from "lucide-react";
 import { useUserMerchantData } from "@/features/merchants/context/MerchantContext";
+import { useEnvironment } from "@/core/environment/EnvironmentContext";
 import {
   useDashboardSummary,
   useDashboardStats,
@@ -19,14 +20,11 @@ import { toast } from "sonner";
 
 export default function ReportsPage() {
   const { merchant } = useUserMerchantData();
+  const { environment } = useEnvironment();
   const [selectedPeriod, setSelectedPeriod] = useState<"7d" | "30d" | "90d" | "all">("30d");
   const [chartDays, setChartDays] = useState(30);
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportFormat, setExportFormat] = useState<"CSV" | "EXCEL">("CSV");
-
-  // Determine environment based on merchant state
-  const environment: "sandbox" | "production" =
-    merchant?.productionState === "ACTIVE" ? "production" : "sandbox";
 
   // API Hooks
   const { data: summary, isLoading: summaryLoading } = useDashboardSummary();
