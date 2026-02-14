@@ -15,21 +15,19 @@ import {
   XCircle,
 } from "lucide-react";
 import { useUserMerchantData } from "@/features/merchants/context/MerchantContext";
+import { useEnvironment } from "@/core/environment/EnvironmentContext";
 import { useRecentTransactions } from "@/features/merchants/hooks/useMerchant";
 
 type TransactionType = "all" | "collection" | "payout";
 
 export default function TransactionsPage() {
   const { merchantId, merchant } = useUserMerchantData();
+  const { environment } = useEnvironment();
   const [activeTab, setActiveTab] = useState<TransactionType>("all");
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-
-  // Determine environment based on merchant state
-  const environment: "sandbox" | "production" =
-    merchant?.productionState === "ACTIVE" ? "production" : "sandbox";
 
   // Fetch transactions using the same hook as dashboard
   // Pass type filter based on activeTab

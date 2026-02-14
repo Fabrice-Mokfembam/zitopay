@@ -1,3 +1,5 @@
+"use client";
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getDashboardSummary,
@@ -28,13 +30,23 @@ import type {
   CreateScheduledReportRequest,
   UpdateScheduledReportRequest,
 } from './types/index';
+import { useEnvironment } from '@/core/environment/EnvironmentContext';
 
 // Dashboard Summary
 export const useDashboardSummary = () => {
+  const { environment } = useEnvironment();
+  
+  console.log('[useDashboardSummary] Hook called - environment:', environment);
+  
   return useQuery({
-    queryKey: ['reports', 'dashboard', 'summary'],
-    queryFn: getDashboardSummary,
-    staleTime: 2000, // 2 seconds cache
+    queryKey: ['reports', 'dashboard', 'summary', environment],
+    queryFn: () => {
+      console.log('[useDashboardSummary] queryFn executing - environment:', environment);
+      return getDashboardSummary(environment);
+    },
+    enabled: !!environment, // ALWAYS wait for environment
+    staleTime: 0, // No cache - always fetch fresh data when environment changes
+    refetchOnMount: true, // Refetch when component mounts
   });
 };
 
@@ -43,11 +55,20 @@ export const useDashboardStats = (
   merchantId: string,
   period: '7d' | '30d' | '90d' | 'all' = '30d'
 ) => {
+  const { environment } = useEnvironment();
+  
+  // Debug logging - ALWAYS log
+  console.log('[useDashboardStats] Hook called - environment:', environment, 'merchantId:', merchantId, 'period:', period);
+  
   return useQuery({
-    queryKey: ['reports', 'dashboard', 'stats', merchantId, period],
-    queryFn: () => getDashboardStats(merchantId, period),
-    enabled: !!merchantId,
-    staleTime: 2000,
+    queryKey: ['reports', 'dashboard', 'stats', merchantId, period, environment],
+    queryFn: () => {
+      console.log('[useDashboardStats] queryFn executing - environment:', environment, 'merchantId:', merchantId);
+      return getDashboardStats(merchantId, period, environment);
+    },
+    enabled: !!merchantId && !!environment, // Only run when both merchantId and environment are available
+    staleTime: 0, // No cache - always fetch fresh data when environment changes
+    refetchOnMount: true, // Refetch when component mounts
   });
 };
 
@@ -57,56 +78,82 @@ export const useRecentTransactions = (
   limit: number = 10,
   type?: 'collection' | 'payout' | 'refund'
 ) => {
+  const { environment } = useEnvironment();
+  
+  // Debug logging - ALWAYS log
+  console.log('[useRecentTransactions] Hook called - environment:', environment, 'merchantId:', merchantId, 'limit:', limit, 'type:', type);
+  
   return useQuery({
-    queryKey: ['reports', 'dashboard', 'recent-transactions', merchantId, limit, type],
-    queryFn: () => getRecentTransactions(merchantId, limit, type),
-    enabled: !!merchantId,
-    staleTime: 2000,
+    queryKey: ['reports', 'dashboard', 'recent-transactions', merchantId, limit, type, environment],
+    queryFn: () => {
+      console.log('[useRecentTransactions] queryFn executing - environment:', environment, 'merchantId:', merchantId);
+      return getRecentTransactions(merchantId, limit, type, environment);
+    },
+    enabled: !!merchantId && !!environment, // Only run when both merchantId and environment are available
+    staleTime: 0, // No cache - always fetch fresh data when environment changes
+    refetchOnMount: true, // Refetch when component mounts
   });
 };
 
 // Chart Data
 export const useVolumeOverTime = (days: number = 30) => {
+  const { environment } = useEnvironment();
   return useQuery({
-    queryKey: ['reports', 'dashboard', 'volume-over-time', days],
-    queryFn: () => getVolumeOverTime(days),
-    staleTime: 2000,
+    queryKey: ['reports', 'dashboard', 'volume-over-time', days, environment],
+    queryFn: () => getVolumeOverTime(days, environment),
+    enabled: !!environment, // ALWAYS wait for environment
+    staleTime: 0, // No cache - always fetch fresh data when environment changes
+    refetchOnMount: true,
   });
 };
 
 export const useSuccessVsFailed = () => {
+  const { environment } = useEnvironment();
   return useQuery({
-    queryKey: ['reports', 'dashboard', 'success-vs-failed'],
-    queryFn: getSuccessVsFailed,
-    staleTime: 2000,
+    queryKey: ['reports', 'dashboard', 'success-vs-failed', environment],
+    queryFn: () => getSuccessVsFailed(environment),
+    enabled: !!environment, // ALWAYS wait for environment
+    staleTime: 0, // No cache - always fetch fresh data when environment changes
+    refetchOnMount: true,
   });
 };
 
 export const useGatewayBreakdown = () => {
+  const { environment } = useEnvironment();
   return useQuery({
-    queryKey: ['reports', 'dashboard', 'gateway-breakdown'],
-    queryFn: getGatewayBreakdown,
-    staleTime: 2000,
+    queryKey: ['reports', 'dashboard', 'gateway-breakdown', environment],
+    queryFn: () => getGatewayBreakdown(environment),
+    enabled: !!environment, // ALWAYS wait for environment
+    staleTime: 0, // No cache - always fetch fresh data when environment changes
+    refetchOnMount: true,
   });
 };
 
 export const useCollectionsVsPayouts = () => {
+  const { environment } = useEnvironment();
   return useQuery({
-    queryKey: ['reports', 'dashboard', 'collections-vs-payouts'],
-    queryFn: getCollectionsVsPayouts,
-    staleTime: 2000,
+    queryKey: ['reports', 'dashboard', 'collections-vs-payouts', environment],
+    queryFn: () => getCollectionsVsPayouts(environment),
+    enabled: !!environment, // ALWAYS wait for environment
+    staleTime: 0, // No cache - always fetch fresh data when environment changes
+    refetchOnMount: true,
   });
 };
 
 // Transaction Reports
 export const useTransactionReport = (filters: TransactionReportFilters = {}) => {
+  const { environment } = useEnvironment();
   return useQuery({
-    queryKey: ['reports', 'transactions', filters],
-    queryFn: () => getTransactionReport(filters),
+    queryKey: ['reports', 'transactions', filters, environment],
+    queryFn: () => getTransactionReport(filters, environment),
+    enabled: !!environment, // Only run when environment is available
+    staleTime: 0, // No cache - always fetch fresh data when environment changes
+    refetchOnMount: true,
   });
 };
 
 export const useExportTransactions = () => {
+  const { environment } = useEnvironment();
   return useMutation({
     mutationFn: ({
       format,
@@ -114,23 +161,31 @@ export const useExportTransactions = () => {
     }: {
       format: 'CSV' | 'EXCEL';
       filters: Omit<TransactionReportFilters, 'page' | 'limit'>;
-    }) => exportTransactions(format, filters),
+    }) => exportTransactions(format, filters, environment),
   });
 };
 
 // Settlement Reports
 export const useSettlementReport = (filters: SettlementReportFilters = {}) => {
+  const { environment } = useEnvironment();
   return useQuery({
-    queryKey: ['reports', 'settlements', filters],
-    queryFn: () => getSettlementReport(filters),
+    queryKey: ['reports', 'settlements', filters, environment],
+    queryFn: () => getSettlementReport(filters, environment),
+    enabled: !!environment, // Only run when environment is available
+    staleTime: 0, // No cache - always fetch fresh data when environment changes
+    refetchOnMount: true,
   });
 };
 
 // Revenue Reports
 export const useRevenueReport = (filters: RevenueReportFilters = {}) => {
+  const { environment } = useEnvironment();
   return useQuery({
-    queryKey: ['reports', 'revenue', filters],
-    queryFn: () => getRevenueReport(filters),
+    queryKey: ['reports', 'revenue', filters, environment],
+    queryFn: () => getRevenueReport(filters, environment),
+    enabled: !!environment, // Only run when environment is available
+    staleTime: 0, // No cache - always fetch fresh data when environment changes
+    refetchOnMount: true,
   });
 };
 

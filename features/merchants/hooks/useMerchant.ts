@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient, UseMutationResult, UseQueryResult } from '@tanstack/react-query';
+import { useEnvironment } from '@/core/environment/EnvironmentContext';
 import {
     createMerchant,
     getUserMerchants,
@@ -289,11 +290,20 @@ export const useDashboardStats = (
     period: '7d' | '30d' | '90d' | 'all' = '30d',
     enabled: boolean = true
 ): UseQueryResult<DashboardStatsResponse, Error> => {
+    const { environment } = useEnvironment();
+    
+    console.log('[merchants/useDashboardStats] Hook called - environment:', environment, 'merchantId:', merchantId, 'period:', period);
+    
     return useQuery({
-        queryKey: ['dashboard', 'stats', merchantId, period],
-        queryFn: () => getDashboardStats(merchantId, period),
-        enabled: enabled && !!merchantId,
+        queryKey: ['dashboard', 'stats', merchantId, period, environment],
+        queryFn: () => {
+            console.log('[merchants/useDashboardStats] queryFn executing - environment:', environment, 'merchantId:', merchantId);
+            return getDashboardStats(merchantId, period, environment);
+        },
+        enabled: enabled && !!merchantId && !!environment, // Only run when merchantId and environment are available
         refetchInterval: 30000, // Refetch every 30 seconds
+        staleTime: 0, // No cache - always fetch fresh data when environment changes
+        refetchOnMount: true,
     });
 };
 
@@ -307,11 +317,20 @@ export const useRecentTransactions = (
     type?: 'collection' | 'payout' | 'refund',
     enabled: boolean = true
 ): UseQueryResult<RecentTransactionsResponse, Error> => {
+    const { environment } = useEnvironment();
+    
+    console.log('[merchants/useRecentTransactions] Hook called - environment:', environment, 'merchantId:', merchantId, 'limit:', limit, 'type:', type);
+    
     return useQuery({
-        queryKey: ['dashboard', 'transactions', 'recent', merchantId, limit, type],
-        queryFn: () => getRecentTransactions(merchantId, limit, type),
-        enabled: enabled && !!merchantId,
+        queryKey: ['dashboard', 'transactions', 'recent', merchantId, limit, type, environment],
+        queryFn: () => {
+            console.log('[merchants/useRecentTransactions] queryFn executing - environment:', environment, 'merchantId:', merchantId);
+            return getRecentTransactions(merchantId, limit, type, environment);
+        },
+        enabled: enabled && !!merchantId && !!environment, // Only run when merchantId and environment are available
         refetchInterval: 60000, // Refetch every 60 seconds
+        staleTime: 0, // No cache - always fetch fresh data when environment changes
+        refetchOnMount: true,
     });
 };
 

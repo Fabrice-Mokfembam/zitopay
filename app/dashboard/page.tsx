@@ -23,6 +23,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useUserMerchantData } from "@/features/merchants/context/MerchantContext";
+import { useEnvironment } from "@/core/environment/EnvironmentContext";
 import {
   useDashboardStats,
   useRecentTransactions,
@@ -508,27 +509,37 @@ const colorMap: Record<string, { bg: string; border: string; icon: string }> = {
 export default function DashboardPage() {
   const router = useRouter();
   const { merchantId, merchant } = useUserMerchantData();
+  const { environment } = useEnvironment();
   const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
   const [topUpModalOpen, setTopUpModalOpen] = useState(false);
   const [period] = useState<'7d' | '30d' | '90d' | 'all'>('30d');
 
-  // Determine environment based on merchant state
-  const environment: "sandbox" | "production" =
-    merchant?.productionState === "ACTIVE" ? "production" : "sandbox";
+  // Ensure environment is defined (fallback to sandbox)
+  const currentEnvironment = environment || 'sandbox';
 
   // Fetch dashboard data
-  const { data: statsData, isLoading: isLoadingStats } = useDashboardStats(
+  const { data: statsData, isLoading: isLoadingStats, error: statsError } = useDashboardStats(
     merchantId || '',
-    period,
-    !!merchantId
+    period
   );
 
-  const { data: transactionsData, isLoading: isLoadingTransactions } = useRecentTransactions(
+  const { data: transactionsData, isLoading: isLoadingTransactions, error: transactionsError } = useRecentTransactions(
     merchantId || '',
     10,
-    undefined,
-    !!merchantId
+    undefined
   );
+
+  // Show loading state if merchant or environment is not ready
+  if (!merchantId || !currentEnvironment) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-sm text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -545,7 +556,7 @@ export default function DashboardPage() {
 
   const formatAmount = (amount: number, currency: string = "XAF") => {
     // Display FCFA instead of XAF in production mode
-    const displayCurrency = currency === "XAF" && environment === "production" ? "FCFA" : currency;
+    const displayCurrency = currency === "XAF" && currentEnvironment === "production" ? "FCFA" : currency;
     return `${amount.toLocaleString()} ${displayCurrency}`;
   };
 
@@ -573,14 +584,14 @@ export default function DashboardPage() {
         <div className="flex flex-wrap items-center gap-2">
           {/* Environment Badge */}
           <div className={`px-2.5 py-1 rounded-md text-[10px] font-medium flex items-center gap-1.5 ${
-            environment === "sandbox"
+            currentEnvironment === "sandbox"
               ? "bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400"
               : "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400"
           }`}>
             <div className={`w-1.5 h-1.5 rounded-full ${
-              environment === "sandbox" ? "bg-orange-500" : "bg-green-500"
+              currentEnvironment === "sandbox" ? "bg-orange-500" : "bg-green-500"
             }`} />
-            {environment === "sandbox" ? "Sandbox" : "Production"}
+            {currentEnvironment === "sandbox" ? "Sandbox" : "Production"}
           </div>
 
           {/* Date Range Selector */}

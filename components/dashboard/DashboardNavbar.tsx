@@ -3,42 +3,38 @@
 import { Globe, ChevronDown, X, FileText, Globe as GlobeIcon, CheckCircle2, AlertCircle } from "lucide-react";
 import { useAuthContext } from "@/features/auth/context/AuthContext";
 import { useUserMerchantData } from "@/features/merchants/context/MerchantContext";
+import { useEnvironment } from "@/core/environment/EnvironmentContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export function DashboardNavbar() {
     const { user } = useAuthContext();
-    const { merchant, isLoading: isMerchantLoading } = useUserMerchantData();
+    const { merchant } = useUserMerchantData();
+    const { environment, hasProductionAccess, requestEnvironmentSwitch, isSwitching } = useEnvironment();
     const router = useRouter();
-    const [isSandboxMode, setIsSandboxMode] = useState(true);
     const [showProductionModal, setShowProductionModal] = useState(false);
 
-    // Determine if production is active
-    const isProductionActive = merchant?.productionState === 'ACTIVE';
+    const isSandboxMode = environment === 'sandbox';
 
-    // Set default mode based on merchant data
-    useEffect(() => {
-        if (!isMerchantLoading && merchant) {
-            // Default to sandbox mode unless production is active
-            setIsSandboxMode(!isProductionActive);
-        }
-    }, [merchant, isMerchantLoading, isProductionActive]);
-
-    // Handle toggle click
+    // Handle toggle click - triggers confirmation flow
     const handleToggleClick = () => {
-        // If currently in sandbox mode and clicking to switch to production
-        if (isSandboxMode) {
-            // Show modal if production is not active
-            if (!isProductionActive) {
+        const targetEnvironment = isSandboxMode ? 'production' : 'sandbox';
+        
+        // If switching to production without access, show info modal
+        if (targetEnvironment === 'production' && !hasProductionAccess) {
+            setShowProductionModal(true);
+            return;
+        }
+
+        // Request environment switch (will show confirmation modal)
+        try {
+            requestEnvironmentSwitch(targetEnvironment);
+        } catch (error: any) {
+            // If error, show production access modal
+            if (error.message?.includes('Production access is not available')) {
                 setShowProductionModal(true);
-            } else {
-                // Production is active, allow switch
-                setIsSandboxMode(false);
             }
-        } else {
-            // Switching back to sandbox mode
-            setIsSandboxMode(true);
         }
     };
 
@@ -85,13 +81,16 @@ export function DashboardNavbar() {
                     </span>
                     <button
                         onClick={handleToggleClick}
-                        className={`relative w-11 h-6 rounded-full transition-colors ${isSandboxMode ? 'bg-gray-300 dark:bg-gray-600' : 'bg-green-400'
-                            }`}
-                        aria-label="Toggle sandbox mode"
+                        disabled={isSwitching}
+                        className={`relative w-11 h-6 rounded-full transition-colors ${
+                            isSandboxMode ? 'bg-gray-300 dark:bg-gray-600' : 'bg-green-400'
+                        } ${isSwitching ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        aria-label="Toggle environment"
                     >
                         <span
-                            className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform ${isSandboxMode ? 'translate-x-0' : 'translate-x-5'
-                                }`}
+                            className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform ${
+                                isSandboxMode ? 'translate-x-0' : 'translate-x-5'
+                            }`}
                         />
                     </button>
                 </div>

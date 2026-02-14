@@ -48,6 +48,47 @@ apiClient.interceptors.request.use(
             config.headers.Authorization = `Bearer ${token}`;
         }
 
+        // COMPREHENSIVE LOGGING - Log ALL requests with full URL and query parameters
+        if (typeof window !== 'undefined') {
+            // Build full URL with query parameters
+            const baseUrl = config.baseURL || '';
+            const url = config.url || '';
+            let fullUrl = `${baseUrl}${url}`;
+            
+            // Add query parameters if they exist
+            if (config.params) {
+                const queryString = new URLSearchParams(config.params as Record<string, string>).toString();
+                if (queryString) {
+                    fullUrl += `?${queryString}`;
+                }
+            }
+            
+            // Log the complete request
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.log(`[API REQUEST] ${config.method?.toUpperCase() || 'GET'}`);
+            console.log(`[URL] ${fullUrl}`);
+            
+            // Check for environment parameter
+            if (config.params && typeof config.params === 'object') {
+                const params = config.params as Record<string, unknown>;
+                if (params.environment) {
+                    console.log(`✅ [ENVIRONMENT PARAMETER] ${params.environment}`);
+                } else {
+                    // Check if this is a reports or wallet endpoint that should have environment
+                    if (url.includes('/reports/') || url.includes('/wallet/') || url.includes('/dashboard/')) {
+                        console.error(`❌ [MISSING ENVIRONMENT] This endpoint should have environment parameter!`);
+                    }
+                }
+                
+                // Log all parameters
+                console.log(`[QUERY PARAMS]`, params);
+            } else {
+                console.log(`[QUERY PARAMS] None`);
+            }
+            
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        }
+
         return config;
     },
     (error) => Promise.reject(error)
