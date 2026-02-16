@@ -12,6 +12,8 @@ import {
   UpdateMerchantResponse,
   AdminTransactionsResponse,
   AdminTransactionFilters,
+  ReconcileTransactionRequest,
+  ReconcileTransactionResponse,
   GetPlatformSettingsResponse,
   UpdateMerchantRegistrationSettingsRequest,
   UpdateMerchantRegistrationSettingsResponse,
@@ -215,6 +217,21 @@ export const getAllTransactions = async (
   const response = await apiClient.get<AdminTransactionsResponse>(
     `${ADMIN_BASE_URL}/transactions`,
     { params }
+  );
+  return response.data;
+};
+
+/**
+ * Manually reconcile a transaction
+ * Marks a transaction as COMPLETE or FAIL when gateway fails to respond
+ */
+export const reconcileTransaction = async (
+  transactionId: string,
+  data: ReconcileTransactionRequest
+): Promise<ReconcileTransactionResponse> => {
+  const response = await apiClient.post<ReconcileTransactionResponse>(
+    `${ADMIN_BASE_URL}/transactions/${transactionId}/reconcile`,
+    data
   );
   return response.data;
 };
