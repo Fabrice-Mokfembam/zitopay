@@ -11,6 +11,7 @@ import {
     updateMerchant,
     generateBypassPassword,
     getAllTransactions,
+    reconcileTransaction,
     getPlatformSettings,
     updateMerchantRegistrationSettings,
     getFeeVersions,
@@ -52,6 +53,7 @@ import {
     UpdateMerchantRequest,
     AdminTransactionsResponse,
     AdminTransactionFilters,
+    ReconcileTransactionRequest,
     GetPlatformSettingsResponse,
     UpdateMerchantRegistrationSettingsRequest,
     FeeVersionsResponse,
@@ -253,6 +255,22 @@ export function useAdminTransactions(
         enabled,
         refetchInterval: 30000, // Refetch every 30 seconds
         staleTime: 30000, // Consider data stale after 30 seconds
+    });
+}
+
+/**
+ * Hook for manually reconciling a transaction
+ * Marks a transaction as COMPLETE or FAIL when gateway fails to respond
+ */
+export function useReconcileTransaction() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ transactionId, data }: { transactionId: string; data: ReconcileTransactionRequest }) =>
+            reconcileTransaction(transactionId, data),
+        onSuccess: () => {
+            // Invalidate transactions query to refresh the list
+            queryClient.invalidateQueries({ queryKey: ["admin", "transactions"] });
+        },
     });
 }
 

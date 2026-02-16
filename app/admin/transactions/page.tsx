@@ -28,8 +28,10 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAdminTransactions } from "@/features/admin/queries";
+import { useAdminTransactions, useReconcileTransaction } from "@/features/admin/queries";
 import { AdminTransaction } from "@/features/admin/types";
+import { toast } from "sonner";
+import ReconcileTransactionModal from "./components/ReconcileTransactionModal";
 
 // Helper function to format date
 const formatDate = (dateString: string): string => {
@@ -93,11 +95,15 @@ export default function TransactionsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTxn, setSelectedTxn] = useState<AdminTransaction | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isReconcileModalOpen, setIsReconcileModalOpen] = useState(false);
+  const [transactionToReconcile, setTransactionToReconcile] = useState<AdminTransaction | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [environmentFilter, setEnvironmentFilter] = useState<string>("all");
+
+  const reconcileMutation = useReconcileTransaction();
 
   const itemsPerPage = 50;
   const offset = (currentPage - 1) * itemsPerPage;
@@ -148,6 +154,36 @@ export default function TransactionsPage() {
   const openDetailModal = (txn: AdminTransaction) => {
     setSelectedTxn(txn);
     setIsDetailModalOpen(true);
+  };
+
+  const openReconcileModal = (txn: AdminTransaction) => {
+    setTransactionToReconcile(txn);
+    setIsReconcileModalOpen(true);
+  };
+
+  const handleReconcile = async (action: 'COMPLETE' | 'FAIL', notes: string) => {
+    if (!transactionToReconcile) return;
+
+    try {
+      const result = await reconcileMutation.mutateAsync({
+        transactionId: transactionToReconcile.transactionId,
+        data: { action, notes },
+      });
+
+      if (result.success) {
+        toast.success(result.message);
+        setIsReconcileModalOpen(false);
+        setTransactionToReconcile(null);
+      }
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      toast.error(error.response?.data?.message || "Failed to reconcile transaction");
+    }
+  };
+
+  // Check if transaction can be reconciled
+  const canReconcile = (status: string): boolean => {
+    return ['PROCESSING', 'VERIFYING', 'PENDING'].includes(status);
   };
 
   const StatusBadge = ({ status }: { status: string }) => {
@@ -588,12 +624,19 @@ export default function TransactionsPage() {
                           <button
                             onClick={() => openDetailModal(txn)}
                             className="p-1.5 hover:bg-gray-100 hover:text-blue-600 rounded-lg transition-all text-gray-400"
+                            title="View Details"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                          <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-all text-gray-400 hover:text-orange-600">
-                            <RefreshCcw className="w-4 h-4" />
-                          </button>
+                          {canReconcile(txn.status) && (
+                            <button
+                              onClick={() => openReconcileModal(txn)}
+                              className="p-1.5 hover:bg-gray-100 rounded-lg transition-all text-gray-400 hover:text-orange-600"
+                              title="Reconcile Transaction"
+                            >
+                              <RefreshCcw className="w-4 h-4" />
+                            </button>
+                          )}
                           <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-all text-gray-400 hover:text-gray-900">
                             <MoreVertical className="w-4 h-4" />
                           </button>
@@ -995,9 +1038,18 @@ export default function TransactionsPage() {
                     <button className="px-6 py-2.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold rounded-lg transition-all shadow-sm flex items-center gap-2 text-sm">
                       Initiate Refund
                     </button>
-                    <button className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-all shadow-sm flex items-center gap-2 text-sm">
-                      Mark as Success (Manual)
-                    </button>
+                    {canReconcile(selectedTxn.status) && (
+                      <button
+                        onClick={() => {
+                          setIsDetailModalOpen(false);
+                          openReconcileModal(selectedTxn);
+                        }}
+                        className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-all shadow-sm flex items-center gap-2 text-sm"
+                      >
+                        <RefreshCcw className="w-4 h-4" />
+                        Reconcile Transaction
+                      </button>
+                    )}
                     <button className="px-6 py-2.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold rounded-lg transition-all shadow-sm flex items-center gap-2 text-sm">
                       Notify Merchant
                     </button>
@@ -1011,6 +1063,18 @@ export default function TransactionsPage() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Reconcile Transaction Modal */}
+      <ReconcileTransactionModal
+        isOpen={isReconcileModalOpen}
+        onClose={() => {
+          setIsReconcileModalOpen(false);
+          setTransactionToReconcile(null);
+        }}
+        onConfirm={handleReconcile}
+        transaction={transactionToReconcile}
+        isLoading={reconcileMutation.isPending}
+      />
     </div>
   );
 }

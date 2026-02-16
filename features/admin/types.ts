@@ -233,6 +233,24 @@ export interface AdminTransactionFilters {
   environment?: 'sandbox' | 'production';
 }
 
+// Manual Reconciliation Types
+export interface ReconcileTransactionRequest {
+  action: 'COMPLETE' | 'FAIL';
+  notes?: string;
+}
+
+export interface ReconcileTransactionResponse {
+  success: boolean;
+  transaction: {
+    id: string;
+    status: string;
+    completedAt: string | null;
+    failureReason: string | null;
+  };
+  walletCredited: boolean;
+  message: string;
+}
+
 // Fee Management Types
 export interface FeeVersion {
   id: string;
