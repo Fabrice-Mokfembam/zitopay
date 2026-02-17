@@ -254,39 +254,45 @@ export const deleteScheduledReport = async (id: string): Promise<void> => {
 // Admin Routes
 const ADMIN_REPORTS_BASE_URL = '/admin/reports';
 
-export const getPlatformSummary = async (): Promise<PlatformSummaryResponse> => {
+export const getPlatformSummary = async (
+  environment: Environment
+): Promise<PlatformSummaryResponse> => {
   const response = await apiClient.get<PlatformSummaryResponse>(
-    `${ADMIN_REPORTS_BASE_URL}/platform-summary`
+    `${ADMIN_REPORTS_BASE_URL}/platform-summary`,
+    { params: { environment } }
   );
   return response.data;
 };
 
 export const getTopMerchantsByVolume = async (
-  limit: number = 10
+  limit: number = 10,
+  environment: Environment
 ): Promise<TopMerchantByVolume[]> => {
   const response = await apiClient.get<TopMerchantByVolume[]>(
     `${ADMIN_REPORTS_BASE_URL}/merchants/top-by-volume`,
-    { params: { limit } }
+    { params: { limit, environment } }
   );
   return response.data;
 };
 
 export const getTopMerchantsByRevenue = async (
-  limit: number = 10
+  limit: number = 10,
+  environment: Environment
 ): Promise<TopMerchantByRevenue[]> => {
   const response = await apiClient.get<TopMerchantByRevenue[]>(
     `${ADMIN_REPORTS_BASE_URL}/merchants/top-by-revenue`,
-    { params: { limit } }
+    { params: { limit, environment } }
   );
   return response.data;
 };
 
 export const getRecentlyOnboardedMerchants = async (
-  limit: number = 10
+  limit: number = 10,
+  environment: Environment
 ): Promise<RecentlyOnboardedMerchant[]> => {
   const response = await apiClient.get<RecentlyOnboardedMerchant[]>(
     `${ADMIN_REPORTS_BASE_URL}/merchants/recently-onboarded`,
-    { params: { limit } }
+    { params: { limit, environment } }
   );
   return response.data;
 };
