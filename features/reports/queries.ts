@@ -239,33 +239,45 @@ export const useDeleteScheduledReport = () => {
 
 // Admin Routes
 export const usePlatformSummary = () => {
+  const { environment } = useEnvironment();
+  
   return useQuery({
-    queryKey: ['admin', 'reports', 'platform-summary'],
-    queryFn: getPlatformSummary,
+    queryKey: ['admin', 'reports', 'platform-summary', environment],
+    queryFn: () => getPlatformSummary(environment || 'sandbox'),
+    enabled: !!environment,
     staleTime: 2000,
   });
 };
 
 export const useTopMerchantsByVolume = (limit: number = 10) => {
+  const { environment } = useEnvironment();
+  
   return useQuery({
-    queryKey: ['admin', 'reports', 'merchants', 'top-by-volume', limit],
-    queryFn: () => getTopMerchantsByVolume(limit),
+    queryKey: ['admin', 'reports', 'merchants', 'top-by-volume', limit, environment],
+    queryFn: () => getTopMerchantsByVolume(limit, environment || 'sandbox'),
+    enabled: !!environment,
     staleTime: 2000,
   });
 };
 
 export const useTopMerchantsByRevenue = (limit: number = 10) => {
+  const { environment } = useEnvironment();
+  
   return useQuery({
-    queryKey: ['admin', 'reports', 'merchants', 'top-by-revenue', limit],
-    queryFn: () => getTopMerchantsByRevenue(limit),
+    queryKey: ['admin', 'reports', 'merchants', 'top-by-revenue', limit, environment],
+    queryFn: () => getTopMerchantsByRevenue(limit, environment || 'sandbox'),
+    enabled: !!environment,
     staleTime: 2000,
   });
 };
 
 export const useRecentlyOnboardedMerchants = (limit: number = 10) => {
+  const { environment } = useEnvironment();
+  
   return useQuery({
-    queryKey: ['admin', 'reports', 'merchants', 'recently-onboarded', limit],
-    queryFn: () => getRecentlyOnboardedMerchants(limit),
+    queryKey: ['admin', 'reports', 'merchants', 'recently-onboarded', limit, environment],
+    queryFn: () => getRecentlyOnboardedMerchants(limit, environment || 'sandbox'),
+    enabled: !!environment,
     staleTime: 2000,
   });
 };

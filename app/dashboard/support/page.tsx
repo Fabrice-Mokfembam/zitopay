@@ -33,25 +33,43 @@ export default function HelpSupportPage() {
     const [category, setCategory] = useState<TicketCategory>("TECHNICAL");
     const [priority, setPriority] = useState<TicketPriority>("MEDIUM");
     const [message, setMessage] = useState("");
+    const [formError, setFormError] = useState<string | null>(null);
+
+    const MIN_MESSAGE_LENGTH = 10;
 
     const handleSubmitTicket = async () => {
-        if (!subject || !message) return;
+        setFormError(null);
 
-        createTicketMutation.mutate({
-            subject,
-            category,
-            priority,
-            message,
-            attachments: [] // Todo: Implement file upload
-        }, {
-            onSuccess: () => {
-                setShowContactModal(false);
-                setSubject("");
-                setMessage("");
-                setPriority("MEDIUM");
-                setCategory("TECHNICAL");
+        if (!subject || !message) {
+            setFormError("Please fill in all required fields.");
+            return;
+        }
+
+        const trimmedMessage = message.trim();
+        if (trimmedMessage.length < MIN_MESSAGE_LENGTH) {
+            setFormError(`Description must be at least ${MIN_MESSAGE_LENGTH} characters.`);
+            return;
+        }
+
+        createTicketMutation.mutate(
+            {
+                subject,
+                category,
+                priority,
+                message: trimmedMessage,
+                attachments: [], // Todo: Implement file upload
+            },
+            {
+                onSuccess: () => {
+                    setShowContactModal(false);
+                    setSubject("");
+                    setMessage("");
+                    setPriority("MEDIUM");
+                    setCategory("TECHNICAL");
+                    setFormError(null);
+                },
             }
-        });
+        );
     };
 
     const faqCategories = [
@@ -195,19 +213,6 @@ export default function HelpSupportPage() {
                         />
                     </div>
 
-                    <div className="bg-blue-50 dark:bg-blue-900/10 rounded-xl p-6 border border-blue-100 dark:border-blue-900/30">
-                        <div className="flex items-center gap-2 mb-3">
-                            <MessageCircle className="w-5 h-5 text-blue-600" />
-                            <h3 className="font-semibold text-blue-900 dark:text-blue-100">Live Chat</h3>
-                        </div>
-                        <p className="text-sm text-blue-800 dark:text-blue-200 mb-4">
-                            Chat with our support team in real-time. Available Mon-Fri, 8AM-6PM.
-                        </p>
-                        <button className="w-full py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors">
-                            Start Chat
-                        </button>
-                    </div>
-
                     <div className="bg-background rounded-xl border border-border p-6">
                         <h3 className="font-semibold text-foreground mb-4">Contact Info</h3>
                         <div className="space-y-4">
@@ -310,7 +315,7 @@ export default function HelpSupportPage() {
 
                             <div>
                                 <label className="text-xs font-medium text-foreground mb-2 block">
-                                    Description *
+                                    Description * <span className="text-xs text-muted-foreground">(minimum 10 characters)</span>
                                 </label>
                                 <textarea
                                     value={message}
@@ -319,7 +324,20 @@ export default function HelpSupportPage() {
                                     placeholder="Please describe the issue in detail..."
                                     className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm resize-none focus:ring-2 focus:ring-orange-500 outline-none"
                                 />
+                                <div className="mt-1 flex items-center justify-between text-xs">
+                                    <span className={cn("text-muted-foreground", message.trim().length > 0 && message.trim().length < MIN_MESSAGE_LENGTH && "text-red-500")}>
+                                        {message.trim().length > 0
+                                            ? `${message.trim().length} / ${MIN_MESSAGE_LENGTH}+ characters`
+                                            : `Please enter at least ${MIN_MESSAGE_LENGTH} characters.`}
+                                    </span>
+                                </div>
                             </div>
+
+                            {formError && (
+                                <div className="text-xs text-red-500 bg-red-50 border border-red-100 rounded-md px-3 py-2">
+                                    {formError}
+                                </div>
+                            )}
 
                             <div className="flex gap-3 pt-4 border-t border-border">
                                 <button
@@ -330,7 +348,12 @@ export default function HelpSupportPage() {
                                 </button>
                                 <button
                                     onClick={handleSubmitTicket}
-                                    disabled={createTicketMutation.isPending || !subject || !message}
+                                    disabled={
+                                        createTicketMutation.isPending ||
+                                        !subject ||
+                                        !message.trim() ||
+                                        message.trim().length < MIN_MESSAGE_LENGTH
+                                    }
                                     className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                                 >
                                     {createTicketMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
