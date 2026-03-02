@@ -111,7 +111,7 @@ export default function BusinessSettingsPage() {
     const getProductionStatusText = (status: string) => {
         switch (status) {
             case "ACTIVE":
-                return { text: "Active", color: "text-green-600 dark:text-green-400" };
+                return { text: "Active", color: "text-blue-600 dark:text-blue-400" };
             case "PENDING_APPROVAL":
                 return { text: "Pending Approval", color: "text-orange-600 dark:text-orange-400" };
             case "SUSPENDED":
@@ -167,7 +167,7 @@ export default function BusinessSettingsPage() {
                         <div className="flex items-center justify-between mb-2">
                             <span className="text-xs font-medium text-muted-foreground">Sandbox</span>
                             <span className={`inline-flex items-center gap-1 text-xs font-semibold ${selectedMerchant.sandboxState === "ACTIVE"
-                                ? "text-green-600 dark:text-green-400"
+                                ? "text-blue-600 dark:text-blue-400"
                                 : "text-red-600 dark:text-red-400"
                                 }`}>
                                 <CheckCircle2 className="w-3 h-3" />
@@ -182,7 +182,7 @@ export default function BusinessSettingsPage() {
                         <div className="flex items-center justify-between mb-2">
                             <span className="text-xs font-medium text-muted-foreground">KYB Status</span>
                             <span className={`inline-flex items-center gap-1 text-xs font-semibold ${selectedMerchant.kycStatus === "APPROVED"
-                                ? "text-green-600 dark:text-green-400"
+                                ? "text-blue-600 dark:text-blue-400"
                                 : selectedMerchant.kycStatus === "PENDING"
                                     ? "text-orange-600 dark:text-orange-400"
                                     : "text-muted-foreground"
@@ -283,7 +283,7 @@ export default function BusinessSettingsPage() {
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                     <div className="bg-background rounded-2xl p-6 shadow-2xl border border-border max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold text-foreground">Edit Business Information</h3>
+                            <h3 className="text-lg font-semibold text-foreground">Edit Business Information</h3>
                             <button
                                 onClick={() => setShowEditModal(false)}
                                 className="p-1 hover:bg-muted rounded transition-colors"

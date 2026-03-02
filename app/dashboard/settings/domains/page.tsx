@@ -42,7 +42,7 @@ export default function DomainsPage() {
         switch (status) {
             case "APPROVED":
                 return {
-                    color: "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20",
+                    color: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
                     icon: <CheckCircle2 className="w-3.5 h-3.5" />,
                     label: "Verified",
                 };
@@ -263,7 +263,7 @@ export default function DomainsPage() {
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-background rounded-xl border border-border shadow-2xl max-w-md w-full">
                         <div className="px-6 py-4 border-b border-border flex items-center justify-between">
-                            <h3 className="text-lg font-bold text-foreground">Add Domain</h3>
+                            <h3 className="text-lg font-semibold text-foreground">Add Domain</h3>
                             <button
                                 onClick={() => {
                                     setShowAddModal(false);
@@ -278,7 +278,7 @@ export default function DomainsPage() {
 
                         <div className="p-6 space-y-4">
                             <div>
-                                <label className="text-sm font-medium text-foreground mb-2 block">
+                                <label className="text-xs font-medium text-foreground mb-2 block">
                                     Domain Name *
                                 </label>
                                 <input
@@ -354,7 +354,7 @@ export default function DomainsPage() {
                             <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
                             </div>
-                            <h3 className="text-lg font-bold text-foreground mb-2">Delete Domain?</h3>
+                            <h3 className="text-lg font-semibold text-foreground mb-2">Delete Domain?</h3>
                             <p className="text-sm text-muted-foreground mb-6">
                                 Are you sure you want to delete <strong>{selectedDomain.domain}</strong>? This action cannot be undone.
                             </p>

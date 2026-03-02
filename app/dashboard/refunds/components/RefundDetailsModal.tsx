@@ -30,15 +30,15 @@ export function RefundDetailsModal({
   const getStatusColor = (status: string) => {
     switch (status) {
       case "SUCCESS":
-        return "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400";
+        return "text-green-600 dark:text-green-400";
       case "PENDING":
-        return "bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400";
+        return "text-orange-600 dark:text-orange-400";
       case "PROCESSING":
-        return "bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400";
+        return "text-muted-foreground";
       case "FAILED":
-        return "bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400";
+        return "text-red-600 dark:text-red-400";
       default:
-        return "bg-muted text-muted-foreground";
+        return "text-muted-foreground";
     }
   };
 
@@ -58,9 +58,9 @@ export function RefundDetailsModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-background rounded-2xl p-6 shadow-2xl border border-border max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-background rounded-xl p-6 shadow-2xl border border-border max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-bold text-foreground">Refund Details</h3>
+          <h3 className="text-lg font-semibold text-foreground">Refund Details</h3>
           <button
             onClick={onClose}
             className="p-1 hover:bg-muted rounded transition-colors"
@@ -79,22 +79,21 @@ export function RefundDetailsModal({
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">Status</span>
                 <span
-                  className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${getStatusColor(
+                  className={`inline-flex items-center gap-1 text-xs font-medium ${getStatusColor(
                     refund.status
                   )}`}
                 >
-                  {refund.status === "SUCCESS" && (
-                    <CheckCircle2 className="w-3 h-3 mr-1" />
-                  )}
-                  {refund.status === "PENDING" && (
-                    <Clock className="w-3 h-3 mr-1" />
-                  )}
-                  {refund.status === "PROCESSING" && (
-                    <Clock className="w-3 h-3 mr-1" />
-                  )}
-                  {refund.status === "FAILED" && (
-                    <XCircle className="w-3 h-3 mr-1" />
-                  )}
+                  <span
+                    className={`w-1 h-1 rounded-full ${
+                      refund.status === "SUCCESS"
+                        ? "bg-green-500"
+                        : refund.status === "PENDING"
+                        ? "bg-orange-500"
+                        : refund.status === "PROCESSING"
+                        ? "bg-muted-foreground"
+                        : "bg-red-500"
+                    }`}
+                  />
                   {refund.status}
                 </span>
               </div>

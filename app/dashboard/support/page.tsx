@@ -96,7 +96,7 @@ export default function HelpSupportPage() {
             case 'OPEN': return 'bg-blue-100 text-blue-700';
             case 'IN_PROGRESS': return 'bg-yellow-100 text-yellow-700';
             case 'WAITING_FOR_CUSTOMER': return 'bg-orange-100 text-orange-700';
-            case 'RESOLVED': return 'bg-green-100 text-green-700';
+            case 'RESOLVED': return 'bg-blue-100 text-blue-700';
             case 'CLOSED': return 'bg-gray-100 text-gray-700';
             default: return 'bg-gray-100 text-gray-700';
         }
@@ -107,8 +107,8 @@ export default function HelpSupportPage() {
             {/* HEADER */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-foreground">Help & Support</h1>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <h1 className="text-xl font-semibold text-foreground">Help & Support</h1>
+                    <p className="text-xs text-muted-foreground mt-0.5">
                         Track your tickets and get help from our team
                     </p>
                 </div>
@@ -226,7 +226,7 @@ export default function HelpSupportPage() {
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
+                                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
                                     <Phone className="w-4 h-4" />
                                 </div>
                                 <div>
@@ -256,7 +256,7 @@ export default function HelpSupportPage() {
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                     <div className="bg-background rounded-2xl p-6 shadow-2xl border border-border max-w-lg w-full max-h-[90vh] overflow-y-auto">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold text-foreground">Create Support Ticket</h3>
+                            <h3 className="text-lg font-semibold text-foreground">Create Support Ticket</h3>
                             <button
                                 onClick={() => setShowContactModal(false)}
                                 className="p-1 hover:bg-muted rounded transition-colors"

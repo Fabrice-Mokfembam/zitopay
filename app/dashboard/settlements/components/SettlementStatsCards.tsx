@@ -28,54 +28,77 @@ export function SettlementStatsCards({
   const currency = environment === "production" ? "FCFA" : "XAF";
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
-            className="bg-background rounded-xl p-4 border border-border animate-pulse"
+            className="bg-background rounded-lg p-3 border border-border animate-pulse"
           >
-            <div className="h-4 bg-muted rounded w-20 mb-2" />
-            <div className="h-6 bg-muted rounded w-24" />
+            <div className="flex items-start justify-between mb-2">
+              <div className="w-8 h-8 bg-muted rounded-lg" />
+            </div>
+            <div className="w-20 h-2.5 bg-muted rounded mb-1.5" />
+            <div className="w-28 h-5 bg-muted rounded" />
           </div>
         ))}
       </div>
     );
   }
 
+  // Unified card style — same neutral background for all cards.
+  // Only the primary card (TOTAL NET) gets an orange left-border accent.
+  const cardStyle = {
+    base: "bg-background rounded-lg p-3 border border-border hover:shadow-sm transition-shadow",
+    primary: "bg-background rounded-lg p-3 border border-border border-l-2 border-l-orange-500 hover:shadow-sm transition-shadow",
+    icon: {
+      primary: "text-orange-500",
+      secondary: "text-muted-foreground",
+    },
+  };
+
+  const PRIMARY_STAT = "TOTAL NET";
+
+  const stats = [
+    { label: "PENDING", value: pending.toString(), icon: Clock, isPrimary: false },
+    { label: "PROCESSING", value: processing.toString(), icon: AlertCircle, isPrimary: false },
+    { label: "COMPLETED", value: completed.toString(), icon: CheckCircle2, isPrimary: false },
+    ...(totalNet !== undefined ? [{ label: "TOTAL NET", value: `${totalNet.toLocaleString()} ${currency}`, icon: TrendingUp, isPrimary: true }] : []),
+  ];
+
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      <div className="bg-orange-50 dark:bg-orange-900/10 rounded-xl p-4 border border-orange-200 dark:border-orange-800">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1">
-          <Clock className="w-3 h-3" />
-          PENDING
-        </p>
-        <p className="text-xl font-bold text-foreground">{pending}</p>
-      </div>
-      <div className="bg-blue-50 dark:bg-blue-900/10 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1">
-          <AlertCircle className="w-3 h-3" />
-          PROCESSING
-        </p>
-        <p className="text-xl font-bold text-foreground">{processing}</p>
-      </div>
-      <div className="bg-green-50 dark:bg-green-900/10 rounded-xl p-4 border border-green-200 dark:border-green-800">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1">
-          <CheckCircle2 className="w-3 h-3" />
-          COMPLETED
-        </p>
-        <p className="text-xl font-bold text-foreground">{completed}</p>
-      </div>
-      {totalNet !== undefined && (
-        <div className="bg-purple-50 dark:bg-purple-900/10 rounded-xl p-4 border border-purple-200 dark:border-purple-800">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1">
-            <TrendingUp className="w-3 h-3" />
-            TOTAL NET
-          </p>
-          <p className="text-xl font-bold text-foreground">
-            {totalNet.toLocaleString()} {currency}
-          </p>
-        </div>
-      )}
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {stats.map((stat, index) => {
+        const Icon = stat.icon;
+        const isPrimary = stat.label === PRIMARY_STAT;
+        return (
+          <div
+            key={index}
+            className={isPrimary ? cardStyle.primary : cardStyle.base}
+          >
+            <div className="flex items-start justify-between mb-2">
+              <div className="w-8 h-8 bg-muted/60 rounded-lg flex items-center justify-center">
+                <Icon
+                  className={`w-4 h-4 ${
+                    isPrimary
+                      ? cardStyle.icon.primary
+                      : cardStyle.icon.secondary
+                  }`}
+                />
+              </div>
+            </div>
+            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">
+              {stat.label}
+            </p>
+            <p
+              className={`text-base font-semibold ${
+                isPrimary ? "text-orange-500" : "text-foreground"
+              }`}
+            >
+              {stat.value}
+            </p>
+          </div>
+        );
+      })}
     </div>
   );
 }

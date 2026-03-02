@@ -88,7 +88,7 @@ export function SettlementDetailsModal({
       <div className="bg-background rounded-2xl shadow-2xl border border-border max-w-2xl w-full my-8">
         <div className="p-6 border-b border-border flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-bold text-foreground">
+            <h3 className="text-lg font-semibold text-foreground">
               Settlement Details
             </h3>
             <p className="text-xs text-muted-foreground mt-1">

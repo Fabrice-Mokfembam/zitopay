@@ -23,7 +23,7 @@ export function SettlementFilters({
   onExport,
 }: SettlementFiltersProps) {
   return (
-    <div className="bg-background rounded-xl p-4 border border-border space-y-4">
+    <div className="bg-background rounded-lg p-3 border border-border space-y-4">
       <div className="flex flex-wrap gap-3 items-center">
         {/* Search */}
         <div className="relative flex-1 min-w-[200px]">

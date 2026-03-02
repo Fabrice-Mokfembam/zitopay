@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Download, Calendar, BarChart3, DollarSign, TrendingUp, Activity, X } from "lucide-react";
+import { Download, Calendar, BarChart3, DollarSign, TrendingUp, TrendingDown, Activity, X } from "lucide-react";
 import { useUserMerchantData } from "@/features/merchants/context/MerchantContext";
 import { useEnvironment } from "@/core/environment/EnvironmentContext";
 import {
@@ -85,20 +85,20 @@ export default function ReportsPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-4 p-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Reports & Analytics</h1>
-          <p className="text-xs text-gray-500 mt-1">
+          <h1 className="text-xl font-semibold text-foreground">Reports & Analytics</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
             Analyze your business performance and export reports
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           <select
             value={selectedPeriod}
             onChange={(e) => setSelectedPeriod(e.target.value as "7d" | "30d" | "90d" | "all")}
-            className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-medium hover:bg-gray-50 transition-colors"
+            className="px-3 py-1.5 bg-background border border-border rounded-md text-xs font-medium hover:bg-muted transition-colors"
           >
             <option value="7d">Last 7 Days</option>
             <option value="30d">Last 30 Days</option>
@@ -107,87 +107,105 @@ export default function ReportsPage() {
           </select>
           <button
             onClick={() => setShowExportModal(true)}
-            className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-semibold hover:bg-orange-700 transition-colors flex items-center gap-2"
+            className="px-3 py-1.5 bg-orange-500 text-white rounded-md text-xs font-semibold hover:bg-orange-600 transition-colors flex items-center gap-1.5"
           >
-            <Download className="w-4 h-4" />
+            <Download className="w-3.5 h-3.5" />
             Export
           </button>
         </div>
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Key Metrics - Show only 4 cards (removed Calendar/5th card) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {statsLoading ? (
           <>
-            {[1, 2, 3, 4, 5].map((i) => (
-              <MetricCard key={i} label="" value="" isLoading={true} />
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-background rounded-lg p-3 border border-border animate-pulse">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="w-8 h-8 bg-muted rounded-lg" />
+                </div>
+                <div className="w-20 h-2.5 bg-muted rounded mb-1.5" />
+                <div className="w-28 h-5 bg-muted rounded" />
+              </div>
             ))}
           </>
         ) : stats && stats.stats && stats.stats.length > 0 ? (
-          stats.stats.map((stat, index) => {
-            const icons = [DollarSign, Activity, BarChart3, TrendingUp, Calendar];
-            const bgColors = [
-              "bg-purple-50",
-              "bg-blue-50",
-              "bg-green-50",
-              "bg-emerald-50",
-              "bg-orange-50",
-            ];
-            const iconColors = [
-              "text-purple-600",
-              "text-blue-600",
-              "text-green-600",
-              "text-emerald-600",
-              "text-orange-600",
-            ];
+          stats.stats.slice(0, 4).map((stat, index) => {
+            const icons = [DollarSign, Activity, BarChart3, TrendingUp];
             const Icon = icons[index % icons.length];
-
+            const isPrimary = stat.label === "Available Balance";
+            
             return (
-              <MetricCard
+              <div
                 key={index}
-                label={stat.label}
-                value={stat.value}
-                currency={stat.currency}
-                change={stat.change}
-                trend={stat.trend}
-                subtitle={stat.subtitle}
-                icon={<Icon className="w-4 h-4 text-white" />}
-                bgColor={bgColors[index % bgColors.length]}
-                iconColor={iconColors[index % iconColors.length]}
-              />
+                className={`bg-background rounded-lg p-3 border border-border ${
+                  isPrimary ? "border-l-2 border-l-orange-500" : ""
+                } hover:shadow-sm transition-shadow`}
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <div className="w-8 h-8 bg-muted/60 rounded-lg flex items-center justify-center">
+                    <Icon className={`w-4 h-4 ${isPrimary ? "text-orange-500" : "text-muted-foreground"}`} />
+                  </div>
+                  {stat.change && stat.trend && (
+                    <span
+                      className={`text-[10px] font-medium flex items-center gap-0.5 ${
+                        stat.trend === "up"
+                          ? "text-green-600 dark:text-green-400"
+                          : "text-red-600 dark:text-red-400"
+                      }`}
+                    >
+                      {stat.trend === "up" ? (
+                        <TrendingUp className="w-2.5 h-2.5" />
+                      ) : (
+                        <TrendingDown className="w-2.5 h-2.5" />
+                      )}
+                      {stat.change}
+                    </span>
+                  )}
+                </div>
+                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">
+                  {stat.label}
+                </p>
+                <p className={`text-base font-semibold ${isPrimary ? "text-orange-500" : "text-foreground"}`}>
+                  {stat.value} {stat.currency}
+                </p>
+                {stat.subtitle && (
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{stat.subtitle}</p>
+                )}
+              </div>
             );
           })
         ) : (
           <div className="col-span-full text-center py-8">
-            <p className="text-sm text-gray-500">No stats data available</p>
+            <p className="text-xs text-muted-foreground">No stats data available</p>
           </div>
         )}
       </div>
 
       {/* Summary Stats */}
       {summary && (
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="bg-white rounded-lg p-4 border border-gray-200">
-            <p className="text-xs font-medium text-gray-600 uppercase tracking-wide mb-1">
-              Transactions Today
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-background rounded-lg p-3 border border-border">
+            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">
+              Today
             </p>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-base font-semibold text-foreground">
               {summary.totalTransactionsToday}
             </p>
           </div>
-          <div className="bg-white rounded-lg p-4 border border-gray-200">
-            <p className="text-xs font-medium text-gray-600 uppercase tracking-wide mb-1">
+          <div className="bg-background rounded-lg p-3 border border-border">
+            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">
               This Week
             </p>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-base font-semibold text-foreground">
               {summary.totalTransactionsThisWeek}
             </p>
           </div>
-          <div className="bg-white rounded-lg p-4 border border-gray-200">
-            <p className="text-xs font-medium text-gray-600 uppercase tracking-wide mb-1">
+          <div className="bg-background rounded-lg p-3 border border-border">
+            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">
               This Month
             </p>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-base font-semibold text-foreground">
               {summary.totalTransactionsThisMonth}
             </p>
           </div>
@@ -195,7 +213,7 @@ export default function ReportsPage() {
       )}
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {/* Volume Over Time */}
         <ChartCard
           title="Transaction Volume"
@@ -332,16 +350,16 @@ export default function ReportsPage() {
       </ChartCard>
 
       {/* Scheduled Reports */}
-      <div className="bg-white rounded-lg p-6 border border-gray-200">
+      <div className="bg-background rounded-lg p-3 border border-border">
         <ScheduledReportsList />
       </div>
 
       {/* Export Modal */}
       {showExportModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h3 className="text-lg font-bold text-gray-900">Export Report</h3>
+          <div className="bg-background rounded-xl max-w-md w-full border border-border">
+            <div className="flex items-center justify-between p-4 border-b border-border">
+              <h3 className="text-lg font-semibold text-foreground">Export Report</h3>
               <button
                 onClick={() => setShowExportModal(false)}
                 className="p-1 hover:bg-gray-100 rounded transition-colors"
@@ -350,9 +368,9 @@ export default function ReportsPage() {
               </button>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-4 space-y-4">
               <div>
-                <label className="text-xs font-medium text-gray-700 mb-2 block">Format *</label>
+                <label className="text-xs font-medium text-foreground mb-2 block">Format *</label>
                 <div className="flex gap-3">
                   {(["CSV", "EXCEL"] as const).map((format) => (
                     <label key={format} className="flex items-center gap-2 cursor-pointer">
@@ -362,8 +380,9 @@ export default function ReportsPage() {
                         value={format}
                         checked={exportFormat === format}
                         onChange={(e) => setExportFormat(e.target.value as "CSV" | "EXCEL")}
+                        className="text-orange-500"
                       />
-                      <span className="text-xs text-gray-700 uppercase">{format}</span>
+                      <span className="text-xs text-foreground uppercase">{format}</span>
                     </label>
                   ))}
                 </div>
@@ -372,14 +391,14 @@ export default function ReportsPage() {
               <div className="flex gap-3 pt-4">
                 <button
                   onClick={() => setShowExportModal(false)}
-                  className="flex-1 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-4 py-2 bg-background border border-border rounded-md text-xs font-semibold hover:bg-muted transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleExport}
                   disabled={exportMutation.isPending}
-                  className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-semibold hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-md text-xs font-semibold hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {exportMutation.isPending ? "Exporting..." : "Export"}
                 </button>

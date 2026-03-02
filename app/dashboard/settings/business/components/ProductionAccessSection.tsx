@@ -111,14 +111,14 @@ export default function ProductionAccessSection({
 
             case "ACTIVE":
                 return (
-                    <div className="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                    <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                         <div className="flex items-start gap-3">
-                            <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
+                            <CheckCircle2 className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
                             <div className="flex-1">
-                                <h4 className="text-sm font-semibold text-green-900 dark:text-green-100">
+                                <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100">
                                     Production Active 🚀
                                 </h4>
-                                <p className="text-xs text-green-700 dark:text-green-300 mt-1">
+                                <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
                                     Your production environment is live! You can now accept real payments from
                                     customers.
                                 </p>
@@ -182,11 +182,11 @@ export default function ProductionAccessSection({
                     <div className="bg-background rounded-2xl p-6 shadow-2xl border border-border max-w-2xl w-full">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
-                                <div className="w-10 h-10 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center">
-                                    <Rocket className="w-5 h-5 text-green-600 dark:text-green-400" />
+                                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
+                                    <Rocket className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-bold text-foreground">
+                                    <h3 className="text-lg font-semibold text-foreground">
                                         Production Credentials
                                     </h3>
                                     <p className="text-xs text-muted-foreground">

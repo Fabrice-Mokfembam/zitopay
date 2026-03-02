@@ -1,102 +1,126 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
     Search,
     Download,
     CheckCircle2,
     Clock,
     XCircle,
+    ArrowUpFromLine,
     MoreVertical,
     X,
     Plus,
     Upload,
     ChevronLeft,
     ChevronRight,
-    RefreshCw,
 } from "lucide-react";
 import { useUserMerchantData } from "@/features/merchants/context/MerchantContext";
+import { useEnvironment } from "@/core/environment/EnvironmentContext";
+import { useRecentTransactions } from "@/features/merchants/hooks/useMerchant";
 
 export default function PayoutsPage() {
-    const { merchant } = useUserMerchantData();
+    const { merchantId } = useUserMerchantData();
+    const { environment } = useEnvironment();
+
     const [searchQuery, setSearchQuery] = useState("");
+    const [statusFilter, setStatusFilter] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
     const [showSinglePayoutModal, setShowSinglePayoutModal] = useState(false);
     const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
 
-    // Determine environment based on merchant state
-    const environment: "sandbox" | "production" =
-        merchant?.productionState === "ACTIVE" ? "production" : "sandbox";
+    const itemsPerPage = 20;
 
-    // Currency display
+    // Fetch payout transactions using the shared hook (reads environment internally)
+    const {
+        data: transactionsData,
+        isLoading,
+        error,
+    } = useRecentTransactions(
+        merchantId || "",
+        100,
+        "payout",
+        !!merchantId
+    );
+
+    // Currency display based on environment
     const currency = environment === "production" ? "FCFA" : "XAF";
 
-    const stats = {
-        total: 850000,
-        successful: 456,
-        pending: 8,
-        failed: 12,
-    };
+    // All payouts from API
+    const allPayouts = transactionsData?.transactions ?? [];
 
-    const payouts = [
-        {
-            id: "#27-9281-456",
-            recipient: "+237 670 123 456",
-            amount: 50000,
-            gateway: "MTN",
-            status: "success",
-            date: "Jan 12",
-            time: "14:23",
-        },
-        {
-            id: "#27-9281-457",
-            recipient: "+237 690 234 567",
-            amount: 25000,
-            gateway: "Orange",
-            status: "pending",
-            date: "Jan 12",
-            time: "13:45",
-        },
-        {
-            id: "#27-9280-458",
-            recipient: "+237 677 345 678",
-            amount: 75000,
-            gateway: "MTN",
-            status: "failed",
-            date: "Jan 11",
-            time: "22:10",
-        },
-    ];
+    // Filter by search query and status
+    const filteredPayouts = useMemo(() => {
+        return allPayouts.filter((tx) => {
+            const matchesSearch =
+                !searchQuery ||
+                tx.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (tx.recipient ?? "").toLowerCase().includes(searchQuery.toLowerCase());
+
+            const matchesStatus =
+                !statusFilter ||
+                tx.status.toLowerCase() === statusFilter.toLowerCase();
+
+            return matchesSearch && matchesStatus;
+        });
+    }, [allPayouts, searchQuery, statusFilter]);
+
+    // Pagination
+    const totalPages = Math.ceil(filteredPayouts.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const paginatedPayouts = filteredPayouts.slice(startIndex, startIndex + itemsPerPage);
+
+    // Stats derived from all payouts
+    const stats = useMemo(() => ({
+        total: allPayouts.reduce((sum, tx) => sum + tx.amount, 0),
+        successful: allPayouts.filter((tx) => tx.status === "SUCCESS").length,
+        pending: allPayouts.filter((tx) => tx.status === "PENDING_GATEWAY").length,
+        failed: allPayouts.filter((tx) => tx.status === "FAILED").length,
+    }), [allPayouts]);
 
     const getStatusColor = (status: string) => {
-        switch (status) {
-            case "success":
+        switch (status.toUpperCase()) {
+            case "SUCCESS":
                 return "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400";
-            case "pending":
+            case "PENDING_GATEWAY":
                 return "bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400";
-            case "failed":
+            case "FAILED":
                 return "bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400";
             default:
                 return "bg-muted text-muted-foreground";
         }
     };
 
+    const getStatusIcon = (status: string) => {
+        switch (status.toUpperCase()) {
+            case "SUCCESS":
+                return <CheckCircle2 className="w-3 h-3 mr-1" />;
+            case "PENDING_GATEWAY":
+                return <Clock className="w-3 h-3 mr-1" />;
+            case "FAILED":
+                return <XCircle className="w-3 h-3 mr-1" />;
+            default:
+                return null;
+        }
+    };
+
+    const formatStatus = (status: string) =>
+        status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
     return (
-        <div className="p-6 space-y-6">
-            {/* HEADER */}
-            <div className="flex items-center justify-between">
+        <div className="p-6 space-y-6 max-w-7xl mx-auto">
+            {/* HEADER & ACTIONS */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-xl font-bold text-foreground">Payouts</h1>
                     <p className="text-xs text-muted-foreground mt-1">
                         Send money to customers and vendors
                     </p>
                 </div>
-                <div className="flex gap-3">
-                    <button
-                        onClick={() => setShowSinglePayoutModal(true)}
-                        className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600 transition-colors flex items-center gap-2"
-                    >
-                        <Plus className="w-4 h-4" />
-                        Single
+                <div className="flex flex-wrap items-center gap-2">
+                    <button className="px-4 py-2 bg-background border border-border text-foreground rounded-lg text-sm font-semibold hover:bg-muted transition-colors flex items-center gap-2">
+                        <Download className="w-4 h-4" />
+                        Export
                     </button>
                     <button
                         onClick={() => setShowBulkUploadModal(true)}
@@ -105,67 +129,77 @@ export default function PayoutsPage() {
                         <Upload className="w-4 h-4" />
                         Bulk Upload
                     </button>
+                    <button
+                        onClick={() => setShowSinglePayoutModal(true)}
+                        className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600 transition-colors flex items-center gap-2"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Single
+                    </button>
                 </div>
             </div>
 
             {/* STATS CARDS */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 <div className="bg-blue-50 dark:bg-blue-900/10 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                        TOTAL
-                    </p>
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">TOTAL</p>
                     <p className="text-xl font-bold text-foreground">
-                        {currency} {stats.total.toLocaleString()}
+                        {isLoading ? "—" : `${currency} ${stats.total.toLocaleString()}`}
                     </p>
                 </div>
                 <div className="bg-green-50 dark:bg-green-900/10 rounded-xl p-4 border border-green-200 dark:border-green-800">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                        SUCCESS
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">SUCCESS</p>
+                    <p className="text-xl font-bold text-foreground">
+                        {isLoading ? "—" : stats.successful}
                     </p>
-                    <p className="text-xl font-bold text-foreground">{stats.successful}</p>
                 </div>
                 <div className="bg-orange-50 dark:bg-orange-900/10 rounded-xl p-4 border border-orange-200 dark:border-orange-800">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                        PENDING
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">PENDING</p>
+                    <p className="text-xl font-bold text-foreground">
+                        {isLoading ? "—" : stats.pending}
                     </p>
-                    <p className="text-xl font-bold text-foreground">{stats.pending}</p>
                 </div>
                 <div className="bg-red-50 dark:bg-red-900/10 rounded-xl p-4 border border-red-200 dark:border-red-800">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                        FAILED
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">FAILED</p>
+                    <p className="text-xl font-bold text-foreground">
+                        {isLoading ? "—" : stats.failed}
                     </p>
-                    <p className="text-xl font-bold text-foreground">{stats.failed}</p>
                 </div>
             </div>
 
             {/* FILTERS & SEARCH */}
-            <div className="bg-background rounded-xl p-4 border border-border space-y-4">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <input
-                        type="text"
-                        placeholder="Search payouts..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 bg-muted border border-border rounded-lg text-sm text-foreground"
-                    />
-                </div>
-                <div className="flex flex-wrap gap-3">
-                    <select className="px-3 py-2 bg-background border border-border rounded-lg text-xs font-medium">
-                        <option>Last 30 Days</option>
+            <div className="bg-background rounded-xl p-3 border border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                    <div className="relative flex-1 md:min-w-[250px]">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <input
+                            type="text"
+                            placeholder="Search ID or recipient..."
+                            value={searchQuery}
+                            onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                            className="w-full pl-9 pr-4 py-1.5 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 transition-shadow"
+                        />
+                    </div>
+                    <select
+                        value={statusFilter}
+                        onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+                        className="px-3 py-1.5 bg-background border border-border rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-orange-500 transition-shadow"
+                    >
+                        <option value="">All Status</option>
+                        <option value="SUCCESS">Success</option>
+                        <option value="PENDING_GATEWAY">Pending</option>
+                        <option value="FAILED">Failed</option>
                     </select>
-                    <select className="px-3 py-2 bg-background border border-border rounded-lg text-xs font-medium">
-                        <option>All Gateways</option>
-                    </select>
-                    <select className="px-3 py-2 bg-background border border-border rounded-lg text-xs font-medium">
-                        <option>All Status</option>
-                    </select>
-                    <button className="ml-auto px-3 py-2 bg-background border border-border rounded-lg text-xs font-semibold hover:bg-muted transition-colors flex items-center gap-2">
-                        <Download className="w-4 h-4" />
-                        Export
-                    </button>
                 </div>
             </div>
+
+            {/* ERROR STATE */}
+            {error && (
+                <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-xl p-4">
+                    <p className="text-sm font-semibold text-red-900 dark:text-red-100">Error loading payouts</p>
+                    <p className="text-xs text-red-700 dark:text-red-300 mt-1">{error.message}</p>
+                </div>
+            )}
 
             {/* TABLE */}
             <div className="bg-background rounded-xl border border-border overflow-hidden">
@@ -173,85 +207,110 @@ export default function PayoutsPage() {
                     <table className="w-full">
                         <thead>
                             <tr className="border-b border-border bg-muted/50">
-                                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase">
-                                    Date
-                                </th>
-                                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase">
-                                    ID
-                                </th>
-                                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase">
-                                    Recipient
-                                </th>
-                                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase">
-                                    Amount
-                                </th>
-                                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase">
-                                    Gateway
-                                </th>
-                                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase">
-                                    Status
-                                </th>
-                                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase">
-                                    Actions
-                                </th>
+                                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase">Date</th>
+                                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase">ID</th>
+                                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase">Recipient</th>
+                                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase">Amount</th>
+                                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase">Gateway</th>
+                                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase">Status</th>
+                                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {payouts.map((item) => (
-                                <tr
-                                    key={item.id}
-                                    className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors"
-                                >
-                                    <td className="py-3 px-4">
-                                        <div className="text-xs font-medium text-foreground">{item.date}</div>
-                                        <div className="text-xs text-muted-foreground">{item.time}</div>
-                                    </td>
-                                    <td className="py-3 px-4 text-xs font-mono text-foreground">{item.id}</td>
-                                    <td className="py-3 px-4 text-xs text-foreground">{item.recipient}</td>
-                                    <td className="py-3 px-4 text-xs font-semibold text-foreground">
-                                        {item.amount.toLocaleString()} {currency}
-                                    </td>
-                                    <td className="py-3 px-4 text-xs text-foreground">{item.gateway}</td>
-                                    <td className="py-3 px-4">
-                                        <span
-                                            className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${getStatusColor(
-                                                item.status
-                                            )}`}
-                                        >
-                                            {item.status === "success" && <CheckCircle2 className="w-3 h-3 mr-1" />}
-                                            {item.status === "pending" && <Clock className="w-3 h-3 mr-1" />}
-                                            {item.status === "failed" && <XCircle className="w-3 h-3 mr-1" />}
-                                            {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-                                        </span>
-                                    </td>
-                                    <td className="py-3 px-4">
-                                        <button className="p-1 hover:bg-muted rounded transition-colors">
-                                            <MoreVertical className="w-4 h-4 text-muted-foreground" />
-                                        </button>
+                            {isLoading ? (
+                                Array.from({ length: 8 }).map((_, i) => (
+                                    <tr key={i} className="border-b border-border">
+                                        {Array.from({ length: 7 }).map((__, j) => (
+                                            <td key={j} className="py-2.5 px-3">
+                                                <div className="h-3 bg-muted rounded animate-pulse w-20" />
+                                            </td>
+                                        ))}
+                                    </tr>
+                                ))
+                            ) : paginatedPayouts.length > 0 ? (
+                                paginatedPayouts.map((tx) => (
+                                    <tr
+                                        key={tx.id}
+                                        className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors group cursor-pointer"
+                                    >
+                                        <td className="py-2.5 px-3">
+                                            <div className="text-xs font-medium text-foreground">{tx.date}</div>
+                                            <div className="text-[10px] text-muted-foreground">{tx.time}</div>
+                                        </td>
+                                        <td className="py-2.5 px-3 text-xs font-mono text-foreground">
+                                            {tx.id.length > 18 ? `${tx.id.slice(0, 18)}...` : tx.id}
+                                        </td>
+                                        <td className="py-2.5 px-3 text-xs text-foreground">{tx.recipient ?? "—"}</td>
+                                        <td className="py-2.5 px-3 text-xs font-semibold text-foreground">
+                                            {tx.amount.toLocaleString()} {currency}
+                                        </td>
+                                        <td className="py-2.5 px-3 text-xs text-foreground">{tx.gateway.replace(/_/g, " ")}</td>
+                                        <td className="py-2.5 px-3">
+                                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${getStatusColor(tx.status)}`}>
+                                                {getStatusIcon(tx.status)}
+                                                {formatStatus(tx.status)}
+                                            </span>
+                                        </td>
+                                        <td className="py-2.5 px-3">
+                                            <button className="p-1 hover:text-foreground text-muted-foreground hover:bg-muted rounded transition-colors opacity-0 group-hover:opacity-100">
+                                                <MoreVertical className="w-4 h-4" />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={7} className="py-12 text-center">
+                                        <ArrowUpFromLine className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                                        <p className="text-sm text-muted-foreground">No payouts found</p>
                                     </td>
                                 </tr>
-                            ))}
+                            )}
                         </tbody>
                     </table>
                 </div>
 
                 {/* Pagination */}
-                <div className="p-4 border-t border-border flex items-center justify-between">
-                    <div className="text-xs text-muted-foreground">Showing 1-20 of 456</div>
-                    <div className="flex items-center gap-2">
-                        <button className="p-2 hover:bg-muted rounded transition-colors">
-                            <ChevronLeft className="w-4 h-4" />
-                        </button>
-                        <button className="px-3 py-1 bg-orange-500 text-white rounded text-xs font-medium">
-                            1
-                        </button>
-                        <button className="px-3 py-1 hover:bg-muted rounded text-xs font-medium">2</button>
-                        <button className="px-3 py-1 hover:bg-muted rounded text-xs font-medium">3</button>
-                        <button className="p-2 hover:bg-muted rounded transition-colors">
-                            <ChevronRight className="w-4 h-4" />
-                        </button>
+                {filteredPayouts.length > 0 && (
+                    <div className="p-4 border-t border-border flex items-center justify-between">
+                        <div className="text-xs text-muted-foreground">
+                            Showing {startIndex + 1}–{Math.min(startIndex + itemsPerPage, filteredPayouts.length)} of {filteredPayouts.length}
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                                className="p-2 hover:bg-muted rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                            </button>
+                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                let pageNum = i + 1;
+                                if (totalPages > 5) {
+                                    if (currentPage <= 3) pageNum = i + 1;
+                                    else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+                                    else pageNum = currentPage - 2 + i;
+                                }
+                                return (
+                                    <button
+                                        key={pageNum}
+                                        onClick={() => setCurrentPage(pageNum)}
+                                        className={`px-3 py-1 rounded text-xs font-medium transition-colors ${currentPage === pageNum ? "bg-orange-500 text-white" : "hover:bg-muted text-foreground"}`}
+                                    >
+                                        {pageNum}
+                                    </button>
+                                );
+                            })}
+                            <button
+                                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages || totalPages === 0}
+                                className="p-2 hover:bg-muted rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <ChevronRight className="w-4 h-4" />
+                            </button>
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
 
             {/* SINGLE PAYOUT MODAL */}
@@ -259,7 +318,7 @@ export default function PayoutsPage() {
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                     <div className="bg-background rounded-2xl p-6 shadow-2xl border border-border max-w-md w-full">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold text-foreground">New Payout</h3>
+                            <h3 className="text-lg font-semibold text-foreground">New Payout</h3>
                             <button
                                 onClick={() => setShowSinglePayoutModal(false)}
                                 className="p-1 hover:bg-muted rounded transition-colors"
@@ -269,58 +328,23 @@ export default function PayoutsPage() {
                         </div>
                         <div className="space-y-4">
                             <div>
-                                <label className="text-xs font-medium text-foreground mb-2 block">
-                                    Recipient Phone Number
-                                </label>
-                                <input
-                                    type="tel"
-                                    placeholder="+237 670 123 456"
-                                    className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm"
-                                />
+                                <label className="text-xs font-medium text-foreground mb-2 block">Recipient Phone Number</label>
+                                <input type="tel" placeholder="+237 670 123 456" className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm" />
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-foreground mb-2 block">
-                                    Amount ({currency})
-                                </label>
-                                <input
-                                    type="number"
-                                    placeholder="50000"
-                                    className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm"
-                                />
+                                <label className="text-xs font-medium text-foreground mb-2 block">Amount ({currency})</label>
+                                <input type="number" placeholder="50000" className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm" />
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-foreground mb-2 block">
-                                    Gateway
-                                </label>
+                                <label className="text-xs font-medium text-foreground mb-2 block">Gateway</label>
                                 <select className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm">
                                     <option>MTN Mobile Money</option>
                                     <option>Orange Money</option>
-                                    <option>Moov Money</option>
                                 </select>
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-foreground mb-2 block">
-                                    Reference/Description
-                                </label>
-                                <input
-                                    type="text"
-                                    placeholder="Salary payment"
-                                    className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm"
-                                />
-                            </div>
-                            <div className="bg-muted/50 rounded-lg p-3 text-xs">
-                                <div className="flex justify-between mb-1">
-                                    <span className="text-muted-foreground">Amount:</span>
-                                    <span className="font-medium">50,000 {currency}</span>
-                                </div>
-                                <div className="flex justify-between mb-1">
-                                    <span className="text-muted-foreground">Fee:</span>
-                                    <span className="font-medium">500 {currency}</span>
-                                </div>
-                                <div className="flex justify-between pt-2 border-t border-border">
-                                    <span className="font-semibold">Total:</span>
-                                    <span className="font-bold">50,500 {currency}</span>
-                                </div>
+                                <label className="text-xs font-medium text-foreground mb-2 block">Reference/Description</label>
+                                <input type="text" placeholder="Salary payment" className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-sm" />
                             </div>
                             <button className="w-full px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600 transition-colors">
                                 Send Payout
@@ -335,7 +359,7 @@ export default function PayoutsPage() {
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                     <div className="bg-background rounded-2xl p-6 shadow-2xl border border-border max-w-md w-full">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold text-foreground">Bulk Payout Upload</h3>
+                            <h3 className="text-lg font-semibold text-foreground">Bulk Payout Upload</h3>
                             <button
                                 onClick={() => setShowBulkUploadModal(false)}
                                 className="p-1 hover:bg-muted rounded transition-colors"
@@ -346,12 +370,8 @@ export default function PayoutsPage() {
                         <div className="space-y-4">
                             <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
                                 <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                                <p className="text-sm font-medium text-foreground mb-1">
-                                    Drop CSV file here or click to browse
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                    Maximum file size: 5MB
-                                </p>
+                                <p className="text-sm font-medium text-foreground mb-1">Drop CSV file here or click to browse</p>
+                                <p className="text-xs text-muted-foreground">Maximum file size: 5MB</p>
                                 <input type="file" accept=".csv" className="hidden" />
                             </div>
                             <div className="bg-muted/50 rounded-lg p-3">
