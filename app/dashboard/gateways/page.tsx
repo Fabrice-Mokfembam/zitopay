@@ -38,12 +38,13 @@ const DEFAULT_GATEWAYS: Gateway[] = [
     },
     {
         id: "ORANGE_MONEY",
-        apiCode: "ORANGE",
+        apiCode: "ORANGE_MONEY",
         name: "Orange Money",
         icon: "O",
         color: "bg-orange-500",
         status: "disabled",
-        comingSoon: true,
+        // Orange Money is no longer hard-coded as “Coming Soon”.
+        // Its availability is determined by backend gateway configuration.
         minAmount: 1000,
         maxAmount: 1000000,
         dailyLimit: 5000000,
@@ -190,8 +191,8 @@ export default function GatewaysPage() {
 
                         {/* Configured Message */}
                         {gateway.isConfigured && (
-                            <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg">
-                                <p className="text-xs font-medium text-green-700 dark:text-green-400 flex items-center gap-1.5">
+                            <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg">
+                                <p className="text-xs font-medium text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
                                     <CheckCircle2 className="w-3.5 h-3.5" />
                                     Already configured - Click to update settings
                                 </p>
@@ -223,7 +224,7 @@ export default function GatewaysPage() {
                             className={`w-full px-4 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-2 ${gateway.comingSoon
                                 ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
                                 : gateway.isConfigured
-                                ? "bg-green-500 text-white hover:bg-green-600"
+                                ? "bg-blue-500 text-white hover:bg-blue-600"
                                 : "bg-orange-500 text-white hover:bg-orange-600"
                                 }`}
                         >
@@ -245,12 +246,12 @@ export default function GatewaysPage() {
                             {/* Modal Header */}
                             <div className="px-6 py-4 border-b border-border flex items-center justify-between">
                                 <div>
-                                    <h3 className="text-lg font-bold text-foreground">
+                                    <h3 className="text-lg font-semibold text-foreground">
                                         {selectedGateway.isConfigured ? "Update Gateway Configuration" : "Configure Gateway"}
                                     </h3>
                                     <p className="text-xs text-muted-foreground mt-1">{selectedGateway.name}</p>
                                     {selectedGateway.isConfigured && (
-                                        <p className="text-xs text-green-600 dark:text-green-400 mt-1 flex items-center gap-1">
+                                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 flex items-center gap-1">
                                             <CheckCircle2 className="w-3 h-3" />
                                             This gateway is already configured
                                         </p>
@@ -273,7 +274,7 @@ export default function GatewaysPage() {
                                         <button
                                             onClick={() => setSelectedGateway({ ...selectedGateway, status: 'enabled' })}
                                             className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-2 ${selectedGateway.status === 'enabled'
-                                                ? 'bg-green-500 text-white'
+                                                ? 'bg-blue-500 text-white'
                                                 : 'bg-background border border-border text-foreground hover:bg-muted'
                                                 }`}
                                         >

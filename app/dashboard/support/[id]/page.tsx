@@ -61,7 +61,7 @@ export default function TicketDetailPage() {
             case 'OPEN': return 'bg-blue-100 text-blue-700';
             case 'IN_PROGRESS': return 'bg-yellow-100 text-yellow-700';
             case 'WAITING_FOR_CUSTOMER': return 'bg-orange-100 text-orange-700';
-            case 'RESOLVED': return 'bg-green-100 text-green-700';
+            case 'RESOLVED': return 'bg-blue-100 text-blue-700';
             case 'CLOSED': return 'bg-gray-100 text-gray-700';
             default: return 'bg-gray-100 text-gray-700';
         }
@@ -89,8 +89,8 @@ export default function TicketDetailPage() {
                                 <Clock className="w-3 h-3" /> {format(new Date(ticket.createdAt), "MMM d, yyyy")}
                             </span>
                         </div>
-                        <h1 className="text-2xl font-bold text-foreground">{ticket.subject}</h1>
-                        <p className="text-sm text-muted-foreground mt-1">category: <span className="font-medium text-foreground">{ticket.category}</span></p>
+                        <h1 className="text-xl font-semibold text-foreground">{ticket.subject}</h1>
+                        <p className="text-xs text-muted-foreground mt-0.5">category: <span className="font-medium text-foreground">{ticket.category}</span></p>
                     </div>
 
                     <div className="flex items-center gap-2">

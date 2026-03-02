@@ -28,15 +28,15 @@ export function SettlementsTable({
   const getStatusColor = (status: string) => {
     switch (status) {
       case "COMPLETED":
-        return "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400";
+        return "text-green-600 dark:text-green-400";
       case "PENDING":
-        return "bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400";
+        return "text-orange-600 dark:text-orange-400";
       case "PROCESSING":
-        return "bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400";
+        return "text-muted-foreground";
       case "FAILED":
-        return "bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400";
+        return "text-red-600 dark:text-red-400";
       default:
-        return "bg-muted text-muted-foreground";
+        return "text-muted-foreground";
     }
   };
 
@@ -61,7 +61,7 @@ export function SettlementsTable({
 
   if (isLoading) {
     return (
-      <div className="bg-background rounded-xl border border-border overflow-hidden">
+      <div className="bg-background rounded-lg border border-border overflow-hidden">
         <div className="p-4 space-y-3">
           {[1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="h-12 bg-muted/50 rounded animate-pulse" />
@@ -73,7 +73,7 @@ export function SettlementsTable({
 
   if (settlements.length === 0) {
     return (
-      <div className="bg-background rounded-xl border border-border p-12 text-center">
+      <div className="bg-background rounded-lg border border-border p-12 text-center">
         <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
         <h3 className="text-sm font-semibold text-foreground mb-2">
           No settlements found
@@ -86,7 +86,7 @@ export function SettlementsTable({
   }
 
   return (
-    <div className="bg-background rounded-xl border border-border overflow-hidden">
+    <div className="bg-background rounded-lg border border-border overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
@@ -123,19 +123,21 @@ export function SettlementsTable({
                 </td>
                 <td className="py-3 px-4">
                   <span
-                    className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${getStatusColor(
+                    className={`inline-flex items-center gap-1 text-xs font-medium ${getStatusColor(
                       settlement.status
                     )}`}
                   >
-                    {settlement.status === "COMPLETED" && (
-                      <CheckCircle2 className="w-3 h-3 mr-1" />
-                    )}
-                    {settlement.status === "PENDING" && (
-                      <Clock className="w-3 h-3 mr-1" />
-                    )}
-                    {settlement.status === "FAILED" && (
-                      <XCircle className="w-3 h-3 mr-1" />
-                    )}
+                    <span
+                      className={`w-1 h-1 rounded-full ${
+                        settlement.status === "COMPLETED"
+                          ? "bg-green-500"
+                          : settlement.status === "PENDING"
+                          ? "bg-orange-500"
+                          : settlement.status === "PROCESSING"
+                          ? "bg-muted-foreground"
+                          : "bg-red-500"
+                      }`}
+                    />
                     {settlement.status}
                   </span>
                 </td>

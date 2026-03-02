@@ -256,21 +256,21 @@ export default function TeamMembersPage() {
                                     <td className="py-2 px-3 text-xs text-foreground">{permission.name}</td>
                                     <td className="py-2 px-3 text-center">
                                         {permission.owner ? (
-                                            <CheckCircle2 className="w-4 h-4 text-green-600 mx-auto" />
+                                            <CheckCircle2 className="w-4 h-4 text-blue-600 mx-auto" />
                                         ) : (
                                             <XCircle className="w-4 h-4 text-red-600 mx-auto" />
                                         )}
                                     </td>
                                     <td className="py-2 px-3 text-center">
                                         {permission.admin ? (
-                                            <CheckCircle2 className="w-4 h-4 text-green-600 mx-auto" />
+                                            <CheckCircle2 className="w-4 h-4 text-blue-600 mx-auto" />
                                         ) : (
                                             <XCircle className="w-4 h-4 text-red-600 mx-auto" />
                                         )}
                                     </td>
                                     <td className="py-2 px-3 text-center">
                                         {permission.viewer ? (
-                                            <CheckCircle2 className="w-4 h-4 text-green-600 mx-auto" />
+                                            <CheckCircle2 className="w-4 h-4 text-blue-600 mx-auto" />
                                         ) : (
                                             <XCircle className="w-4 h-4 text-red-600 mx-auto" />
                                         )}
@@ -287,7 +287,7 @@ export default function TeamMembersPage() {
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                     <div className="bg-background rounded-2xl p-6 shadow-2xl border border-border max-w-md w-full">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold text-foreground">Invite Team Member</h3>
+                            <h3 className="text-lg font-semibold text-foreground">Invite Team Member</h3>
                             <button
                                 onClick={() => setShowInviteModal(false)}
                                 className="p-1 hover:bg-muted rounded transition-colors"
@@ -339,20 +339,20 @@ export default function TeamMembersPage() {
                                 <div className="space-y-1">
                                     {inviteRole === "admin" ? (
                                         <>
-                                            <p className="text-xs text-green-600 dark:text-green-400">
+                                            <p className="text-xs text-blue-600 dark:text-blue-400">
                                                 ✅ View all data
                                             </p>
-                                            <p className="text-xs text-green-600 dark:text-green-400">
+                                            <p className="text-xs text-blue-600 dark:text-blue-400">
                                                 ✅ Create payouts and refunds
                                             </p>
-                                            <p className="text-xs text-green-600 dark:text-green-400">
+                                            <p className="text-xs text-blue-600 dark:text-blue-400">
                                                 ✅ Manage integrations
                                             </p>
                                             <p className="text-xs text-red-600 dark:text-red-400">❌ Delete account</p>
                                         </>
                                     ) : (
                                         <>
-                                            <p className="text-xs text-green-600 dark:text-green-400">
+                                            <p className="text-xs text-blue-600 dark:text-blue-400">
                                                 ✅ View all data
                                             </p>
                                             <p className="text-xs text-red-600 dark:text-red-400">

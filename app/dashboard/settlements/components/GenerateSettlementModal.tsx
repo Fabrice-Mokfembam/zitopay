@@ -43,7 +43,7 @@ export function GenerateSettlementModal({
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-background rounded-2xl shadow-2xl border border-border max-w-md w-full">
         <div className="p-6 border-b border-border flex items-center justify-between">
-          <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
             <Calendar className="w-5 h-5" />
             Generate Settlement
           </h3>

@@ -99,7 +99,7 @@ export default function DashboardLayout({
         <DashboardNavbar />
 
         {/* Page Content with increased padding */}
-        <main className="flex-1 overflow-y-auto bg-muted/30 p-8">
+        <main className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950/50 p-4">
           {children}
         </main>
       </div>

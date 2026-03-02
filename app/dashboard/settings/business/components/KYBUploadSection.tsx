@@ -146,14 +146,14 @@ export default function KYBUploadSection({
             )}
 
             {kycStatus === "APPROVED" && (
-                <div className="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                     <div className="flex items-start gap-3">
-                        <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
+                        <CheckCircle2 className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
                         <div className="flex-1">
-                            <h4 className="text-sm font-semibold text-green-900 dark:text-green-100">
+                            <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100">
                                 KYB Approved ✅
                             </h4>
-                            <p className="text-xs text-green-700 dark:text-green-300 mt-1">
+                            <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
                                 Your business has been verified! You can now request production access.
                             </p>
                         </div>
@@ -334,7 +334,7 @@ export default function KYBUploadSection({
                                         </p>
                                     </div>
                                 </div>
-                                <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 shrink-0" />
+                                <CheckCircle2 className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" />
                             </div>
                         ))}
                     </div>
@@ -369,7 +369,7 @@ export default function KYBUploadSection({
                     )}
 
                     {uploadedDocuments.length > 0 && (
-                        <p className="text-xs text-center text-green-600 dark:text-green-400">
+                        <p className="text-xs text-center text-blue-600 dark:text-blue-400">
                             ✓ {uploadedDocuments.length} document{uploadedDocuments.length > 1 ? "s" : ""} ready for review
                         </p>
                     )}

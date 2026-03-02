@@ -30,7 +30,7 @@ export default function SettingsPage() {
   if (isLoadingMerchant) {
     return (
       <div>
-        <h2 className="text-2xl font-bold mb-6">Settings</h2>
+        <h1 className="text-xl font-semibold text-foreground mb-6">Settings</h1>
         <div className="animate-pulse">
           <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
           <div className="h-20 bg-gray-200 rounded"></div>
@@ -41,7 +41,7 @@ export default function SettingsPage() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-6">Settings</h2>
+      <h1 className="text-xl font-semibold text-foreground mb-6">Settings</h1>
       <div className="space-y-6">
         <div className="border rounded-lg p-6">
           <h3 className="text-lg font-semibold mb-4">Fee Settings</h3>

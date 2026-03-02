@@ -48,7 +48,7 @@ export default function FeeSettingsPage() {
     <div className="p-6 space-y-6">
       {/* HEADER */}
       <div>
-        <h1 className="text-xl font-bold text-foreground">Fee Settings</h1>
+        <h1 className="text-xl font-semibold text-foreground">Fee Settings</h1>
         <p className="text-xs text-muted-foreground mt-1">
           Configure transaction fees and understand how they work
         </p>
@@ -72,14 +72,14 @@ export default function FeeSettingsPage() {
             disabled={updateMerchantProfile.isPending}
             className={`p-4 rounded-lg border transition-colors text-left ${
               feePayer === 'PAYER'
-                ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
                 : 'bg-background border-border hover:bg-muted'
             }`}
           >
             <div className="flex items-start gap-3">
               <div className={`w-4 h-4 rounded-full border-2 mt-0.5 ${
                 feePayer === 'PAYER' 
-                  ? 'bg-green-500 border-green-500' 
+                  ? 'bg-blue-500 border-blue-500' 
                   : 'border-border'
               }`}>
                 {feePayer === 'PAYER' && (
@@ -88,7 +88,7 @@ export default function FeeSettingsPage() {
               </div>
               <div className="flex-1">
                 <div className={`font-medium text-sm ${
-                  feePayer === 'PAYER' ? 'text-green-700 dark:text-green-400' : 'text-foreground'
+                  feePayer === 'PAYER' ? 'text-blue-700 dark:text-blue-400' : 'text-foreground'
                 }`}>
                   Customer (Payer)
                 </div>
@@ -146,21 +146,21 @@ export default function FeeSettingsPage() {
 
         <div className="space-y-4">
           <div className="bg-gray-50 dark:bg-gray-900/20 rounded-lg p-4">
-            <h3 className="text-sm font-medium text-foreground mb-3">Transaction Fee Components</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Transaction Fee Components</h3>
             <div className="space-y-3">
               <div className="flex items-start gap-3">
                 <div className="w-2 h-2 bg-blue-500 rounded-full mt-1.5"></div>
                 <div>
-                  <div className="text-sm font-medium text-foreground">Gateway Fees</div>
+                  <div className="text-xs font-semibold text-foreground">Gateway Fees</div>
                   <div className="text-xs text-muted-foreground">
                     Fees charged by mobile money providers (MTN, Orange, etc.) for processing transactions
                   </div>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full mt-1.5"></div>
+                <div className="w-2 h-2 bg-blue-500 rounded-full mt-1.5"></div>
                 <div>
-                  <div className="text-sm font-medium text-foreground">Platform Fees</div>
+                  <div className="text-xs font-semibold text-foreground">Platform Fees</div>
                   <div className="text-xs text-muted-foreground">
                     ZitoPay platform charges for maintaining infrastructure, security, and support
                   </div>
@@ -170,7 +170,7 @@ export default function FeeSettingsPage() {
           </div>
 
           <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-            <h3 className="text-sm font-medium text-foreground mb-3">Example Calculation</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Example Calculation</h3>
             <div className="space-y-2 text-xs">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Transaction Amount:</span>
@@ -189,7 +189,7 @@ export default function FeeSettingsPage() {
                   <span>Customer Pays:</span>
                   <span>10,200 XAF</span>
                 </div>
-                <div className="flex justify-between font-medium text-green-600">
+                <div className="flex justify-between font-medium text-blue-600">
                   <span>You Receive:</span>
                   <span>10,000 XAF</span>
                 </div>
@@ -216,7 +216,7 @@ export default function FeeSettingsPage() {
             <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Mail className="w-4 h-4 text-orange-600" />
-                <h3 className="text-sm font-medium text-foreground">Email Support</h3>
+                <h3 className="text-sm font-semibold text-foreground">Email Support</h3>
               </div>
               <p className="text-xs text-muted-foreground mb-3">
                 Contact our support team to discuss volume-based discounts and custom pricing
@@ -234,7 +234,7 @@ export default function FeeSettingsPage() {
             <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-3">
                 <MessageSquare className="w-4 h-4 text-purple-600" />
-                <h3 className="text-sm font-medium text-foreground">Support Ticket</h3>
+                <h3 className="text-sm font-semibold text-foreground">Support Ticket</h3>
               </div>
               <p className="text-xs text-muted-foreground mb-3">
                 Create a support ticket for formal fee review and negotiation requests
@@ -253,7 +253,7 @@ export default function FeeSettingsPage() {
           <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-3">
               <HelpCircle className="w-4 h-4 text-yellow-600" />
-              <h3 className="text-sm font-medium text-foreground">Negotiation Tips</h3>
+              <h3 className="text-sm font-semibold text-foreground">Negotiation Tips</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
               <div>
@@ -282,8 +282,8 @@ export default function FeeSettingsPage() {
       {/* FAQ */}
       <div className="bg-background rounded-xl p-6 border border-border">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-            <HelpCircle className="w-4 h-4 text-green-600" />
+          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+            <HelpCircle className="w-4 h-4 text-blue-600" />
           </div>
           <div>
             <h2 className="text-sm font-semibold text-foreground">Frequently Asked Questions</h2>
@@ -292,26 +292,26 @@ export default function FeeSettingsPage() {
         </div>
 
         <div className="space-y-4">
-          <div className="border-l-2 border-green-200 pl-4">
-            <h3 className="text-sm font-medium text-foreground mb-1">Can I change the fee payer setting anytime?</h3>
+          <div className="border-l-2 border-blue-200 pl-4">
+            <h3 className="text-sm font-semibold text-foreground mb-1">Can I change the fee payer setting anytime?</h3>
             <p className="text-xs text-muted-foreground">
               Yes, you can change this setting at any time. Changes will apply to all new transactions immediately.
             </p>
           </div>
           <div className="border-l-2 border-blue-200 pl-4">
-            <h3 className="text-sm font-medium text-foreground mb-1">How are gateway fees determined?</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-1">How are gateway fees determined?</h3>
             <p className="text-xs text-muted-foreground">
               Gateway fees are set by mobile money providers and may vary by country, transaction amount, and volume.
             </p>
           </div>
           <div className="border-l-2 border-purple-200 pl-4">
-            <h3 className="text-sm font-medium text-foreground mb-1">Are there any hidden fees?</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-1">Are there any hidden fees?</h3>
             <p className="text-xs text-muted-foreground">
               No, all fees are transparently displayed. You'll see the exact fee breakdown before confirming any transaction.
             </p>
           </div>
           <div className="border-l-2 border-orange-200 pl-4">
-            <h3 className="text-sm font-medium text-foreground mb-1">What's the minimum transaction amount?</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-1">What's the minimum transaction amount?</h3>
             <p className="text-xs text-muted-foreground">
               Minimum amounts vary by gateway and are typically around 1,000 XAF for most mobile money providers.
             </p>

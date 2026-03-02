@@ -4,9 +4,7 @@ import { useState } from "react";
 import {
     Wallet as WalletIcon,
     Lock,
-    TrendingUp,
     TrendingDown,
-    Download,
     ArrowUpRight,
     ArrowDownLeft,
     Clock,
@@ -31,34 +29,37 @@ export default function WalletPage() {
     const { data: balanceData, isLoading: isLoadingSummary, error: summaryError } = useWalletSummary();
     const { data: recentActivity, isLoading: isLoadingActivity, error: activityError } = useWalletActivity({ limit: 20 });
 
-    // Format number with dot as thousands separator
+    // Format number with comma as thousands separator and dot for decimals
     const formatNumber = (num: number): string => {
-        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        return num.toLocaleString('en-US', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2
+        });
     };
 
     const getTypeIcon = (type: string) => {
         switch (type) {
             case "credit":
-                return <ArrowDownLeft className="w-4 h-4 text-green-600" />;
+                return <ArrowDownLeft className="w-3.5 h-3.5 text-muted-foreground" />;
             case "withdrawal":
-                return <ArrowUpRight className="w-4 h-4 text-red-600" />;
+                return <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground" />;
             case "fee":
-                return <TrendingDown className="w-4 h-4 text-orange-600" />;
+                return <TrendingDown className="w-3.5 h-3.5 text-muted-foreground" />;
             default:
-                return <RefreshCw className="w-4 h-4" />;
+                return <RefreshCw className="w-3.5 h-3.5 text-muted-foreground" />;
         }
     };
 
     const getStatusColor = (status: string) => {
         switch (status) {
             case "completed":
-                return "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400";
+                return "text-green-600 dark:text-green-400";
             case "pending":
-                return "bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400";
+                return "text-orange-600 dark:text-orange-400";
             case "failed":
-                return "bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400";
+                return "text-red-600 dark:text-red-400";
             default:
-                return "bg-muted text-muted-foreground";
+                return "text-muted-foreground";
         }
     };
 
@@ -73,29 +74,29 @@ export default function WalletPage() {
     // Loading state
     if (isLoadingSummary || isLoadingActivity) {
         return (
-            <div className="p-6 space-y-6">
+            <div className="space-y-4 p-4">
                 <div>
-                    <h1 className="text-xl font-bold text-foreground">Wallet & Balance</h1>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <h1 className="text-xl font-semibold text-foreground">Wallet & Balance</h1>
+                    <p className="text-xs text-muted-foreground mt-0.5">
                         Manage your funds, view balance history, and process withdrawals
                     </p>
                 </div>
 
                 {/* Loading Skeleton */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                     {[1, 2, 3, 4].map((i) => (
-                        <div key={i} className="bg-muted/50 rounded-xl p-6 border border-border animate-pulse">
-                            <div className="h-10 w-10 bg-muted rounded-lg mb-3" />
-                            <div className="h-3 w-24 bg-muted rounded mb-2" />
-                            <div className="h-6 w-32 bg-muted rounded mb-1" />
-                            <div className="h-3 w-20 bg-muted rounded mb-4" />
-                            <div className="h-8 w-full bg-muted rounded" />
+                        <div key={i} className="bg-background rounded-lg p-3 border border-border animate-pulse">
+                            <div className="flex items-start justify-between mb-2">
+                                <div className="w-8 h-8 bg-muted rounded-lg" />
+                            </div>
+                            <div className="h-2.5 w-20 bg-muted rounded mb-1.5" />
+                            <div className="h-5 w-28 bg-muted rounded" />
                         </div>
                     ))}
                 </div>
 
-                <div className="bg-background rounded-xl p-6 border border-border">
-                    <div className="h-6 w-48 bg-muted rounded mb-6 animate-pulse" />
+                <div className="bg-background rounded-lg p-3 border border-border">
+                    <div className="h-4 w-32 bg-muted rounded mb-4 animate-pulse" />
                     <div className="h-64 bg-muted/30 rounded-lg animate-pulse" />
                 </div>
             </div>
@@ -105,18 +106,18 @@ export default function WalletPage() {
     // Error state
     if (summaryError || activityError) {
         return (
-            <div className="p-6">
-                <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
+            <div className="p-4">
+                <div className="bg-background border border-red-200 dark:border-red-800 rounded-lg p-6 text-center">
                     <XCircle className="w-12 h-12 text-red-600 dark:text-red-400 mx-auto mb-3" />
-                    <h3 className="text-lg font-bold text-red-900 dark:text-red-100 mb-2">
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
                         Failed to Load Wallet Data
                     </h3>
-                    <p className="text-sm text-red-700 dark:text-red-300 mb-4">
+                    <p className="text-sm text-muted-foreground mb-4">
                         {summaryError?.message || activityError?.message || "An error occurred while fetching wallet data"}
                     </p>
                     <button
                         onClick={() => window.location.reload()}
-                        className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors"
+                        className="px-4 py-2 bg-orange-500 text-white rounded-md text-sm font-semibold hover:bg-orange-600 transition-colors"
                     >
                         Retry
                     </button>
@@ -128,10 +129,10 @@ export default function WalletPage() {
     // No data state
     if (!balanceData || !recentActivity) {
         return (
-            <div className="p-6">
-                <div className="bg-muted/50 border border-border rounded-xl p-6 text-center">
+            <div className="p-4">
+                <div className="bg-background border border-border rounded-lg p-6 text-center">
                     <WalletIcon className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                    <h3 className="text-lg font-bold text-foreground mb-2">No Wallet Data</h3>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">No Wallet Data</h3>
                     <p className="text-sm text-muted-foreground">
                         Unable to load wallet information at this time.
                     </p>
@@ -141,86 +142,87 @@ export default function WalletPage() {
     }
 
     return (
-        <div className="p-6 space-y-6">
+        <div className="space-y-4 p-4">
             {/* HEADER */}
             <div>
-                <h1 className="text-xl font-bold text-foreground">Wallet & Balance</h1>
-                <p className="text-xs text-muted-foreground mt-1">
+                <h1 className="text-xl font-semibold text-foreground">Wallet & Balance</h1>
+                <p className="text-xs text-muted-foreground mt-0.5">
                     Manage your funds, view balance history, and process withdrawals
                 </p>
             </div>
 
             {/* BALANCE OVERVIEW */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Available Balance */}
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/10 dark:to-emerald-900/10 rounded-xl p-6 border border-green-200 dark:border-green-800">
-                    <div className="flex items-start justify-between mb-3">
-                        <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
-                            <WalletIcon className="w-5 h-5 text-white" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                {/* Available Balance - Primary card with orange accent */}
+                <div className="bg-background rounded-lg p-3 border border-border border-l-2 border-l-orange-500 hover:shadow-sm transition-shadow">
+                    <div className="flex items-start justify-between mb-2">
+                        <div className="w-8 h-8 bg-muted/60 rounded-lg flex items-center justify-center">
+                            <WalletIcon className="w-4 h-4 text-orange-500" />
                         </div>
-                        <span className="text-xs font-semibold text-green-600 dark:text-green-400">
+                        <span className="text-[10px] font-medium flex items-center gap-0.5 text-red-600 dark:text-red-400">
+                            <TrendingDown className="w-2.5 h-2.5" />
                             {balanceData!.trend}
                         </span>
                     </div>
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                        💰 AVAILABLE BALANCE
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">
+                        Available Balance
                     </p>
-                    <p className="text-2xl font-bold text-foreground mb-1">
+                    <p className="text-base font-semibold text-orange-500 mb-0.5">
                         FCFA {formatNumber(balanceData!.available)}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-[10px] text-muted-foreground">
                         Last updated: {balanceData!.lastUpdated}
                     </p>
                 </div>
 
                 {/* Pending Balance */}
-                <div className="bg-orange-50 dark:bg-orange-900/10 rounded-xl p-6 border border-orange-200 dark:border-orange-800">
-                    <div className="flex items-start justify-between mb-3">
-                        <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center">
-                            <Lock className="w-5 h-5 text-white" />
+                <div className="bg-background rounded-lg p-3 border border-border hover:shadow-sm transition-shadow">
+                    <div className="flex items-start justify-between mb-2">
+                        <div className="w-8 h-8 bg-muted/60 rounded-lg flex items-center justify-center">
+                            <Lock className="w-4 h-4 text-muted-foreground" />
                         </div>
                     </div>
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                        🔒 PENDING BALANCE
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">
+                        PENDING BALANCE
                     </p>
-                    <p className="text-2xl font-bold text-foreground mb-1">
+                    <p className="text-base font-semibold text-foreground mb-0.5">
                         FCFA {formatNumber(balanceData!.pending)}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-[10px] text-muted-foreground">
                         3 transactions processing
                     </p>
                 </div>
 
                 {/* Total Collected */}
-                <div className="bg-blue-50 dark:bg-blue-900/10 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
-                    <div className="flex items-start justify-between mb-3">
-                        <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                            <ArrowDownLeft className="w-5 h-5 text-white" />
+                <div className="bg-background rounded-lg p-3 border border-border hover:shadow-sm transition-shadow">
+                    <div className="flex items-start justify-between mb-2">
+                        <div className="w-8 h-8 bg-muted/60 rounded-lg flex items-center justify-center">
+                            <ArrowDownLeft className="w-4 h-4 text-muted-foreground" />
                         </div>
                     </div>
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                        📊 TOTAL COLLECTED
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">
+                        TOTAL COLLECTED
                     </p>
-                    <p className="text-2xl font-bold text-foreground mb-1">
+                    <p className="text-base font-semibold text-foreground mb-0.5">
                         FCFA {formatNumber(balanceData!.totalCollected)}
                     </p>
-                    <p className="text-xs text-muted-foreground">This month</p>
+                    <p className="text-[10px] text-muted-foreground">This month</p>
                 </div>
 
                 {/* Total Withdrawn */}
-                <div className="bg-purple-50 dark:bg-purple-900/10 rounded-xl p-6 border border-purple-200 dark:border-purple-800">
-                    <div className="flex items-start justify-between mb-3">
-                        <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
-                            <ArrowUpRight className="w-5 h-5 text-white" />
+                <div className="bg-background rounded-lg p-3 border border-border hover:shadow-sm transition-shadow">
+                    <div className="flex items-start justify-between mb-2">
+                        <div className="w-8 h-8 bg-muted/60 rounded-lg flex items-center justify-center">
+                            <ArrowUpRight className="w-4 h-4 text-muted-foreground" />
                         </div>
                     </div>
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                        📤 TOTAL WITHDRAWN
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">
+                        TOTAL WITHDRAWN
                     </p>
-                    <p className="text-2xl font-bold text-foreground mb-1">
+                    <p className="text-base font-semibold text-foreground mb-0.5">
                         FCFA {formatNumber(balanceData!.totalWithdrawn)}
                     </p>
-                    <p className="text-xs text-muted-foreground">This month</p>
+                    <p className="text-[10px] text-muted-foreground">This month</p>
                 </div>
             </div>
 
@@ -258,31 +260,32 @@ export default function WalletPage() {
             </div> */}
 
             {/* RECENT ACTIVITY */}
-            <div className="bg-background rounded-xl border border-border overflow-hidden">
-                <div className="p-4 border-b border-border flex items-center justify-between">
+            <div className="bg-background rounded-lg border border-border overflow-hidden">
+                <div className="px-3 py-2 border-b border-border flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-foreground">Recent Activity</h3>
-                    <button className="text-xs font-medium text-orange-600 dark:text-orange-400 hover:underline">
-                        View All →
+                    <button className="text-xs font-medium text-orange-600 dark:text-orange-400 hover:underline flex items-center gap-1">
+                        View All
+                        <ArrowUpRight className="w-3 h-3" />
                     </button>
                 </div>
 
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead>
-                            <tr className="border-b border-border bg-muted/50">
-                                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase">
+                            <tr className="border-b border-border bg-muted/30">
+                                <th className="text-left py-2 px-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
                                     Date/Time
                                 </th>
-                                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase">
+                                <th className="text-left py-2 px-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
                                     Type
                                 </th>
-                                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase">
+                                <th className="text-left py-2 px-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
                                     Amount
                                 </th>
-                                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase">
+                                <th className="text-left py-2 px-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
                                     Balance Before
                                 </th>
-                                <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground uppercase">
+                                <th className="text-left py-2 px-3 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
                                     Status
                                 </th>
                             </tr>
@@ -293,22 +296,22 @@ export default function WalletPage() {
                                     key={index}
                                     className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors"
                                 >
-                                    <td className="py-3 px-4">
+                                    <td className="py-2.5 px-3">
                                         <div className="text-xs font-medium text-foreground">{activity.date}</div>
-                                        <div className="text-xs text-muted-foreground">{activity.time}</div>
+                                        <div className="text-[10px] text-muted-foreground">{activity.time}</div>
                                     </td>
-                                    <td className="py-3 px-4">
+                                    <td className="py-2.5 px-3">
                                         <div className="flex items-center gap-2">
                                             {getTypeIcon(activity.type)}
                                             <div>
                                                 <div className="text-xs font-medium text-foreground">{activity.label}</div>
                                                 {activity.reference && (
-                                                    <div className="text-xs text-muted-foreground">{activity.reference}</div>
+                                                    <div className="text-[10px] text-muted-foreground font-mono">{activity.reference}</div>
                                                 )}
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="py-3 px-4">
+                                    <td className="py-2.5 px-3">
                                         <span
                                             className={`text-xs font-semibold ${activity.amount > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
                                                 }`}
@@ -317,18 +320,24 @@ export default function WalletPage() {
                                             {formatNumber(activity.amount)} FCFA
                                         </span>
                                     </td>
-                                    <td className="py-3 px-4 text-xs font-medium text-foreground">
+                                    <td className="py-2.5 px-3 text-xs font-medium text-foreground">
                                         {formatNumber(activity.balanceAfter)} FCFA
                                     </td>
-                                    <td className="py-3 px-4">
+                                    <td className="py-2.5 px-3">
                                         <span
-                                            className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${getStatusColor(
+                                            className={`inline-flex items-center gap-1 text-[10px] font-medium ${getStatusColor(
                                                 activity.status
                                             )}`}
                                         >
-                                            {activity.status === "completed" && <CheckCircle2 className="w-3 h-3 mr-1" />}
-                                            {activity.status === "pending" && <Clock className="w-3 h-3 mr-1" />}
-                                            {activity.status === "failed" && <XCircle className="w-3 h-3 mr-1" />}
+                                            <span
+                                                className={`w-1 h-1 rounded-full ${
+                                                    activity.status === "completed"
+                                                        ? "bg-green-500"
+                                                        : activity.status === "pending"
+                                                        ? "bg-orange-500"
+                                                        : "bg-red-500"
+                                                }`}
+                                            />
                                             {activity.status.charAt(0).toUpperCase() + activity.status.slice(1)}
                                         </span>
                                     </td>
@@ -339,10 +348,10 @@ export default function WalletPage() {
                 </div>
 
                 {/* Pagination */}
-                <div className="p-4 border-t border-border flex items-center justify-between">
+                <div className="px-3 py-2 border-t border-border flex items-center justify-between">
                     <div className="text-xs text-muted-foreground">Showing 1-10 of 156</div>
                     <div className="flex items-center gap-2">
-                        <button className="p-2 hover:bg-muted rounded transition-colors">
+                        <button className="p-2 hover:bg-muted rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                             <ChevronLeft className="w-4 h-4" />
                         </button>
                         <button className="px-3 py-1 bg-orange-500 text-white rounded text-xs font-medium">
@@ -350,7 +359,7 @@ export default function WalletPage() {
                         </button>
                         <button className="px-3 py-1 hover:bg-muted rounded text-xs font-medium">2</button>
                         <button className="px-3 py-1 hover:bg-muted rounded text-xs font-medium">3</button>
-                        <button className="p-2 hover:bg-muted rounded transition-colors">
+                        <button className="p-2 hover:bg-muted rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                             <ChevronRight className="w-4 h-4" />
                         </button>
                     </div>
@@ -360,9 +369,9 @@ export default function WalletPage() {
             {/* WITHDRAW MODAL */}
             {showWithdrawModal && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-background rounded-2xl p-6 shadow-2xl border border-border max-w-md w-full">
+                    <div className="bg-background rounded-xl p-6 shadow-2xl border border-border max-w-md w-full">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold text-foreground">Withdraw Funds</h3>
+                            <h3 className="text-lg font-semibold text-foreground">Withdraw Funds</h3>
                             <button
                                 onClick={() => setShowWithdrawModal(false)}
                                 className="p-1 hover:bg-muted rounded transition-colors"
@@ -391,12 +400,12 @@ export default function WalletPage() {
                                         type="number"
                                         value={withdrawAmount}
                                         onChange={(e) => setWithdrawAmount(e.target.value)}
-                                        placeholder="100.000"
+                                        placeholder="100,000"
                                         className="w-full pl-14 pr-4 py-2 bg-muted border border-border rounded-lg text-sm"
                                     />
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                    Min: 10.000 FCFA | Max: {formatNumber(balanceData!.available)} FCFA
+                                    Min: {formatNumber(10000)} FCFA | Max: {formatNumber(balanceData!.available)} FCFA
                                 </p>
                             </div>
 
@@ -445,7 +454,7 @@ export default function WalletPage() {
                                             <div className="text-xs font-medium text-foreground">Bank Transfer</div>
                                             <div className="text-xs text-muted-foreground">Account: **** **** 1234</div>
                                             <div className="text-xs text-muted-foreground">
-                                                Fee: 1.000 FCFA | Time: 1-2 business days
+                                                Fee: {formatNumber(1000)} FCFA | Time: 1-2 business days
                                             </div>
                                         </div>
                                     </label>
@@ -476,7 +485,7 @@ export default function WalletPage() {
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground">Processing Fee:</span>
-                                    <span className="font-medium">{withdrawMethod === "bank" ? "1.000" : "500"} FCFA</span>
+                                    <span className="font-medium">{formatNumber(withdrawMethod === "bank" ? 1000 : 500)} FCFA</span>
                                 </div>
                                 <div className="flex justify-between pt-2 border-t border-border">
                                     <span className="font-semibold">You will receive:</span>
@@ -497,9 +506,9 @@ export default function WalletPage() {
             {/* TOP UP MODAL */}
             {showTopUpModal && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-background rounded-2xl p-6 shadow-2xl border border-border max-w-md w-full">
+                    <div className="bg-background rounded-xl p-6 shadow-2xl border border-border max-w-md w-full">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold text-foreground">Top Up Balance</h3>
+                            <h3 className="text-lg font-semibold text-foreground">Top Up Balance</h3>
                             <button
                                 onClick={() => setShowTopUpModal(false)}
                                 className="p-1 hover:bg-muted rounded transition-colors"
@@ -528,12 +537,12 @@ export default function WalletPage() {
                                         type="number"
                                         value={topUpAmount}
                                         onChange={(e) => setTopUpAmount(e.target.value)}
-                                        placeholder="50.000"
+                                        placeholder="50,000"
                                         className="w-full pl-14 pr-4 py-2 bg-muted border border-border rounded-lg text-sm"
                                     />
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                    Min: 5.000 FCFA | Max: 1.000.000 FCFA
+                                    Min: {formatNumber(5000)} FCFA | Max: {formatNumber(1000000)} FCFA
                                 </p>
                             </div>
 

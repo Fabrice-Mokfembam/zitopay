@@ -280,12 +280,12 @@ export default function WebhooksPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-4 p-4">
       {/* HEADER */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Webhooks</h1>
-          <p className="text-xs text-muted-foreground mt-1">
+          <h1 className="text-xl font-semibold text-foreground">Webhooks</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
             Receive real-time notifications for transaction events
           </p>
         </div>
@@ -296,51 +296,51 @@ export default function WebhooksPage() {
             setEnabled(true);
             setShowAddModal(true);
           }}
-          className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600 transition-colors flex items-center gap-2"
+          className="px-3 py-1.5 bg-orange-500 text-white rounded-md text-xs font-semibold hover:bg-orange-600 transition-colors flex items-center gap-1.5"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-3.5 h-3.5" />
           Add Endpoint
         </button>
       </div>
 
       {/* STATS */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-blue-50 dark:bg-blue-900/10 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-            ACTIVE ENDPOINTS
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="bg-background rounded-lg p-3 border border-border hover:shadow-sm transition-shadow">
+          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">
+            Active Endpoints
           </p>
-          <p className="text-2xl font-bold text-foreground">
+          <p className="text-base font-semibold text-foreground">
             {isLoadingEndpoints ? "..." : stats.activeEndpoints}
           </p>
         </div>
-        <div className="bg-purple-50 dark:bg-purple-900/10 rounded-xl p-4 border border-purple-200 dark:border-purple-800">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-            TOTAL SENT
+        <div className="bg-background rounded-lg p-3 border border-border hover:shadow-sm transition-shadow">
+          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">
+            Total Sent
           </p>
-          <p className="text-2xl font-bold text-foreground">
+          <p className="text-base font-semibold text-foreground">
             {isLoadingDeliveries ? "..." : stats.totalSent.toLocaleString()}
           </p>
         </div>
-        <div className="bg-green-50 dark:bg-green-900/10 rounded-xl p-4 border border-green-200 dark:border-green-800">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-            SUCCESS RATE
+        <div className="bg-background rounded-lg p-3 border border-border border-l-2 border-l-orange-500 hover:shadow-sm transition-shadow">
+          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">
+            Success Rate
           </p>
-          <p className="text-2xl font-bold text-foreground">
+          <p className="text-base font-semibold text-orange-500">
             {isLoadingDeliveries ? "..." : `${stats.successRate}%`}
           </p>
         </div>
-        <div className="bg-red-50 dark:bg-red-900/10 rounded-xl p-4 border border-red-200 dark:border-red-800">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-            FAILED LAST 24H
+        <div className="bg-background rounded-lg p-3 border border-border hover:shadow-sm transition-shadow">
+          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide mb-1">
+            Failed Last 24H
           </p>
-          <p className="text-2xl font-bold text-foreground">
+          <p className="text-base font-semibold text-foreground">
             {isLoadingDeliveries ? "..." : stats.failedLast24h}
           </p>
         </div>
       </div>
 
       {/* ENDPOINTS */}
-      <div className="bg-background rounded-xl border border-border overflow-hidden">
+      <div className="bg-background rounded-lg border border-border overflow-hidden">
         <div className="p-4 border-b border-border">
           <h3 className="text-sm font-semibold text-foreground">Endpoints</h3>
         </div>
@@ -390,23 +390,18 @@ export default function WebhooksPage() {
                     </td>
                     <td className="py-3 px-4">
                       <span
-                        className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${
+                        className={`inline-flex items-center gap-1 text-xs font-medium ${
                           endpoint.enabled
-                            ? "bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400"
-                            : "bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-400"
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-muted-foreground"
                         }`}
                       >
-                        {endpoint.enabled ? (
-                          <>
-                            <CheckCircle2 className="w-3 h-3" />
-                            Active
-                          </>
-                        ) : (
-                          <>
-                            <Pause className="w-3 h-3" />
-                            Disabled
-                          </>
-                        )}
+                        <span
+                          className={`w-1 h-1 rounded-full ${
+                            endpoint.enabled ? "bg-green-500" : "bg-muted-foreground"
+                          }`}
+                        />
+                        {endpoint.enabled ? "Active" : "Disabled"}
                       </span>
                     </td>
                     <td className="py-3 px-4">
@@ -429,7 +424,7 @@ export default function WebhooksPage() {
       </div>
 
       {/* RECENT DELIVERIES */}
-      <div className="bg-background rounded-xl border border-border overflow-hidden">
+      <div className="bg-background rounded-lg border border-border overflow-hidden">
         <div className="p-4 border-b border-border flex items-center justify-between">
           <h3 className="text-sm font-semibold text-foreground">Recent Deliveries</h3>
         </div>
@@ -507,9 +502,9 @@ export default function WebhooksPage() {
       {/* ADD ENDPOINT MODAL */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-background rounded-2xl p-6 shadow-2xl border border-border max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-background rounded-xl p-6 shadow-2xl border border-border max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-foreground">Add Webhook Endpoint</h3>
+              <h3 className="text-lg font-semibold text-foreground">Add Webhook Endpoint</h3>
               <button
                 onClick={() => {
                   setShowAddModal(false);
@@ -620,9 +615,9 @@ export default function WebhooksPage() {
       {/* EDIT ENDPOINT MODAL */}
       {showEditModal && selectedEndpoint && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-background rounded-2xl p-6 shadow-2xl border border-border max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-background rounded-xl p-6 shadow-2xl border border-border max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-foreground">Edit Webhook Endpoint</h3>
+              <h3 className="text-lg font-semibold text-foreground">Edit Webhook Endpoint</h3>
               <button
                 onClick={() => {
                   setShowEditModal(false);
@@ -741,9 +736,9 @@ export default function WebhooksPage() {
       {/* DELIVERY DETAIL MODAL */}
       {showDetailModal && deliveryData && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-background rounded-2xl p-6 shadow-2xl border border-border max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-background rounded-xl p-6 shadow-2xl border border-border max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-foreground">Webhook Delivery Details</h3>
+              <h3 className="text-lg font-semibold text-foreground">Webhook Delivery Details</h3>
               <button
                 onClick={() => {
                   setShowDetailModal(false);

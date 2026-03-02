@@ -43,8 +43,8 @@ const navigationOrder: Record<string, { prev?: string; next?: string; prevTitle?
     "/docs/collections/status": {
         prev: "/docs/collections/execute",
         prevTitle: "Execute Collection",
-        next: "/docs/disbursements",
-        nextTitle: "Disbursements",
+        next: "/docs/disbursements/overview",
+        nextTitle: "Disbursements Overview",
     },
     "/docs/disbursements/overview": {
         prev: "/docs/collections/status",

@@ -106,7 +106,7 @@ export default function ScheduledReportModal({
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h3 className="text-lg font-bold text-gray-900">
+          <h3 className="text-lg font-semibold text-foreground">
             {reportId ? "Edit Scheduled Report" : "Schedule Report"}
           </h3>
           <button

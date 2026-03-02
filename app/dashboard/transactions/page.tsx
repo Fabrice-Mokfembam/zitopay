@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
+  Search,
 } from "lucide-react";
 import { useUserMerchantData } from "@/features/merchants/context/MerchantContext";
 import { useEnvironment } from "@/core/environment/EnvironmentContext";
@@ -21,17 +22,19 @@ import { useRecentTransactions } from "@/features/merchants/hooks/useMerchant";
 type TransactionType = "all" | "collection" | "payout";
 
 export default function TransactionsPage() {
-  const { merchantId, merchant } = useUserMerchantData();
+  const { merchantId } = useUserMerchantData();
   const { environment } = useEnvironment();
   const [activeTab, setActiveTab] = useState<TransactionType>("all");
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 12;
 
   // Fetch transactions using the same hook as dashboard
   // Pass type filter based on activeTab
-  const transactionType: 'collection' | 'payout' | 'refund' | undefined = 
+  const transactionType: 'collection' | 'payout' | 'refund' | undefined =
     activeTab === "all" ? undefined : activeTab;
   const { data: transactionsData, isLoading: isLoadingTransactions, error: transactionsError } = useRecentTransactions(
     merchantId || '',
@@ -80,7 +83,7 @@ export default function TransactionsPage() {
 
   // Get transactions from API data
   const transactions = transactionsData?.transactions || [];
-  
+
   // Debug logging (remove in production)
   if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
     console.log('Transactions Page Debug:', {
@@ -95,11 +98,24 @@ export default function TransactionsPage() {
     });
   }
 
+  // Filter transactions
+  const filteredTransactions = transactions.filter((tx) => {
+    const matchesSearch =
+      !searchQuery ||
+      tx.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (tx.gateway && tx.gateway.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    const matchesStatus =
+      !statusFilter || tx.status.toLowerCase() === statusFilter.toLowerCase();
+
+    return matchesSearch && matchesStatus;
+  });
+
   // Pagination calculations
-  const totalPages = Math.ceil(transactions.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedTransactions = transactions.slice(startIndex, endIndex);
+  const paginatedTransactions = filteredTransactions.slice(startIndex, endIndex);
 
   // Reset to page 1 when filter changes
   const handleTabChange = (tab: TransactionType) => {
@@ -108,46 +124,68 @@ export default function TransactionsPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      {/* HEADER */}
-      <div>
-        <h1 className="text-xl font-bold text-foreground">Transactions</h1>
-        <p className="text-xs text-muted-foreground mt-1">
-          View and manage all your payment transactions
-        </p>
+    <div className="p-6 space-y-6 max-w-7xl mx-auto">
+      {/* HEADER & ACTIONS */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-foreground">Transactions</h1>
+          <p className="text-xs text-muted-foreground mt-1">
+            View and manage all your payment history
+          </p>
+        </div>
+        <button className="px-4 py-2 bg-background border border-border text-foreground rounded-lg text-sm font-semibold hover:bg-muted transition-colors flex items-center gap-2">
+          <Download className="w-4 h-4" />
+          Export CSV
+        </button>
       </div>
 
-      {/* TABS */}
-      <div className="flex gap-2">
-        <button
-          onClick={() => handleTabChange("all")}
-          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${activeTab === "all"
-              ? "bg-orange-500 text-white"
-              : "bg-background border border-border text-foreground hover:bg-muted"
-            }`}
-        >
-          All Transactions
-        </button>
-        <button
-          onClick={() => handleTabChange("collection")}
-          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${activeTab === "collection"
-              ? "bg-green-500 text-white"
-              : "bg-background border border-border text-foreground hover:bg-muted"
-            }`}
-        >
-          <ArrowDownToLine className="w-4 h-4" />
-          Collections
-        </button>
-        <button
-          onClick={() => handleTabChange("payout")}
-          className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${activeTab === "payout"
-              ? "bg-blue-500 text-white"
-              : "bg-background border border-border text-foreground hover:bg-muted"
-            }`}
-        >
-          <ArrowUpFromLine className="w-4 h-4" />
-          Payouts
-        </button>
+      {/* CONTROLS (TABS & FILTERS) */}
+      <div className="bg-background rounded-xl p-3 border border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
+
+        {/* TABS (Segmented Control) */}
+        <div className="flex p-1 bg-muted/50 rounded-lg shrink-0">
+          {[
+            { id: "all", label: "All" },
+            { id: "collection", label: "Collections", icon: ArrowDownToLine },
+            { id: "payout", label: "Payouts", icon: ArrowUpFromLine },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id as TransactionType)}
+              className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 ${activeTab === tab.id
+                ? "bg-background text-foreground shadow-sm border border-border/50"
+                : "text-muted-foreground hover:text-foreground"
+                }`}
+            >
+              {tab.icon && <tab.icon className="w-3.5 h-3.5" />}
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* SEARCH & FILTERS */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative flex-1 md:min-w-[250px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search ID or gateway..."
+              value={searchQuery}
+              onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+              className="w-full pl-9 pr-4 py-1.5 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-orange-500 transition-shadow"
+            />
+          </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+            className="px-3 py-1.5 bg-background border border-border rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-orange-500 transition-shadow"
+          >
+            <option value="">All Status</option>
+            <option value="SUCCESS">Success</option>
+            <option value="PENDING_GATEWAY">Pending</option>
+            <option value="FAILED">Failed</option>
+          </select>
+        </div>
       </div>
 
 
@@ -237,11 +275,12 @@ export default function TransactionsPage() {
                     </td>
                   </tr>
                 ))
-              ) : transactions.length > 0 && paginatedTransactions.length > 0 ? (
+              ) : filteredTransactions.length > 0 && paginatedTransactions.length > 0 ? (
                 paginatedTransactions.map((tx) => (
                   <tr
                     key={tx.id}
-                    className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors"
+                    onClick={() => openDetailModal(tx)}
+                    className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors cursor-pointer group"
                   >
                     <td className="py-3 px-4">
                       <div className="text-xs text-foreground font-medium">{tx.date}</div>
@@ -264,13 +303,12 @@ export default function TransactionsPage() {
                         )}`}
                       >
                         <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            tx.status === "SUCCESS"
-                              ? "bg-green-500"
-                              : tx.status === "PENDING_GATEWAY"
-                                ? "bg-orange-500"
-                                : "bg-red-500"
-                          }`}
+                          className={`w-1.5 h-1.5 rounded-full ${tx.status === "SUCCESS"
+                            ? "bg-green-500"
+                            : tx.status === "PENDING_GATEWAY"
+                              ? "bg-orange-500"
+                              : "bg-red-500"
+                            }`}
                         />
                         {tx.status.replace("_", " ")}
                       </span>
@@ -291,8 +329,8 @@ export default function TransactionsPage() {
                       </span>
                     </td>
                     <td className="py-3 px-4">
-                      <button className="p-1 hover:bg-muted rounded transition-colors">
-                        <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                      <button className="p-1 text-muted-foreground hover:bg-muted hover:text-foreground rounded transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">
+                        <MoreVertical className="w-4 h-4" />
                       </button>
                     </td>
                   </tr>
@@ -309,64 +347,63 @@ export default function TransactionsPage() {
         </div>
 
         {/* Pagination */}
-        {transactions.length > 0 && (
+        {filteredTransactions.length > 0 && (
           <div className="p-4 border-t border-border flex items-center justify-between">
             <div className="text-xs text-muted-foreground">
-            Showing {startIndex + 1}-{Math.min(endIndex, transactions.length)} of {transactions.length} transactions
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-              className="p-2 hover:bg-muted rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft className="w-4 h-4 text-muted-foreground" />
-            </button>
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              let pageNum;
-              if (totalPages <= 5) {
-                pageNum = i + 1;
-              } else if (currentPage <= 3) {
-                pageNum = i + 1;
-              } else if (currentPage >= totalPages - 2) {
-                pageNum = totalPages - 4 + i;
-              } else {
-                pageNum = currentPage - 2 + i;
-              }
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => setCurrentPage(pageNum)}
-                  className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
-                    currentPage === pageNum
+              Showing {startIndex + 1}-{Math.min(endIndex, filteredTransactions.length)} of {filteredTransactions.length} transactions
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="p-2 hover:bg-muted rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+              </button>
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`px-3 py-1 rounded text-xs font-medium transition-colors ${currentPage === pageNum
                       ? "bg-orange-500 text-white"
                       : "hover:bg-muted text-foreground"
-                  }`}
+                      }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+              {totalPages > 5 && currentPage < totalPages - 2 && (
+                <span className="text-xs text-muted-foreground">...</span>
+              )}
+              {totalPages > 5 && currentPage < totalPages - 2 && (
+                <button
+                  onClick={() => setCurrentPage(totalPages)}
+                  className="px-3 py-1 hover:bg-muted rounded text-xs font-medium text-foreground"
                 >
-                  {pageNum}
+                  {totalPages}
                 </button>
-              );
-            })}
-            {totalPages > 5 && currentPage < totalPages - 2 && (
-              <span className="text-xs text-muted-foreground">...</span>
-            )}
-            {totalPages > 5 && currentPage < totalPages - 2 && (
+              )}
               <button
-                onClick={() => setCurrentPage(totalPages)}
-                className="px-3 py-1 hover:bg-muted rounded text-xs font-medium text-foreground"
+                onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="p-2 hover:bg-muted rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {totalPages}
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
               </button>
-            )}
-            <button
-              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
-              className="p-2 hover:bg-muted rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronRight className="w-4 h-4 text-muted-foreground" />
-            </button>
+            </div>
           </div>
-        </div>
         )}
       </div>
 
@@ -376,7 +413,7 @@ export default function TransactionsPage() {
           <div className="bg-background rounded-2xl shadow-2xl border border-border max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="sticky top-0 bg-background border-b border-border p-6 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-foreground">Transaction Details</h3>
+              <h3 className="text-lg font-semibold text-foreground">Transaction Details</h3>
               <button
                 onClick={() => setShowDetailModal(false)}
                 className="p-1 hover:bg-muted rounded transition-colors"
